@@ -91,10 +91,10 @@ describe("processing code", () => {
         attributes: [["class", "a"]],
         content: [
           { x: 0, y: 0, text: "{" },
-          { x: 2, y: 1, text: "return" },
-          { x: 9, y: 1, text: "42" },
-          { x: 11, y: 1, text: ";" },
-          { x: 0, y: 2, text: "}" },
+          { x: -14, y: 1, text: "return" },
+          { x: -7, y: 1, text: "42" },
+          { x: -5, y: 1, text: ";" },
+          { x: -16, y: 2, text: "}" },
         ],
       },
       { x: 1, y: 2, text: ";" },
@@ -102,8 +102,7 @@ describe("processing code", () => {
   });
 
   test("it handles boxes inside boxes", () => {
-    container.innerHTML =
-      "const <span foo='bar'>a = <span>()</span> => 42</span>";
+    container.innerHTML = "const <span foo='bar'>a = <b>()</b> => 42</span>";
     const { x, y, content } = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
@@ -120,7 +119,7 @@ describe("processing code", () => {
           {
             x: 4,
             y: 0,
-            tagName: "span",
+            tagName: "b",
             attributes: [],
             content: [
               { x: 0, y: 0, text: "(" },
@@ -132,6 +131,47 @@ describe("processing code", () => {
           { x: 10, y: 0, text: "42" },
         ],
       },
+    ]);
+  });
+
+  test("it handles multi-line boxes inside multi-line", () => {
+    container.innerHTML = `const <span foo='bar'>a = <b>(
+  x
+)</b> => [
+  x
+]</span>;`;
+    const { x, y, content } = processCode(container);
+    expect(x).toBe(0);
+    expect(y).toBe(0);
+    expect(content).toEqual([
+      { x: 0, y: 0, text: "const" },
+      {
+        x: 6,
+        y: 0,
+        tagName: "span",
+        attributes: [["foo", "bar"]],
+        content: [
+          { x: 0, y: 0, text: "a" },
+          { x: 2, y: 0, text: "=" },
+          {
+            x: 4,
+            y: 0,
+            tagName: "b",
+            attributes: [],
+            content: [
+              { x: 0, y: 0, text: "(" },
+              { x: -8, y: 1, text: "x" },
+              { x: -10, y: 2, text: ")" },
+            ],
+          },
+          { x: 2, y: 2, text: "=" },
+          { x: 3, y: 2, text: ">" },
+          { x: 5, y: 2, text: "[" },
+          { x: -4, y: 3, text: "x" },
+          { x: -6, y: 4, text: "]" },
+        ],
+      },
+      { text: ";", x: 1, y: 4 },
     ]);
   });
 

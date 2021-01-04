@@ -1,5 +1,5 @@
-import { tokenizeCode } from "./tokenizer";
 import { TextBox, Code } from "./types";
+import { tokenize } from "./tokenizer";
 
 const isHTMLElement = (arg: any): arg is HTMLElement => {
   if (!arg) {
@@ -56,6 +56,6 @@ const extractCode = (source: Element): Code[] => {
 export const processCode = (source: Element): TextBox => {
   const tagName = source.tagName.toLowerCase();
   const attributes = getAttributes(source);
-  const { content } = tokenizeCode(extractCode(source), 0, 0);
+  const content = tokenize(extractCode(source));
   return { x: 0, y: 0, tagName, attributes, content };
 };

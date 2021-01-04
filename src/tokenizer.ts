@@ -38,9 +38,12 @@ const measureWhitespace = (
 
 const tokenizeText = (
   text: string,
-  x: number,
-  y: number
+  inputX: number,
+  inputY: number,
+  indent: number
 ): { lastX: number; lastY: number; tokens: TextToken[] } => {
+  let x = inputX;
+  let y = inputY;
   const parts = splitText(text);
   const tokens: TextToken[] = [];
   for (const part of parts) {
@@ -48,7 +51,7 @@ const tokenizeText = (
       const { breaks, length } = measureWhitespace(part);
       if (breaks > 0) {
         y += breaks;
-        x = length;
+        x = length - indent;
       } else {
         x += length;
       }
@@ -61,15 +64,25 @@ const tokenizeText = (
       x += part.length;
     }
   }
-  return { tokens, lastX: x, lastY: y };
+  return {
+    tokens,
+    lastX: y !== inputY ? x + indent : x,
+    lastY: y,
+  };
 };
 
 const tokenizeContainer = (
   container: CodeContainer,
   x: number,
-  y: number
+  y: number,
+  indent: number
 ): { box: TextBox; lastX: number; lastY: number } => {
-  const { content, lastX, lastY } = tokenizeCode(container.content, 0, 0);
+  const { content, lastX, lastY } = tokenizeCode(
+    container.content,
+    0,
+    0,
+    indent + x
+  );
   return {
     box: {
       x,
@@ -83,26 +96,31 @@ const tokenizeContainer = (
   };
 };
 
-export const tokenizeCode = (
+const tokenizeCode = (
   codes: Code[],
   x: number,
-  y: number
+  y: number,
+  indent: number
 ): { lastX: number; lastY: number; content: (TextToken | TextBox)[] } => {
   let lastX = x;
   let lastY = y;
   const content: (TextBox | TextToken)[] = [];
   for (const code of codes) {
     if (typeof code === "string") {
-      const text = tokenizeText(code, lastX, lastY);
+      const text = tokenizeText(code, lastX, lastY, indent);
       content.push(...text.tokens);
       lastX = text.lastX;
       lastY = text.lastY;
     } else {
-      const box = tokenizeContainer(code, lastX, lastY);
+      const box = tokenizeContainer(code, lastX, lastY, indent);
       content.push(box.box);
       lastX = box.lastX;
       lastY = box.lastY;
     }
   }
   return { lastX, lastY, content };
+};
+
+export const tokenize = (codes: Code[]): (TextToken | TextBox)[] => {
+  return tokenizeCode(codes, 0, 0, 0).content;
 };

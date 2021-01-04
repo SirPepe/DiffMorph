@@ -15,6 +15,7 @@ export type TextToken = {
   text: string;
 };
 
+// Represents an element containing a bunch of text tokens
 export type TextBox = {
   x: number;
   y: number;
