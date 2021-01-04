@@ -1,0 +1,14 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "module": "commonjs",
+    "outDir": "temp",
+    "declaration": true,
+    "declarationDir": "dist/types/",
+    "esModuleInterop": true
+  },
+  "include": [
+    "src/**/*",
+    "test/**/*"
+  ]
+}
