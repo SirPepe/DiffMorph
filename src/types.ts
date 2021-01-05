@@ -8,6 +8,14 @@ export type CodeContainer = {
   content: Code[];
 };
 
+// Represents a highlight
+export type HighlightToken = {
+  tagName: string;
+  attributes: [string, string][];
+  start: [number, number];
+  end: [number, number];
+};
+
 // Represents a text token
 export type TextToken = {
   x: number;
@@ -16,10 +24,22 @@ export type TextToken = {
 };
 
 // Represents an element containing a bunch of text tokens
-export type TextBox = {
+export type BoxToken = {
   x: number;
   y: number;
   tagName: string;
   attributes: [string, string][];
-  content: (TextToken | TextBox)[];
+  tokens: (TextToken | BoxToken)[];
+};
+
+export const isTextToken = (
+  x: TextToken | BoxToken | HighlightToken
+): x is TextToken => "text" in x && typeof x.text === "string";
+
+// Represents a typed text token
+export type TypedToken = {
+  x: number;
+  y: number;
+  text: string;
+  type: string;
 };

@@ -1,4 +1,4 @@
-import { TextBox, Code } from "./types";
+import { BoxToken, Code, HighlightToken } from "./types";
 import { tokenize } from "./tokenizer";
 
 const isHTMLElement = (arg: any): arg is HTMLElement => {
@@ -53,9 +53,9 @@ const extractCode = (source: Element): Code[] => {
   return extracted;
 };
 
-export const processCode = (source: Element): TextBox => {
+export const processCode = (source: Element): [BoxToken, HighlightToken[]] => {
   const tagName = source.tagName.toLowerCase();
   const attributes = getAttributes(source);
-  const content = tokenize(extractCode(source));
-  return { x: 0, y: 0, tagName, attributes, content };
+  const { tokens, highlights } = tokenize(extractCode(source));
+  return [{ x: 0, y: 0, tagName, attributes, tokens }, highlights];
 };

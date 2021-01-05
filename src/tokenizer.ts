@@ -1,7 +1,43 @@
-import { Code, CodeContainer, TextBox, TextToken } from "./types";
+import {
+  Code,
+  CodeContainer,
+  BoxToken,
+  TextToken,
+  HighlightToken,
+  isTextToken,
+} from "./types";
 
 const ONLY_WHITESPACE_RE = /^\s+$/;
 const LINE_BREAK_RE = /[\r\n]/;
+
+const isHighlightBox = (tagName: string) => tagName === "mark";
+
+const unwrapFirst = (token: TextToken | BoxToken): TextToken => {
+  if (isTextToken(token)) {
+    return token;
+  } else {
+    return unwrapFirst(token.tokens[0]);
+  }
+};
+
+const unwrapLast = (token: TextToken | BoxToken): TextToken => {
+  if (isTextToken(token)) {
+    return token;
+  } else {
+    return unwrapFirst(token.tokens[token.tokens.length - 1]);
+  }
+};
+
+const measureSpan = (
+  content: (TextToken | BoxToken)[]
+): [start: [number, number], end: [number, number]] => {
+  const first = unwrapFirst(content[0]);
+  const last = unwrapLast(content[content.length - 1]);
+  return [
+    [first.x, first.y],
+    [last.x + last.text.length, last.y],
+  ];
+};
 
 const splitText = (text: string): string[] => {
   const tokens = [];
@@ -36,12 +72,19 @@ const measureWhitespace = (
   };
 };
 
+type TokenizerResult = {
+  lastX: number;
+  lastY: number;
+  tokens: (TextToken | BoxToken)[];
+  highlights: HighlightToken[];
+};
+
 const tokenizeText = (
   text: string,
   inputX: number,
   inputY: number,
   indent: number
-): { lastX: number; lastY: number; tokens: TextToken[] } => {
+): TokenizerResult => {
   let x = inputX;
   let y = inputY;
   const parts = splitText(text);
@@ -56,18 +99,15 @@ const tokenizeText = (
         x += length;
       }
     } else {
-      tokens.push({
-        x,
-        y,
-        text: part,
-      });
+      tokens.push({ x, y, text: part });
       x += part.length;
     }
   }
   return {
-    tokens,
     lastX: y !== inputY ? x + indent : x,
     lastY: y,
+    tokens,
+    highlights: [],
   };
 };
 
@@ -76,23 +116,26 @@ const tokenizeContainer = (
   x: number,
   y: number,
   indent: number
-): { box: TextBox; lastX: number; lastY: number } => {
-  const { content, lastX, lastY } = tokenizeCode(
+): TokenizerResult => {
+  const { tokens, highlights, lastX, lastY } = tokenizeCode(
     container.content,
     0,
     0,
     indent + x
   );
   return {
-    box: {
-      x,
-      y,
-      tagName: container.tagName,
-      attributes: container.attributes,
-      content,
-    },
     lastX: lastY !== y ? lastX : lastX + x,
     lastY: lastY + y,
+    tokens: [
+      {
+        x,
+        y,
+        tagName: container.tagName,
+        attributes: container.attributes,
+        tokens,
+      },
+    ],
+    highlights,
   };
 };
 
@@ -101,26 +144,45 @@ const tokenizeCode = (
   x: number,
   y: number,
   indent: number
-): { lastX: number; lastY: number; content: (TextToken | TextBox)[] } => {
+): TokenizerResult => {
   let lastX = x;
   let lastY = y;
-  const content: (TextBox | TextToken)[] = [];
+  const tokens: (BoxToken | TextToken)[] = [];
+  const highlights: HighlightToken[] = [];
   for (const code of codes) {
     if (typeof code === "string") {
-      const text = tokenizeText(code, lastX, lastY, indent);
-      content.push(...text.tokens);
-      lastX = text.lastX;
-      lastY = text.lastY;
+      const textResult = tokenizeText(code, lastX, lastY, indent);
+      tokens.push(...textResult.tokens);
+      lastX = textResult.lastX;
+      lastY = textResult.lastY;
     } else {
-      const box = tokenizeContainer(code, lastX, lastY, indent);
-      content.push(box.box);
-      lastX = box.lastX;
-      lastY = box.lastY;
+      if (isHighlightBox(code.tagName)) {
+        const highlight = tokenizeCode(code.content, lastX, lastY, indent);
+        tokens.push(...highlight.tokens);
+        const span = measureSpan(highlight.tokens);
+        highlights.push({
+          tagName: code.tagName,
+          attributes: code.attributes,
+          start: [span[0][0] + indent, span[0][1]],
+          end: [span[1][0] + indent, span[1][1]],
+        });
+        lastX = highlight.lastX;
+        lastY = highlight.lastY;
+      } else {
+        const boxResult = tokenizeContainer(code, lastX, lastY, indent);
+        tokens.push(...boxResult.tokens);
+        highlights.push(...boxResult.highlights);
+        lastX = boxResult.lastX;
+        lastY = boxResult.lastY;
+      }
     }
   }
-  return { lastX, lastY, content };
+  return { lastX, lastY, tokens, highlights };
 };
 
-export const tokenize = (codes: Code[]): (TextToken | TextBox)[] => {
-  return tokenizeCode(codes, 0, 0, 0).content;
+export const tokenize = (
+  codes: Code[]
+): { tokens: (TextToken | BoxToken)[]; highlights: HighlightToken[] } => {
+  const { tokens, highlights } = tokenizeCode(codes, 0, 0, 0);
+  return { tokens, highlights };
 };

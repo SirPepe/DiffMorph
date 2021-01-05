@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test-dev": "jest --watch"
   },
   "author": "peter@peterkroener.de",
   "license": "ISC",

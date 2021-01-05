@@ -5,10 +5,10 @@ describe("processing code", () => {
 
   test("it splits code", () => {
     container.innerHTML = "const a = () => 42";
-    const { x, y, content } = processCode(container);
+    const [{ x, y, tokens }, highlights] = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
-    expect(content).toEqual([
+    expect(tokens).toEqual([
       { x: 0, y: 0, text: "const" },
       { x: 6, y: 0, text: "a" },
       { x: 8, y: 0, text: "=" },
@@ -18,16 +18,17 @@ describe("processing code", () => {
       { x: 14, y: 0, text: ">" },
       { x: 16, y: 0, text: "42" },
     ]);
+    expect(highlights).toEqual([]);
   });
 
   test("it splits multi-line code", () => {
     container.innerHTML = `const a = () => {
   return 42;
 };`;
-    const { x, y, content } = processCode(container);
+    const [{ x, y, tokens }, highlights] = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
-    expect(content).toEqual([
+    expect(tokens).toEqual([
       { x: 0, y: 0, text: "const" },
       { x: 6, y: 0, text: "a" },
       { x: 8, y: 0, text: "=" },
@@ -42,21 +43,22 @@ describe("processing code", () => {
       { x: 0, y: 2, text: "}" },
       { x: 1, y: 2, text: ";" },
     ]);
+    expect(highlights).toEqual([]);
   });
 
   test("it handles boxes", () => {
     container.innerHTML = "const <span foo='bar'>a = () => 42</span>";
-    const { x, y, content } = processCode(container);
+    const [{ x, y, tokens }, highlights] = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
-    expect(content).toEqual([
+    expect(tokens).toEqual([
       { x: 0, y: 0, text: "const" },
       {
         x: 6,
         y: 0,
         tagName: "span",
         attributes: [["foo", "bar"]],
-        content: [
+        tokens: [
           { x: 0, y: 0, text: "a" },
           { x: 2, y: 0, text: "=" },
           { x: 4, y: 0, text: "(" },
@@ -67,16 +69,17 @@ describe("processing code", () => {
         ],
       },
     ]);
+    expect(highlights).toEqual([]);
   });
 
   test("it handles multi-line boxes", () => {
     container.innerHTML = `const a = () => <span class="a">{
   return 42;
 }</span>;`;
-    const { x, y, content } = processCode(container);
+    const [{ x, y, tokens }, highlights] = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
-    expect(content).toEqual([
+    expect(tokens).toEqual([
       { x: 0, y: 0, text: "const" },
       { x: 6, y: 0, text: "a" },
       { x: 8, y: 0, text: "=" },
@@ -89,7 +92,7 @@ describe("processing code", () => {
         y: 0,
         tagName: "span",
         attributes: [["class", "a"]],
-        content: [
+        tokens: [
           { x: 0, y: 0, text: "{" },
           { x: -14, y: 1, text: "return" },
           { x: -7, y: 1, text: "42" },
@@ -99,21 +102,22 @@ describe("processing code", () => {
       },
       { x: 1, y: 2, text: ";" },
     ]);
+    expect(highlights).toEqual([]);
   });
 
   test("it handles boxes inside boxes", () => {
     container.innerHTML = "const <span foo='bar'>a = <b>()</b> => 42</span>";
-    const { x, y, content } = processCode(container);
+    const [{ x, y, tokens }, highlights] = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
-    expect(content).toEqual([
+    expect(tokens).toEqual([
       { x: 0, y: 0, text: "const" },
       {
         x: 6,
         y: 0,
         tagName: "span",
         attributes: [["foo", "bar"]],
-        content: [
+        tokens: [
           { x: 0, y: 0, text: "a" },
           { x: 2, y: 0, text: "=" },
           {
@@ -121,7 +125,7 @@ describe("processing code", () => {
             y: 0,
             tagName: "b",
             attributes: [],
-            content: [
+            tokens: [
               { x: 0, y: 0, text: "(" },
               { x: 1, y: 0, text: ")" },
             ],
@@ -132,6 +136,7 @@ describe("processing code", () => {
         ],
       },
     ]);
+    expect(highlights).toEqual([]);
   });
 
   test("it handles multi-line boxes inside multi-line", () => {
@@ -140,17 +145,17 @@ describe("processing code", () => {
 )</b> => [
   x
 ]</span>;`;
-    const { x, y, content } = processCode(container);
+    const [{ x, y, tokens }, highlights] = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
-    expect(content).toEqual([
+    expect(tokens).toEqual([
       { x: 0, y: 0, text: "const" },
       {
         x: 6,
         y: 0,
         tagName: "span",
         attributes: [["foo", "bar"]],
-        content: [
+        tokens: [
           { x: 0, y: 0, text: "a" },
           { x: 2, y: 0, text: "=" },
           {
@@ -158,7 +163,7 @@ describe("processing code", () => {
             y: 0,
             tagName: "b",
             attributes: [],
-            content: [
+            tokens: [
               { x: 0, y: 0, text: "(" },
               { x: -8, y: 1, text: "x" },
               { x: -10, y: 2, text: ")" },
@@ -173,14 +178,15 @@ describe("processing code", () => {
       },
       { text: ";", x: 1, y: 4 },
     ]);
+    expect(highlights).toEqual([]);
   });
 
-  /*test.skip("it handles highlights", () => {
+  test("it handles highlights", () => {
     container.innerHTML = "const a = () => <mark>42</mark>";
-    const { x, y, content } = processCode(container);
+    const [{ x, y, tokens }, highlights] = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
-    expect(content).toEqual([
+    expect(tokens).toEqual([
       { x: 0, y: 0, text: "const" },
       { x: 6, y: 0, text: "a" },
       { x: 8, y: 0, text: "=" },
@@ -190,16 +196,56 @@ describe("processing code", () => {
       { x: 14, y: 0, text: ">" },
       { x: 16, y: 0, text: "42" },
     ]);
+    expect(highlights).toEqual([
+      {
+        tagName: "mark",
+        attributes: [],
+        start: [16, 0],
+        end: [18, 0],
+      },
+    ]);
   });
 
-  test.skip("it splits multi-line highlights", () => {
+  test("it handles multiple highlights", () => {
+    container.innerHTML =
+      "const <mark class='a'>a</mark> = () => <mark class='b'>42</mark>";
+    const [{ x, y, tokens }, highlights] = processCode(container);
+    expect(x).toBe(0);
+    expect(y).toBe(0);
+    expect(tokens).toEqual([
+      { x: 0, y: 0, text: "const" },
+      { x: 6, y: 0, text: "a" },
+      { x: 8, y: 0, text: "=" },
+      { x: 10, y: 0, text: "(" },
+      { x: 11, y: 0, text: ")" },
+      { x: 13, y: 0, text: "=" },
+      { x: 14, y: 0, text: ">" },
+      { x: 16, y: 0, text: "42" },
+    ]);
+    expect(highlights).toEqual([
+      {
+        tagName: "mark",
+        attributes: [["class", "a"]],
+        start: [6, 0],
+        end: [7, 0],
+      },
+      {
+        tagName: "mark",
+        attributes: [["class", "b"]],
+        start: [16, 0],
+        end: [18, 0],
+      },
+    ]);
+  });
+
+  test("it handles multi-line highlights", () => {
     container.innerHTML = `const a = () => <mark>{
   return 42;
 }</mark>`;
-    const { x, y, content } = processCode(container);
+    const [{ x, y, tokens }, highlights] = processCode(container);
     expect(x).toBe(0);
     expect(y).toBe(0);
-    expect(content).toEqual([
+    expect(tokens).toEqual([
       { x: 0, y: 0, text: "const" },
       { x: 6, y: 0, text: "a" },
       { x: 8, y: 0, text: "=" },
@@ -213,5 +259,55 @@ describe("processing code", () => {
       { x: 11, y: 1, text: ";" },
       { x: 0, y: 2, text: "}" },
     ]);
-  });*/
+    expect(highlights).toEqual([
+      {
+        tagName: "mark",
+        attributes: [],
+        start: [16, 0],
+        end: [1, 2],
+      },
+    ]);
+  });
+
+  test("it handles highlights in boxes inside boxes", () => {
+    container.innerHTML =
+      "const <span foo='bar'>a = <b><mark>()</mark></b> => 42</span>";
+    const [{ x, y, tokens }, highlights] = processCode(container);
+    expect(x).toBe(0);
+    expect(y).toBe(0);
+    expect(tokens).toEqual([
+      { x: 0, y: 0, text: "const" },
+      {
+        x: 6,
+        y: 0,
+        tagName: "span",
+        attributes: [["foo", "bar"]],
+        tokens: [
+          { x: 0, y: 0, text: "a" },
+          { x: 2, y: 0, text: "=" },
+          {
+            x: 4,
+            y: 0,
+            tagName: "b",
+            attributes: [],
+            tokens: [
+              { x: 0, y: 0, text: "(" },
+              { x: 1, y: 0, text: ")" },
+            ],
+          },
+          { x: 7, y: 0, text: "=" },
+          { x: 8, y: 0, text: ">" },
+          { x: 10, y: 0, text: "42" },
+        ],
+      },
+    ]);
+    expect(highlights).toEqual([
+      {
+        tagName: "mark",
+        attributes: [],
+        start: [10, 0],
+        end: [12, 0],
+      },
+    ]);
+  });
 });
