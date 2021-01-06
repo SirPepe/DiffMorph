@@ -72,6 +72,30 @@ describe("processing code", () => {
     expect(highlights).toEqual([]);
   });
 
+  test("it handles boxes in the middle of code", () => {
+    container.innerHTML = "const <span foo='bar'>a</span> = () => 42";
+    const [{ x, y, tokens }, highlights] = processCode(container);
+    expect(x).toBe(0);
+    expect(y).toBe(0);
+    expect(tokens).toEqual([
+      { x: 0, y: 0, text: "const" },
+      {
+        x: 6,
+        y: 0,
+        tagName: "span",
+        attributes: [["foo", "bar"]],
+        tokens: [{ x: 0, y: 0, text: "a" }],
+      },
+      { x: 8, y: 0, text: "=" },
+      { x: 10, y: 0, text: "(" },
+      { x: 11, y: 0, text: ")" },
+      { x: 13, y: 0, text: "=" },
+      { x: 14, y: 0, text: ">" },
+      { x: 16, y: 0, text: "42" },
+    ]);
+    expect(highlights).toEqual([]);
+  });
+
   test("it handles multi-line boxes", () => {
     container.innerHTML = `const a = () => <span class="a">{
   return 42;
@@ -139,7 +163,7 @@ describe("processing code", () => {
     expect(highlights).toEqual([]);
   });
 
-  test("it handles multi-line boxes inside multi-line", () => {
+  test("it handles multi-line boxes inside multi-line boxes", () => {
     container.innerHTML = `const <span foo='bar'>a = <b>(
   x
 )</b> => [
@@ -177,6 +201,36 @@ describe("processing code", () => {
         ],
       },
       { text: ";", x: 1, y: 4 },
+    ]);
+    expect(highlights).toEqual([]);
+  });
+
+  test("creates correct box offsets", () => {
+    container.innerHTML = `let <a>x
+  =
+    <b>42</b></a>`;
+    const [{ x, y, tokens }, highlights] = processCode(container);
+    expect(x).toBe(0);
+    expect(y).toBe(0);
+    expect(tokens).toEqual([
+      { x: 0, y: 0, text: "let" },
+      {
+        x: 4,
+        y: 0,
+        tagName: "a",
+        attributes: [],
+        tokens: [
+          { x: 0, y: 0, text: "x" },
+          { x: -2, y: 1, text: "=" },
+          {
+            x: 4,
+            y: 2,
+            tagName: "b",
+            attributes: [],
+            tokens: [{ x: 0, y: 0, text: "42" }],
+          },
+        ],
+      },
     ]);
     expect(highlights).toEqual([]);
   });
