@@ -36,10 +36,21 @@ export const isTextToken = (
   x: TextToken | BoxToken | HighlightToken
 ): x is TextToken => "text" in x && typeof x.text === "string";
 
-// Represents a typed text token
-export type TypedToken = {
+// Represents a text token that gets passed into a language function
+export type LanguageToken = {
+  x: number;
+  y: number;
+  text: string;
+  prev: LanguageToken | undefined;
+  next: LanguageToken | undefined;
+};
+
+// Represents a text token that was passed through a language function
+export type TypedLanguageToken = {
   x: number;
   y: number;
   text: string;
   type: string;
+  prev: TypedLanguageToken | undefined;
+  next: TypedLanguageToken | undefined;
 };
