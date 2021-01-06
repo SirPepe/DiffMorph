@@ -14,10 +14,42 @@ describe("language", () => {
         { x: 8, y: 0, text: "42" },
       ],
     };
-    const e1 = { x: 0, y: 0, text: "let", next: undefined, prev: undefined };
-    const e2 = { x: 4, y: 0, text: "x", next: undefined, prev: e1 };
-    const e3 = { x: 6, y: 0, text: "=", next: undefined, prev: e2 };
-    const e4 = { x: 8, y: 0, text: "42", next: undefined, prev: e3 };
+    const e1: any = {
+      x: 0,
+      y: 0,
+      text: "let",
+      parent: input,
+      source: input.tokens[0],
+      next: undefined,
+      prev: undefined,
+    };
+    const e2: any = {
+      x: 4,
+      y: 0,
+      text: "x",
+      parent: input,
+      source: input.tokens[1],
+      next: undefined,
+      prev: e1,
+    };
+    const e3: any = {
+      x: 6,
+      y: 0,
+      text: "=",
+      parent: input,
+      source: input.tokens[2],
+      next: undefined,
+      prev: e2,
+    };
+    const e4: any = {
+      x: 8,
+      y: 0,
+      text: "42",
+      parent: input,
+      source: input.tokens[3],
+      next: undefined,
+      prev: e3,
+    };
     e1.next = e2;
     e2.next = e3;
     e3.next = e4;
@@ -54,10 +86,42 @@ describe("language", () => {
         },
       ],
     };
-    const e1 = { x: 0, y: 0, text: "let", next: undefined, prev: undefined };
-    const e2 = { x: 4, y: 0, text: "x", next: undefined, prev: e1 };
-    const e3 = { x: 2, y: 1, text: "=", next: undefined, prev: e2 };
-    const e4 = { x: 4, y: 2, text: "42", next: undefined, prev: e3 };
+    const e1: any = {
+      x: 0,
+      y: 0,
+      text: "let",
+      parent: input,
+      source: input.tokens[0],
+      next: undefined,
+      prev: undefined,
+    };
+    const e2: any = {
+      x: 4,
+      y: 0,
+      text: "x",
+      parent: input.tokens[1],
+      source: input.tokens?.[1]?.tokens?.[0],
+      next: undefined,
+      prev: e1,
+    };
+    const e3: any = {
+      x: 2,
+      y: 1,
+      text: "=",
+      parent: input.tokens[1],
+      source: input.tokens?.[1]?.tokens?.[1],
+      next: undefined,
+      prev: e2,
+    };
+    const e4: any = {
+      x: 4,
+      y: 2,
+      text: "42",
+      parent: input.tokens?.[1]?.tokens?.[2],
+      source: input.tokens?.[1]?.tokens?.[2]?.tokens?.[0],
+      next: undefined,
+      prev: e3,
+    };
     e1.next = e2;
     e2.next = e3;
     e3.next = e4;

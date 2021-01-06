@@ -3,6 +3,7 @@
     "target": "esnext",
     "module": "commonjs",
     "outDir": "temp",
+    "strict": true,
     "declaration": true,
     "declarationDir": "dist/types/",
     "esModuleInterop": true

@@ -37,7 +37,7 @@ const extractCode = (source: Element): Code[] => {
   const children = Array.from(source.childNodes).filter(isDomContent);
   const extracted: Code[] = [];
   for (const child of children) {
-    if (isText(child) && child.textContent !== "") {
+    if (isText(child) && child.textContent) {
       extracted.push(child.textContent);
     } else if (isHTMLElement(child)) {
       const tagName = child.tagName.toLowerCase();

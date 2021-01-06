@@ -43,6 +43,8 @@ export type LanguageToken = {
   text: string;
   prev: LanguageToken | undefined;
   next: LanguageToken | undefined;
+  source: TextToken;
+  parent: BoxToken | undefined;
 };
 
 // Represents a text token that was passed through a language function
@@ -53,4 +55,6 @@ export type TypedLanguageToken = {
   type: string;
   prev: TypedLanguageToken | undefined;
   next: TypedLanguageToken | undefined;
+  source: TextToken;
+  parent: BoxToken | undefined;
 };
