@@ -1,4 +1,12 @@
-import { BoxToken, isTextToken, LanguageToken, TextToken } from "./types";
+import { hash, last } from "./lib";
+import {
+  BoxToken,
+  isTextToken,
+  LanguageToken,
+  TextToken,
+  TypedLanguageToken,
+  TypedToken,
+} from "./types";
 
 const toLanguageToken = (
   source: BoxToken | TextToken,
@@ -26,30 +34,69 @@ export const toLanguageTokens = (
   x = 0,
   y = 0
 ): LanguageToken => {
-  let first: LanguageToken | undefined;
-  let prev: LanguageToken | undefined;
+  let head: LanguageToken | undefined;
+  let tail: LanguageToken | undefined;
   for (const token of root.tokens) {
     const languageToken = toLanguageToken(token, root, x, y);
-    if (!first) {
-      first = languageToken;
+    if (!head || !tail) {
+      head = tail = languageToken;
+      continue;
     }
-    languageToken.prev = prev;
-    if (prev) {
-      prev.next = languageToken;
-    }
-    prev = languageToken;
+    languageToken.prev = tail;
+    tail.next = languageToken;
+    tail = last(tail);
   }
-  if (!first) {
+  if (!head) {
     throw new Error("Can't create language tokens from empty box");
   }
-  return first;
+  return head;
 };
 
-/*export const applyLanguage = (
+const applyLanguageDefinition = (
+  language: (token: LanguageToken) => string,
+  input: LanguageToken
+): TypedLanguageToken => {
+  const head: any = input;
+  let token: any = input;
+  while (token) {
+    token.type = language(token);
+    token = token.next;
+  }
+  return head;
+};
+
+export const applyLanguage = (
   definitionFactory: () => (token: LanguageToken) => string,
   gluePredicate: (token: TypedLanguageToken) => boolean,
-  input: LanguageToken
+  tokens: (BoxToken | TextToken)[]
 ): TypedToken[] => {
-  const language = definitionFactory();
-  return joinedTokens;
-};*/
+  const rootBox =
+    tokens.length === 1 && !isTextToken(tokens[0])
+      ? tokens[0]
+      : { x: 0, y: 0, tagName: "", attributes: [], tokens };
+  const typed = applyLanguageDefinition(
+    definitionFactory(),
+    toLanguageTokens(rootBox)
+  );
+  const joined: TypedToken[] = [];
+  let token: TypedLanguageToken | undefined = typed;
+  while (token) {
+    if (joined.length > 0 && gluePredicate(token)) {
+      joined[joined.length - 1].text += token.text;
+    } else {
+      if (joined.length > 0) {
+        joined[joined.length - 1].hash = hash(
+          hash(token.type) + hash(token.text)
+        );
+      }
+      joined.push({
+        ...token.source,
+        parent: token.parent,
+        type: token.type,
+        hash: "",
+      });
+    }
+    token = token.next;
+  }
+  return joined;
+};

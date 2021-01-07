@@ -44,7 +44,7 @@ export type LanguageToken = {
   prev: LanguageToken | undefined;
   next: LanguageToken | undefined;
   source: TextToken;
-  parent: BoxToken | undefined;
+  parent: BoxToken;
 };
 
 // Represents a text token that was passed through a language function
@@ -56,5 +56,15 @@ export type TypedLanguageToken = {
   prev: TypedLanguageToken | undefined;
   next: TypedLanguageToken | undefined;
   source: TextToken;
-  parent: BoxToken | undefined;
+  parent: BoxToken;
+};
+
+// Represents text tokens that were passed through language and a glue functions
+export type TypedToken = {
+  x: number;
+  y: number;
+  text: string;
+  type: string;
+  hash: string;
+  parent: BoxToken;
 };
