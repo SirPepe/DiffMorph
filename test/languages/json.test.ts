@@ -9,7 +9,7 @@ describe("Basic JSON", () => {
     expect(types).toEqual(["token", "token"]);
   });
 
-  test("Empty object", () => {
+  test("Empty array", () => {
     const tokens = json(`[]`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual(["token", "token"]);
