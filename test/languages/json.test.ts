@@ -68,6 +68,22 @@ describe("Basic JSON", () => {
       "token",
     ]);
   });
+
+  test("Key and object value", () => {
+    const tokens = json(`{ "foo": { "bar": false } }`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "token",
+      "string",
+      "token",
+      "token",
+      "string",
+      "token",
+      "keyword-false",
+      "token",
+      "token",
+    ]);
+  });
 });
 
 describe("Comments in JSON", () => {
