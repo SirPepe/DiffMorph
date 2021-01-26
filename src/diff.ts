@@ -15,9 +15,9 @@ type Line<T extends TokenLike> = {
   readonly items: T[];
 };
 
-// Create a hash of a list of tokens by concatenating their hashes and their
-// *relative* distance on the x axis. The allover level of indentation is not
-// reflected in the hash - two lines containing the same characters the same
+// Create a hash of a list of tokens by concatenating the token's hashes and
+// their *relative* distance on the x axis. The allover level of indentation is
+// not reflected in the hash - two lines containing the same characters the same
 // distance apart get the same hash, no matter the indentation
 const hashLine = (items: TokenLike[]): string => {
   const hashes = items.map((item, idx) => {
