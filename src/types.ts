@@ -51,6 +51,7 @@ export type LanguageToken = {
 export type TypedLanguageToken = {
   x: number;
   y: number;
+  id: string;
   text: string;
   type: string;
   prev: TypedLanguageToken | undefined;
@@ -63,6 +64,7 @@ export type TypedLanguageToken = {
 export type TypedToken = {
   x: number;
   y: number;
+  id: string;
   text: string;
   type: string;
   hash: string;
