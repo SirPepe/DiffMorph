@@ -1,4 +1,4 @@
-import { createIdGenerator, hash, last } from "./lib";
+import { hash, last } from "./lib";
 import {
   BoxToken,
   isTextToken,
@@ -70,11 +70,10 @@ export const applyLanguage = (
   gluePredicate: (token: TypedLanguageToken) => boolean,
   tokens: (BoxToken | TextToken)[]
 ): TypedToken[] => {
-  const idGenerator = createIdGenerator();
   const rootBox =
     tokens.length === 1 && !isTextToken(tokens[0])
       ? tokens[0]
-      : { x: 0, y: 0, tagName: "", attributes: [], tokens };
+      : { x: 0, y: 0, tagName: "", hash: "", attributes: [], tokens };
   const typed = applyLanguageDefinition(
     definitionFactory(),
     toLanguageTokens(rootBox)
@@ -88,14 +87,12 @@ export const applyLanguage = (
       if (joined.length > 0) {
         const last = joined[joined.length - 1];
         last.hash = hash(hash(last.type) + hash(last.text));
-        last.id = idGenerator(last.parent, last.hash);
       }
       joined.push({
         ...token.source,
         parent: token.parent,
         type: token.type,
         hash: "", // filled when the next token is processed
-        id: "", // filled when the next token is processed
       });
     }
     token = token.next;

@@ -1,3 +1,4 @@
+import { hash } from "./lib";
 import {
   Code,
   CodeContainer,
@@ -9,6 +10,9 @@ import {
 
 const ONLY_WHITESPACE_RE = /^\s+$/;
 const LINE_BREAK_RE = /[\r\n]/;
+
+const hashBox = (tagName: string, attributes: [string, string][]): string =>
+  hash(tagName + "|" + attributes.map((pair) => pair.join("=")).join("|"));
 
 const isHighlightBox = (tagName: string) => tagName === "mark";
 
@@ -132,6 +136,7 @@ const tokenizeContainer = (
         y,
         tagName: container.tagName,
         attributes: container.attributes,
+        hash: hashBox(container.tagName, container.attributes),
         tokens,
       },
     ],
@@ -163,6 +168,7 @@ const tokenizeCode = (
         highlights.push({
           tagName: code.tagName,
           attributes: code.attributes,
+          hash: hashBox(code.tagName, code.attributes),
           start: [span[0][0] + indent, span[0][1]],
           end: [span[1][0] + indent, span[1][1]],
         });

@@ -58,6 +58,7 @@ describe("processing code", () => {
         y: 0,
         tagName: "span",
         attributes: [["foo", "bar"]],
+        hash: expect.any(String),
         tokens: [
           { x: 0, y: 0, text: "a" },
           { x: 2, y: 0, text: "=" },
@@ -84,6 +85,7 @@ describe("processing code", () => {
         y: 0,
         tagName: "span",
         attributes: [["foo", "bar"]],
+        hash: expect.any(String),
         tokens: [{ x: 0, y: 0, text: "a" }],
       },
       { x: 8, y: 0, text: "=" },
@@ -116,6 +118,7 @@ describe("processing code", () => {
         y: 0,
         tagName: "span",
         attributes: [["class", "a"]],
+        hash: expect.any(String),
         tokens: [
           { x: 0, y: 0, text: "{" },
           { x: -14, y: 1, text: "return" },
@@ -141,6 +144,7 @@ describe("processing code", () => {
         y: 0,
         tagName: "span",
         attributes: [["foo", "bar"]],
+        hash: expect.any(String),
         tokens: [
           { x: 0, y: 0, text: "a" },
           { x: 2, y: 0, text: "=" },
@@ -149,6 +153,7 @@ describe("processing code", () => {
             y: 0,
             tagName: "b",
             attributes: [],
+            hash: expect.any(String),
             tokens: [
               { x: 0, y: 0, text: "(" },
               { x: 1, y: 0, text: ")" },
@@ -179,6 +184,7 @@ describe("processing code", () => {
         y: 0,
         tagName: "span",
         attributes: [["foo", "bar"]],
+        hash: expect.any(String),
         tokens: [
           { x: 0, y: 0, text: "a" },
           { x: 2, y: 0, text: "=" },
@@ -187,6 +193,7 @@ describe("processing code", () => {
             y: 0,
             tagName: "b",
             attributes: [],
+            hash: expect.any(String),
             tokens: [
               { x: 0, y: 0, text: "(" },
               { x: -8, y: 1, text: "x" },
@@ -219,6 +226,7 @@ describe("processing code", () => {
         y: 0,
         tagName: "a",
         attributes: [],
+        hash: expect.any(String),
         tokens: [
           { x: 0, y: 0, text: "x" },
           { x: -2, y: 1, text: "=" },
@@ -227,6 +235,7 @@ describe("processing code", () => {
             y: 2,
             tagName: "b",
             attributes: [],
+            hash: expect.any(String),
             tokens: [{ x: 0, y: 0, text: "42" }],
           },
         ],
@@ -254,6 +263,7 @@ describe("processing code", () => {
       {
         tagName: "mark",
         attributes: [],
+        hash: expect.any(String),
         start: [16, 0],
         end: [18, 0],
       },
@@ -280,12 +290,14 @@ describe("processing code", () => {
       {
         tagName: "mark",
         attributes: [["class", "a"]],
+        hash: expect.any(String),
         start: [6, 0],
         end: [7, 0],
       },
       {
         tagName: "mark",
         attributes: [["class", "b"]],
+        hash: expect.any(String),
         start: [16, 0],
         end: [18, 0],
       },
@@ -317,6 +329,7 @@ describe("processing code", () => {
       {
         tagName: "mark",
         attributes: [],
+        hash: expect.any(String),
         start: [16, 0],
         end: [1, 2],
       },
@@ -336,6 +349,7 @@ describe("processing code", () => {
         y: 0,
         tagName: "span",
         attributes: [["foo", "bar"]],
+        hash: expect.any(String),
         tokens: [
           { x: 0, y: 0, text: "a" },
           { x: 2, y: 0, text: "=" },
@@ -344,6 +358,7 @@ describe("processing code", () => {
             y: 0,
             tagName: "b",
             attributes: [],
+            hash: expect.any(String),
             tokens: [
               { x: 0, y: 0, text: "(" },
               { x: 1, y: 0, text: ")" },
@@ -359,6 +374,7 @@ describe("processing code", () => {
       {
         tagName: "mark",
         attributes: [],
+        hash: expect.any(String),
         start: [10, 0],
         end: [12, 0],
       },

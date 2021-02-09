@@ -44,4 +44,19 @@ describe("diff", () => {
       deleted: [a[3], a[5]],
     });
   });
+
+  /*test("diffing boxes", () => {
+    const a = [
+      { x: 0, y: 0, hash: "a0" },
+      { x: 2, y: 0, hash: "a1" },
+      { x: 0, y: 1, hash: "b0" },
+      { x: 0, y: 1, hash: "b1" },
+      { x: 0, y: 1, hash: "b2" },
+      { x: 0, y: 2, hash: "c0" },
+    ];
+    const b = [
+
+    ];
+
+  });*/
 });
