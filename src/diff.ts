@@ -39,14 +39,17 @@ const asLines = <T extends TokenLike>(tokens: T[]): Line<T>[] => {
   });
 };
 
-const diffLines = (from: Line<TokenLike>[], to: Line<TokenLike>[]): {
-  moved: TokenLike[],
-  restFrom: TokenLike[],
-  restTo: TokenLike[],
+const diffLines = (
+  from: Line<TokenLike>[],
+  to: Line<TokenLike>[]
+): {
+  moved: TokenLike[];
+  restFrom: TokenLike[];
+  restTo: TokenLike[];
 } => {
   const moved = [];
-  const toById = new Map(to.map( (line) => [line.id, line]));
-  const fromById = new Map(from.map( (line) => [line.id, line]));
+  const toById = new Map(to.map((line) => [line.id, line]));
+  const fromById = new Map(from.map((line) => [line.id, line]));
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash,
     ignoreCase: false,
@@ -81,9 +84,12 @@ const diffLines = (from: Line<TokenLike>[], to: Line<TokenLike>[]): {
   };
 };
 
-const diffTokens = (from: TokenLike[], to: TokenLike[]): {
-  added: TokenLike[],
-  deleted: TokenLike[],
+const diffTokens = (
+  from: TokenLike[],
+  to: TokenLike[]
+): {
+  added: TokenLike[];
+  deleted: TokenLike[];
 } => {
   const added = [];
   const deleted = [];
@@ -101,10 +107,13 @@ const diffTokens = (from: TokenLike[], to: TokenLike[]): {
   return { added, deleted };
 };
 
-export const diff = (from: TokenLike[], to: TokenLike[]): {
-  moved: TokenLike[],
-  added: TokenLike[],
-  deleted: TokenLike[],
+export const diff = (
+  from: TokenLike[],
+  to: TokenLike[]
+): {
+  moved: TokenLike[];
+  added: TokenLike[];
+  deleted: TokenLike[];
 } => {
   const { moved, restFrom, restTo } = diffLines(asLines(from), asLines(to));
   const { added, deleted } = diffTokens(restFrom, restTo);
