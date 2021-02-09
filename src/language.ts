@@ -42,7 +42,17 @@ export const toLanguageTokens = (
       head = tail = languageToken;
       continue;
     }
-    languageToken.prev = tail;
+    // TypeScript rightfully complains about the following line, as "tail" is
+    // NOT a TypedLanguageToken as required by LanguageToken's type. But this is
+    // only a "problem" (as far as the type system is concerned) between this
+    // assignment and the tokens getting processed by the language definition
+    // function, which gets fed the output from this function without _any_
+    // intermediate steps and mutates prev into a TypedLanguageToken. The error
+    // is just a side effect of splitting applyLanguageDefinition() and
+    // toLanguageTokens() into two functions and can thus be ignored without any
+    // risk of breakage. The unit tests for languages (especially HTML) would
+    // fail if this were to cause any problem.
+    languageToken.prev = tail as any;
     tail.next = languageToken;
     tail = last(tail);
   }
@@ -65,6 +75,22 @@ const applyLanguageDefinition = (
   return head;
 };
 
+const toTypedTokens = (token: TypedLanguageToken | undefined): TypedToken[] => {
+  const result: TypedToken[] = [];
+  while (token) {
+    result.push({
+      x: token.x,
+      y: token.y,
+      text: token.text,
+      type: token.type,
+      hash: token.hash,
+      parent: token.parent,
+    });
+    token = token.next;
+  }
+  return result;
+};
+
 export const applyLanguage = (
   definitionFactory: () => (token: LanguageToken) => string,
   gluePredicate: (token: TypedLanguageToken) => boolean,
@@ -74,28 +100,23 @@ export const applyLanguage = (
     tokens.length === 1 && !isTextToken(tokens[0])
       ? tokens[0]
       : { x: 0, y: 0, tagName: "", hash: "", attributes: [], tokens };
-  const typed = applyLanguageDefinition(
+  const firstTyped = applyLanguageDefinition(
     definitionFactory(),
     toLanguageTokens(rootBox)
   );
-  const joined: TypedToken[] = [];
-  let token: TypedLanguageToken | undefined = typed;
+  // This joins the token in-place so that the glue function can benefit from
+  // working with already-glued previous tokens.
+  let token: TypedLanguageToken | undefined = firstTyped;
   while (token) {
-    if (joined.length > 0 && gluePredicate(token)) {
-      joined[joined.length - 1].text += token.text;
-    } else {
-      if (joined.length > 0) {
-        const last = joined[joined.length - 1];
-        last.hash = hash(hash(last.type) + hash(last.text));
+    if (token.prev && gluePredicate(token)) {
+      token.prev.text += token.text;
+      token.prev.hash = hash(hash(token.prev.type) + hash(token.prev.text));
+      token.prev.next = token.next;
+      if (token.next) {
+        token.next.prev = token.prev;
       }
-      joined.push({
-        ...token.source,
-        parent: token.parent,
-        type: token.type,
-        hash: "", // filled when the next token is processed
-      });
     }
     token = token.next;
   }
-  return joined;
+  return toTypedTokens(firstTyped);
 };

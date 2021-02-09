@@ -40,3 +40,26 @@ export const groupBy: GroupFunction = (values: Iterable<any>, select: any) => {
   }
   return result;
 };
+
+export function isSameLine<T extends { y: number }>(a: T, b: T): boolean {
+  if (a.y === b.y) {
+    return true;
+  }
+  return false;
+}
+
+export function isAdjacent<T extends { x: number; y: number; text: string }>(
+  a: T,
+  b: T
+): boolean {
+  if (!isSameLine(a, b)) {
+    return false;
+  }
+  if (a.x + a.text.length === b.x) {
+    return true;
+  }
+  if (b.x + b.text.length === a.x) {
+    return true;
+  }
+  return false;
+}

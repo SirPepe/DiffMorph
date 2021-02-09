@@ -42,12 +42,14 @@ export const isTextToken = (
 ): x is TextToken => "text" in x && typeof x.text === "string";
 
 // Represents a text token that has been linked up to its siblings and parent
-// box. Gets passed into a language function in this format.
+// box. Gets passed into a language function in this format. Note that the type
+// of "prev" type is an already-typed token (as it has been passed through the
+// language function before the current token)
 export type LanguageToken = {
   x: number;
   y: number;
   text: string;
-  prev: LanguageToken | undefined;
+  prev: TypedLanguageToken | undefined;
   next: LanguageToken | undefined;
   source: TextToken;
   parent: BoxToken;
@@ -60,6 +62,7 @@ export type TypedLanguageToken = {
   y: number;
   text: string;
   type: string;
+  hash: string;
   prev: TypedLanguageToken | undefined;
   next: TypedLanguageToken | undefined;
   source: TextToken;

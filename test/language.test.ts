@@ -7,6 +7,7 @@ describe("language", () => {
       y: 0,
       tagName: "span",
       attributes: [],
+      hash: "foo",
       tokens: [
         { x: 0, y: 0, text: "let" },
         { x: 4, y: 0, text: "x" },
@@ -65,6 +66,7 @@ describe("language", () => {
       y: 0,
       tagName: "a",
       attributes: [],
+      hash: "foo",
       tokens: [
         { x: 0, y: 0, text: "let" },
         {
@@ -72,6 +74,7 @@ describe("language", () => {
           y: 0,
           tagName: "b",
           attributes: [],
+          hash: "bar",
           tokens: [
             { x: 0, y: 0, text: "x" },
             { x: -2, y: 1, text: "=" },
@@ -80,6 +83,7 @@ describe("language", () => {
               y: 2,
               tagName: "c",
               attributes: [],
+              hash: "baz",
               tokens: [{ x: 0, y: 0, text: "42" }],
             },
           ],
