@@ -40,7 +40,14 @@ export const languageDefinition = (): ((token: LanguageToken) => string) => {
       state.doctypeState = false;
       return "doctype";
     }
-    if (state.commentState === true && token.text === ">") {
+    if (
+      state.commentState === true &&
+      token.text === ">" &&
+      token?.prev?.text === "-" &&
+      isAdjacent(token, token.prev) &&
+      token?.prev?.prev?.text === "-" &&
+      isAdjacent(token.prev, token.prev.prev)
+    ) {
       state.commentState = false;
       return "comment";
     }
@@ -133,6 +140,25 @@ const gluePredicate = (token: TypedLanguageToken): boolean => {
   // Fuse opening tag names to opening brackets
   if (token.type === "tag" && token?.prev?.text === "<") {
     return true;
+  }
+  if (token.type === "comment" && isAdjacent(token, token.prev)) {
+    if (token.text === "!" && token?.prev?.text === "<") {
+      return true;
+    }
+    if (token.text === "-" && token?.prev?.text.startsWith("<!")) {
+      return true;
+    }
+    if (
+      token.text === "-" &&
+      token?.prev?.text === "-" &&
+      token?.next?.text === ">"
+    ) {
+      return true;
+    }
+    if (token.text === ">" && token?.prev?.text === "--") {
+      return true;
+    }
+    return false;
   }
   // Fuse non-quote bits of attribute values
   if (

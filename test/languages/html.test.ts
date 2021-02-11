@@ -41,4 +41,22 @@ describe("Basic HTML", () => {
       "tag",
     ]);
   });
+
+  test("Basic comment", () => {
+    const tokens = html(`<!-- Hello World -->`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["comment", "comment", "comment", "comment"]);
+  });
+
+  test("Traps in comments", () => {
+    const tokens = html(`<!-- -- -->`); // actually invalid xml
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["comment", "comment", "comment", "comment"]);
+  });
+
+  test("More traps in comments", () => {
+    const tokens = html(`<!-- -> -->`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["comment", "comment", "comment", "comment"]);
+  });
 });
