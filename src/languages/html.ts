@@ -6,6 +6,7 @@ const ATTR_RE = /^[a-z]+[a-z0-9]*$/i;
 
 type State = {
   attrState: boolean | string; // string indicates the quote used
+  xmlDeclarationState: boolean; // when true, tag state must also be true
   commentState: boolean;
   tagState: boolean;
   doctypeState: boolean;
@@ -13,15 +14,18 @@ type State = {
 
 const defaultState = (): State => ({
   attrState: false,
+  xmlDeclarationState: false,
   commentState: false,
   tagState: false,
   doctypeState: false,
 });
 
-export const languageDefinition = (): ((token: LanguageToken) => string) => {
+export const languageDefinition = (): ((
+  token: LanguageToken
+) => string | string[]) => {
   const state = defaultState();
 
-  return (token: LanguageToken): string => {
+  return (token: LanguageToken): string | string[] => {
     // handle comments and doctypes
     if (
       state.commentState === false &&
@@ -61,13 +65,33 @@ export const languageDefinition = (): ((token: LanguageToken) => string) => {
     // handle tags
     if (state.tagState === false && token.text === "<") {
       state.tagState = true;
+      if (token?.next?.text === "?" && token?.next?.next?.text === "xml") {
+        state.xmlDeclarationState = true;
+        return ["tag-xml", "tag-xml", "tag-xml"];
+      }
       return "tag";
+    }
+    if (
+      state.tagState === true &&
+      state.xmlDeclarationState === true &&
+      token.text === "?" &&
+      token?.next?.text === ">"
+    ) {
+      state.tagState = false;
+      state.xmlDeclarationState = false;
+      return ["tag-xml", "tag-xml"];
     }
     if (state.tagState === true && token.text === ">") {
       state.tagState = false;
       return "tag";
     }
     if (state.tagState === true) {
+      // Continue after namespace operator
+      if (token.prev?.type === "operator-namespace") {
+        if (token?.prev.prev) {
+          return token?.prev.prev.type;
+        }
+      }
       // exit attribute value state
       if (token.text === state.attrState) {
         state.attrState = false;
@@ -90,6 +114,11 @@ export const languageDefinition = (): ((token: LanguageToken) => string) => {
       if (token.text === "/") {
         return "tag";
       }
+      // Namespace
+      if (token.text === ":") {
+        return "operator-namespace";
+      }
+      // Attribute value coming up
       if (token.text === "=") {
         return "operator";
       }
@@ -115,6 +144,10 @@ export const languageDefinition = (): ((token: LanguageToken) => string) => {
 };
 
 const gluePredicate = (token: TypedLanguageToken): boolean => {
+  // Fuse XML tags
+  if (token.type === "tag-xml" && token?.prev?.type === "tag-xml") {
+    return true;
+  }
   // Fuse closing slashes to end tags' closing bracket
   if (
     token.type === "tag" &&
@@ -134,8 +167,16 @@ const gluePredicate = (token: TypedLanguageToken): boolean => {
     return true;
   }
   // Fuse closing tag names to opening brackets and closing slash
-  if (token.type === "tag" && token?.prev?.text.startsWith("</")) {
-    return true;
+  if (token.type === "tag") {
+    if (token?.prev?.text.startsWith("</")) {
+      return true;
+    }
+    if (
+      token?.prev?.prev?.type === "operator-namespace" &&
+      token?.prev?.prev?.prev?.text.startsWith("</")
+    ) {
+      return true;
+    }
   }
   // Fuse opening tag names to opening brackets
   if (token.type === "tag" && token?.prev?.text === "<") {

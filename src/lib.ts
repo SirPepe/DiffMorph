@@ -49,9 +49,12 @@ export function isSameLine<T extends { y: number }>(a: T, b: T): boolean {
 }
 
 export function isAdjacent<T extends { x: number; y: number; text: string }>(
-  a: T,
-  b: T
+  a: T | undefined,
+  b: T | undefined
 ): boolean {
+  if (!a || !b) {
+    return false;
+  }
   if (!isSameLine(a, b)) {
     return false;
   }

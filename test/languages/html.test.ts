@@ -60,3 +60,55 @@ describe("Basic HTML", () => {
     expect(types).toEqual(["comment", "comment", "comment", "comment"]);
   });
 });
+
+describe("XML features", () => {
+  test("XML declaration", () => {
+    const tokens = html(`<?xml version="1.0" ?>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag-xml",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "tag-xml",
+    ]);
+  });
+  test("Tag namespace", () => {
+    const tokens = html(`<ns:foo>Hello</ns:foo>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "operator-namespace",
+      "tag",
+      "tag",
+      "token",
+      "tag",
+      "operator-namespace",
+      "tag",
+    ]);
+  });
+  test("Attribute namespace", () => {
+    const tokens = html(`<foo ns:attr="foo">Hello</foo>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator-namespace",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "tag",
+      "token",
+      "tag",
+    ]);
+  });
+  /*test("CDATA", () => {
+    const tokens = html(`<foo>Hello <![CDATA[ World ]]></foo>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["tag", "tag", "tag"]);
+  });*/
+});

@@ -8,7 +8,7 @@ import {
 } from "../../src/types";
 
 export const type = (lang: {
-  languageDefinition: () => (token: LanguageToken) => string;
+  languageDefinition: () => (token: LanguageToken) => string | string[];
   gluePredicate: (token: TypedLanguageToken) => boolean;
 }) => (...input: Code[]): TypedToken[] =>
   applyLanguage(

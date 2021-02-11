@@ -63,14 +63,22 @@ export const toLanguageTokens = (
 };
 
 const applyLanguageDefinition = (
-  language: (token: LanguageToken) => string,
+  language: (token: LanguageToken) => string | string[],
   input: LanguageToken
 ): TypedLanguageToken => {
   const head: any = input;
   let token: any = input;
   while (token) {
-    token.type = language(token);
-    token = token.next;
+    const type = language(token);
+    if (Array.isArray(type)) {
+      while (token && type.length > 0) {
+        token.type = type.shift();
+        token = token.next;
+      }
+    } else {
+      token.type = type;
+      token = token.next;
+    }
   }
   return head;
 };
@@ -92,7 +100,7 @@ const toTypedTokens = (token: TypedLanguageToken | undefined): TypedToken[] => {
 };
 
 export const applyLanguage = (
-  definitionFactory: () => (token: LanguageToken) => string,
+  definitionFactory: () => (token: LanguageToken) => string | string[],
   gluePredicate: (token: TypedLanguageToken) => boolean,
   tokens: (BoxToken | TextToken)[]
 ): TypedToken[] => {
