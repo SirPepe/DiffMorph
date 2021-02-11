@@ -5,6 +5,9 @@ type TokenLike = {
   x: number;
   y: number;
   hash: string;
+  parent: {
+    hash: any;
+  };
 };
 
 type Line<T extends TokenLike> = {
@@ -62,19 +65,19 @@ const diffLines = (
       if (change.added || change.removed) {
         continue;
       }
-      // Otherwise the line was either completely unchanged or just indented, so
-      // it can be taken out of the rest of the process.
+      // Otherwise the line was either completely unchanged or just moved with
+      // all of its tokens, so it can be taken out of the rest of the process.
       const fromLine = fromById.get(line.id);
       if (!fromLine) {
         throw new Error("Expected fromLine to be defined");
       }
-      if (fromLine.x !== line.x) {
-        // Line was indented
+      if (fromLine.x !== line.x || fromLine.y !== line.y) {
+        // Line was moved on some axis
         moved.push(...line.items);
       }
       // Indented or unchanged, thus taken care of and can be removed
-      toById.delete(line.id);
       fromById.delete(line.id);
+      toById.delete(line.id);
     }
   }
   return {
@@ -94,7 +97,7 @@ const diffTokens = (
   const added = [];
   const deleted = [];
   const changes = diffArrays(from, to, {
-    comparator: (a, b) => a.hash === b.hash,
+    comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === a.y,
     ignoreCase: false,
   });
   for (const change of changes) {
@@ -115,7 +118,20 @@ export const diff = (
   added: TokenLike[];
   deleted: TokenLike[];
 } => {
-  const { moved, restFrom, restTo } = diffLines(asLines(from), asLines(to));
-  const { added, deleted } = diffTokens(restFrom, restTo);
+  const moved = [];
+  const added = [];
+  const deleted = [];
+  const fromByParent = groupBy(from, (token) => token.parent.hash);
+  const toByParent = groupBy(to, (token) => token.parent.hash);
+  const parentHashes = new Set([...fromByParent.keys(), ...toByParent.keys()]);
+  for (const parentHash of parentHashes) {
+    const fromTokens = fromByParent.get(parentHash) || [];
+    const toTokens = toByParent.get(parentHash) || [];
+    const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
+    moved.push(...lineDiff.moved);
+    const tokenDiff = diffTokens(lineDiff.restFrom, lineDiff.restTo);
+    added.push(...tokenDiff.added);
+    deleted.push(...tokenDiff.deleted);
+  }
   return { moved, added, deleted };
 };
