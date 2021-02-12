@@ -86,34 +86,6 @@ describe("Basic JSON", () => {
   });
 });
 
-describe("Comments in JSON", () => {
-  test("Line comment", () => {
-    const tokens = json("// a\n{}");
-    const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["comment-line", "token", "token"]);
-  });
-
-  test("Single-line block comment", () => {
-    const tokens = json("/* a */\n{}");
-    const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["comment-block", "token", "token"]);
-  });
-
-  test("Multi-line block comment", () => {
-    const tokens = json(`/*
-  a
-*/\n{}`);
-    const types = tokens.map((token) => token.type);
-    expect(types).toEqual([
-      "comment-block",
-      "comment-block",
-      "comment-block",
-      "token",
-      "token",
-    ]);
-  });
-});
-
 describe("Boxes", () => {
   test("Basic box", () => {
     const tokens = json(

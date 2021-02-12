@@ -129,7 +129,6 @@ const gluePredicate = (token: TypedLanguageToken): boolean => {
 };
 
 export default {
-  id: "json",
   languageDefinition,
   gluePredicate,
 };
