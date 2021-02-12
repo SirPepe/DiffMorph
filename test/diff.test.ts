@@ -196,7 +196,7 @@ describe("diff tokens", () => {
     });
   });
 
-  /*test.only("diffing tokens belonging to different parents", () => {
+  test("diffing tokens belonging to different parents", () => {
     const a = [
       { x: 0, y: 0, hash: "a0", parent: { hash: 0 } },
       { x: 2, y: 0, hash: "a1", parent: { hash: 0 } },
@@ -204,11 +204,15 @@ describe("diff tokens", () => {
       { x: 2, y: 1, hash: "a1", parent: { hash: 1 } },
     ];
     const b = [
-      { x: 0, y: 1, hash: "a0", parent: { hash: 0 } }, // switch with other a0
-      { x: 2, y: 0, hash: "a1", parent: { hash: 0 } },
       { x: 0, y: 0, hash: "a0", parent: { hash: 1 } }, // switch with other a0
-      { x: 2, y: 0, hash: "a1", parent: { hash: 1 } },
+      { x: 2, y: 0, hash: "a1", parent: { hash: 0 } },
+      { x: 0, y: 1, hash: "a0", parent: { hash: 0 } }, // switch with other a0
+      { x: 2, y: 1, hash: "a1", parent: { hash: 1 } },
     ];
-    console.log(diff(a, b));
-  });*/
+    expect(diff(a, b)).toEqual({
+      moved: [],
+      added: [b[2], b[0]],
+      deleted: [a[0], a[2]],
+    });
+  });
 });

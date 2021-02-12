@@ -97,7 +97,7 @@ const diffTokens = (
   const added = [];
   const deleted = [];
   const changes = diffArrays(from, to, {
-    comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === a.y,
+    comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
     ignoreCase: false,
   });
   for (const change of changes) {
