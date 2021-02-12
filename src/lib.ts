@@ -66,3 +66,37 @@ export function isAdjacent<T extends { x: number; y: number; text: string }>(
   }
   return false;
 }
+
+/* eslint-disable */
+type Tuple<
+  T,
+  Length extends number,
+  Rest extends unknown[] = []
+> = Length extends Length
+  ? number extends Length
+    ? T[]
+    : Rest["length"] extends Length
+      ? Rest
+      : Tuple<T, Length, [T, ...Rest]>
+  : never;
+/* eslint-enable */
+
+export const lookaheadText = <
+  T extends { text: string; next: T | undefined },
+  N extends number
+>(
+  token: T,
+  steps: N,
+  expected: Tuple<string, N>
+): boolean => {
+  let step = 0;
+  while (step < steps) {
+    if (!token.next || token.next.text !== expected[step]) {
+      return false;
+    } else {
+      step++;
+      token = token.next;
+    }
+  }
+  return true;
+};

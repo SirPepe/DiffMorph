@@ -1,4 +1,4 @@
-import { isAdjacent } from "../lib";
+import { isAdjacent, lookaheadText } from "../lib";
 import { LanguageToken, TypedLanguageToken } from "../types";
 
 const QUOTES = ["'", '"'];
@@ -7,7 +7,7 @@ const ATTR_RE = /^[a-z]+[a-z0-9]*$/i;
 type State = {
   attrState: boolean | string; // string indicates the quote used
   xmlDeclarationState: boolean; // when true, tag state must also be true
-  commentState: boolean;
+  commentState: false | "cdata" | "comment";
   tagState: boolean;
   doctypeState: boolean;
 };
@@ -35,17 +35,31 @@ export const languageDefinition = (): ((
       if (token?.next?.next?.text.toLowerCase() === "doctype") {
         state.doctypeState = true;
         return "doctype";
+      } else if (token?.next?.next?.text === "[") {
+        state.commentState = "cdata";
+        return "comment-cdata";
       } else {
-        state.commentState = true;
+        state.commentState = "comment";
         return "comment";
       }
     }
+    // exit doctype state
     if (state.doctypeState === true && token.text === ">") {
       state.doctypeState = false;
       return "doctype";
     }
+    // exit cdata state
     if (
-      state.commentState === true &&
+      state.commentState === "cdata" &&
+      token.text === "]" &&
+      lookaheadText(token, 2, ["]", ">"])
+    ) {
+      state.commentState = false;
+      return ["comment-cdata", "comment-cdata", "comment-cdata"];
+    }
+    // exit regular comment state
+    if (
+      state.commentState &&
       token.text === ">" &&
       token?.prev?.text === "-" &&
       isAdjacent(token, token.prev) &&
@@ -55,7 +69,10 @@ export const languageDefinition = (): ((
       state.commentState = false;
       return "comment";
     }
-    if (state.commentState === true) {
+    if (state.commentState === "cdata") {
+      return "comment-cdata";
+    }
+    if (state.commentState === "comment") {
       return "comment";
     }
     if (state.doctypeState === true) {
@@ -215,7 +232,6 @@ const gluePredicate = (token: TypedLanguageToken): boolean => {
 };
 
 export default {
-  id: "html",
   languageDefinition,
   gluePredicate,
 };

@@ -106,9 +106,23 @@ describe("XML features", () => {
       "tag",
     ]);
   });
-  /*test("CDATA", () => {
+  test("CDATA sections", () => {
     const tokens = html(`<foo>Hello <![CDATA[ World ]]></foo>`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["tag", "tag", "tag"]);
-  });*/
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "token",
+      "comment-cdata",
+      "comment-cdata",
+      "comment-cdata",
+      "comment-cdata",
+      "comment-cdata",
+      "comment-cdata",
+      "comment-cdata",
+      "comment-cdata",
+      "comment-cdata",
+      "tag",
+    ]);
+  });
 });
