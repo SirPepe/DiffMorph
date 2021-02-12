@@ -15,6 +15,12 @@ describe("Basic JSON", () => {
     expect(types).toEqual(["token", "token"]);
   });
 
+  test("Standalone null", () => {
+    const tokens = json(`null`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["keyword-null"]);
+  });
+
   test("Key and string value", () => {
     const tokens = json(`{ "foo": "bar" }`);
     const types = tokens.map((token) => token.type);
@@ -103,5 +109,26 @@ describe("Boxes", () => {
     expect(tokens[1].parent).toBe(tokens[2].parent);
     expect(tokens[2].parent).toBe(tokens[3].parent);
     expect(tokens[0].parent).not.toBe(tokens[1].parent);
+  });
+
+  test("Box between theoretically joinable tokens", () => {
+    const tokens = json(
+      '{"foo',
+      {
+        tagName: "span",
+        attributes: [],
+        content: ['bar"'],
+      },
+      ": 42}"
+    );
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "token", // {
+      "string", // "foo
+      "string", // bar" (inside box, must not be joined with rest)
+      "token", // :
+      "number", // 42
+      "token", // }
+    ]);
   });
 });

@@ -116,7 +116,11 @@ export const applyLanguage = (
   // working with already-glued previous tokens.
   let token: TypedLanguageToken | undefined = firstTyped;
   while (token) {
-    if (token.prev && gluePredicate(token)) {
+    if (
+      token.prev &&
+      gluePredicate(token) &&
+      token.parent.hash === token.prev.parent.hash // don't join across boxes
+    ) {
       token.prev.text += token.text;
       token.prev.hash = hash(hash(token.prev.type) + hash(token.prev.text));
       token.prev.next = token.next;
