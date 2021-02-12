@@ -1,4 +1,7 @@
-import { hash } from "./lib";
+// This module implements a very non-smart tokenizer that chops code into small
+// pieces. It has to be non-smart to be useful for every conceivable computer
+// language.
+
 import {
   Code,
   CodeContainer,
@@ -11,10 +14,8 @@ import {
 const ONLY_WHITESPACE_RE = /^\s+$/;
 const LINE_BREAK_RE = /[\r\n]/;
 
-const hashBox = (tagName: string, attributes: [string, string][]): string =>
-  hash(tagName + "|" + attributes.map((pair) => pair.join("=")).join("|"));
-
-const isHighlightBox = (tagName: string) => tagName === "mark";
+const isHighlightBox = (token: CodeContainer): boolean =>
+  token.meta.tagName === "mark";
 
 const unwrapFirst = (token: TextToken | BoxToken): TextToken => {
   if (isTextToken(token)) {
@@ -134,9 +135,8 @@ const tokenizeContainer = (
       {
         x,
         y,
-        tagName: container.tagName,
-        attributes: container.attributes,
-        hash: hashBox(container.tagName, container.attributes),
+        hash: container.hash,
+        meta: container.meta,
         tokens,
       },
     ],
@@ -161,14 +161,14 @@ const tokenizeCode = (
       lastX = textResult.lastX;
       lastY = textResult.lastY;
     } else {
-      if (isHighlightBox(code.tagName)) {
+      if (isHighlightBox(code)) {
+        const { hash, meta } = code;
         const highlight = tokenizeCode(code.content, lastX, lastY, indent);
         tokens.push(...highlight.tokens);
         const span = measureSpan(highlight.tokens);
         highlights.push({
-          tagName: code.tagName,
-          attributes: code.attributes,
-          hash: hashBox(code.tagName, code.attributes),
+          hash,
+          meta,
           start: [span[0][0] + indent, span[0][1]],
           end: [span[1][0] + indent, span[1][1]],
         });

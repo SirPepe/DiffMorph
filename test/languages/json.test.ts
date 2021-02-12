@@ -97,8 +97,11 @@ describe("Boxes", () => {
     const tokens = json(
       "{",
       {
-        tagName: "span",
-        attributes: [],
+        meta: {
+          tagName: "span",
+          attributes: [],
+        },
+        hash: "asdf",
         content: ['"x": 42'],
       },
       "}"
@@ -115,8 +118,11 @@ describe("Boxes", () => {
     const tokens = json(
       '{"foo',
       {
-        tagName: "span",
-        attributes: [],
+        meta: {
+          tagName: "span",
+          attributes: [],
+        },
+        hash: "asdf",
         content: ['bar"'],
       },
       ": 42}"

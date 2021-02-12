@@ -5,8 +5,10 @@ describe("language", () => {
     const input = {
       x: 0,
       y: 0,
-      tagName: "span",
-      attributes: [],
+      meta: {
+        tagName: "span",
+        attributes: [],
+      },
       hash: "foo",
       tokens: [
         { x: 0, y: 0, text: "let" },
@@ -64,16 +66,20 @@ describe("language", () => {
     const input = {
       x: 0,
       y: 0,
-      tagName: "a",
-      attributes: [],
+      meta: {
+        tagName: "a",
+        attributes: [],
+      },
       hash: "foo",
       tokens: [
         { x: 0, y: 0, text: "let" },
         {
           x: 4,
           y: 0,
-          tagName: "b",
-          attributes: [],
+          meta: {
+            tagName: "b",
+            attributes: [],
+          },
           hash: "bar",
           tokens: [
             { x: 0, y: 0, text: "x" },
@@ -81,8 +87,10 @@ describe("language", () => {
             {
               x: 4,
               y: 2,
-              tagName: "c",
-              attributes: [],
+              meta: {
+                tagName: "c",
+                attributes: [],
+              },
               hash: "baz",
               tokens: [{ x: 0, y: 0, text: "42" }],
             },

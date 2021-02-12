@@ -3,16 +3,15 @@ export type Code = string | CodeContainer;
 
 // Represents some kind of element that contains bits of code
 export type CodeContainer = {
-  tagName: string;
-  attributes: [string, string][];
   content: Code[];
+  hash: string;
+  meta: Record<string, any>; // tag name and attributes for DOM sources
 };
 
 // Represents a highlight token that takes up no space but has set dimensions
 export type HighlightToken = {
-  tagName: string;
-  attributes: [string, string][];
   hash: string;
+  meta: Record<string, any>; // tag name and attributes for DOM sources
   start: [number, number];
   end: [number, number];
 };
@@ -31,9 +30,8 @@ export type TextToken = {
 export type BoxToken = {
   x: number;
   y: number;
-  tagName: string;
-  attributes: [string, string][];
   hash: string;
+  meta: Record<string, any>; // tag name and attributes for DOM sources
   tokens: (TextToken | BoxToken)[];
 };
 
