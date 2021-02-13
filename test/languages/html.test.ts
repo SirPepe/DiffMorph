@@ -61,68 +61,27 @@ describe("Basic HTML", () => {
   });
 });
 
-describe("XML features", () => {
+describe("non-support for XML features", () => {
+  // Just verify that xml features are not enabled by accident
+  const banned = new Set(["comment-cdata", "tag-xml", "operator-namespace"]);
   test("XML declaration", () => {
     const tokens = html(`<?xml version="1.0" ?>`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([
-      "tag-xml",
-      "attribute",
-      "operator",
-      "value",
-      "value",
-      "value",
-      "tag-xml",
-    ]);
+    expect(types.some((type) => banned.has(type))).toBe(false);
   });
   test("Tag namespace", () => {
     const tokens = html(`<ns:foo>Hello</ns:foo>`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([
-      "tag",
-      "operator-namespace",
-      "tag",
-      "tag",
-      "token",
-      "tag",
-      "operator-namespace",
-      "tag",
-    ]);
+    expect(types.some((type) => banned.has(type))).toBe(false);
   });
   test("Attribute namespace", () => {
     const tokens = html(`<foo ns:attr="foo">Hello</foo>`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([
-      "tag",
-      "attribute",
-      "operator-namespace",
-      "attribute",
-      "operator",
-      "value",
-      "value",
-      "value",
-      "tag",
-      "token",
-      "tag",
-    ]);
+    expect(types.some((type) => banned.has(type))).toBe(false);
   });
   test("CDATA sections", () => {
     const tokens = html(`<foo>Hello <![CDATA[ World ]]></foo>`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([
-      "tag",
-      "tag",
-      "token",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "tag",
-    ]);
+    expect(types.some((type) => banned.has(type))).toBe(false);
   });
 });

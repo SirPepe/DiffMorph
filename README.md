@@ -9,10 +9,8 @@ can possibly deliver:
 
 * **JSON:** regular old JSON
 * **JSONC:** JSON with optional line and block comments
-* **HTML:** any flavour of HTML, including XHTML
-* **XML:** XML with namespaces, CDATA sections, xml declarations and more. The
-  feature set for XML is actually supported by the HTML implementation, so
-  you can use namespaces, CDATA sections etc. in either language.
+* **HTML:** any flavour of HTML except XHTML (use XML for XHTML)
+* **XML:** XML (with namespaces, CDATA sections, xml declarations and more)
 
 ### Tier 2
 

@@ -1,5 +1,12 @@
+// Implements support for both HTML and XML. XML features are controlled by a
+// a flag, which the XML language definition bind to true.
+
 import { isAdjacent, lookaheadText } from "../lib";
 import { LanguageToken, TypedLanguageToken } from "../types";
+
+type Flags = {
+  xml: boolean;
+};
 
 const QUOTES = ["'", '"'];
 const ATTR_RE = /^[a-z]+[a-z0-9]*$/i;
@@ -20,10 +27,11 @@ const defaultState = (): State => ({
   doctypeState: false,
 });
 
-export const languageDefinition = (): ((
-  token: LanguageToken
-) => string | string[]) => {
+export const languageDefinition = (
+  flags: Flags = { xml: false }
+): ((token: LanguageToken) => string | string[]) => {
   const state = defaultState();
+  const { xml } = flags;
 
   return (token: LanguageToken): string | string[] => {
     // handle comments and doctypes
@@ -35,7 +43,7 @@ export const languageDefinition = (): ((
       if (token?.next?.next?.text.toLowerCase() === "doctype") {
         state.doctypeState = true;
         return "doctype";
-      } else if (token?.next?.next?.text === "[") {
+      } else if (xml && token?.next?.next?.text === "[") {
         state.commentState = "cdata";
         return "comment-cdata";
       } else {
@@ -82,7 +90,11 @@ export const languageDefinition = (): ((
     // handle tags
     if (state.tagState === false && token.text === "<") {
       state.tagState = true;
-      if (token?.next?.text === "?" && token?.next?.next?.text === "xml") {
+      if (
+        xml &&
+        token?.next?.text === "?" &&
+        token?.next?.next?.text === "xml"
+      ) {
         state.xmlDeclarationState = true;
         return ["tag-xml", "tag-xml", "tag-xml"];
       }
@@ -104,7 +116,7 @@ export const languageDefinition = (): ((
     }
     if (state.tagState === true) {
       // Continue after namespace operator
-      if (token.prev?.type === "operator-namespace") {
+      if (xml && token.prev?.type === "operator-namespace") {
         if (token?.prev.prev) {
           return token?.prev.prev.type;
         }
@@ -132,7 +144,7 @@ export const languageDefinition = (): ((
         return "tag";
       }
       // Namespace
-      if (token.text === ":") {
+      if (xml && token.text === ":") {
         return "operator-namespace";
       }
       // Attribute value coming up
