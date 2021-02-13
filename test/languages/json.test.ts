@@ -138,3 +138,17 @@ describe("Boxes", () => {
     ]);
   });
 });
+
+describe("comments in regular JSON", () => {
+  test("does not support line comments", () => {
+    const tokens = json(`// Hello`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([ "token", "token", "token" ]);
+  });
+
+  test("does not support block comments", () => {
+    const tokens = json(`/* Hello */`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([ "token", "token", "token", "token", "token" ]);
+  });
+});

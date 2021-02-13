@@ -1,4 +1,10 @@
+// Implements support for both HTML and XML
+
 import { LanguageToken, TypedLanguageToken } from "../types";
+
+type Flags = {
+  comments: boolean;
+};
 
 const KEYWORDS = ["null", "true", "false"];
 const NUMBER_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
@@ -10,59 +16,64 @@ const defaultState = () => ({
   blockComment: false,
 });
 
-export const languageDefinition = (): ((token: LanguageToken) => string) => {
+export const languageDefinition = (
+  flags: Flags = { comments: false }
+): ((token: LanguageToken) => string) => {
   const state = defaultState();
+  const { comments } = flags;
 
   return (token: LanguageToken): string => {
-    // exit line comment state (on new line)
-    if (state.lineComment && token.prev && token.y > token.prev.y) {
-      state.lineComment = false;
-    }
+    if (comments) {
+      // exit line comment state (on new line)
+      if (state.lineComment && token.prev && token.y > token.prev.y) {
+        state.lineComment = false;
+      }
 
-    // exit block comment state
-    if (
-      state.blockComment === true &&
-      state.key === false &&
-      state.stringValue === false &&
-      token.text === "/" &&
-      token?.prev?.text === "*"
-    ) {
-      state.blockComment = false;
-      return "comment-block";
-    }
+      // exit block comment state
+      if (
+        state.blockComment === true &&
+        state.key === false &&
+        state.stringValue === false &&
+        token.text === "/" &&
+        token?.prev?.text === "*"
+      ) {
+        state.blockComment = false;
+        return "comment-block";
+      }
 
-    // enter block comment state
-    if (
-      state.blockComment === false &&
-      state.key === false &&
-      state.stringValue === false &&
-      token.text === "/" &&
-      token?.next?.text === "*"
-    ) {
-      state.blockComment = true;
-      return "comment-block";
-    }
+      // enter block comment state
+      if (
+        state.blockComment === false &&
+        state.key === false &&
+        state.stringValue === false &&
+        token.text === "/" &&
+        token?.next?.text === "*"
+      ) {
+        state.blockComment = true;
+        return "comment-block";
+      }
 
-    // are we in block comment state?
-    if (state.blockComment) {
-      return "comment-block";
-    }
+      // are we in block comment state?
+      if (state.blockComment) {
+        return "comment-block";
+      }
 
-    // enter line comment state
-    if (
-      state.lineComment === false &&
-      state.stringValue === false &&
-      state.key === false &&
-      token.text === "/" &&
-      token?.next?.text === "/"
-    ) {
-      state.lineComment = true;
-      return "comment-line";
-    }
+      // enter line comment state
+      if (
+        state.lineComment === false &&
+        state.stringValue === false &&
+        state.key === false &&
+        token.text === "/" &&
+        token?.next?.text === "/"
+      ) {
+        state.lineComment = true;
+        return "comment-line";
+      }
 
-    // in line comment state?
-    if (state.lineComment) {
-      return "comment-line";
+      // in line comment state?
+      if (state.lineComment) {
+        return "comment-line";
+      }
     }
 
     // handle entering and exiting strings (keys and values)

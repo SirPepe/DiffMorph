@@ -8,9 +8,7 @@ Languages in Tier 1 are priority languages with the best support that DiffMorph
 can possibly deliver:
 
 * **JSON:** regular old JSON
-* **JSONC:** JSON with optional comments. The feature set of JSONC is actually
-  supported by the "regular" JSON implementation, so either language choice will
-  enable you to use comments
+* **JSONC:** JSON with optional line and block comments
 * **HTML:** any flavour of HTML, including XHTML
 * **XML:** XML with namespaces, CDATA sections, xml declarations and more. The
   feature set for XML is actually supported by the HTML implementation, so
