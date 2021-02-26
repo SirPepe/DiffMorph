@@ -36,9 +36,10 @@ class TokenPool {
 
   // For MOV: get the render token that was last used for a specific typed token
   public reuse(source: TypedToken, target: TypedToken): RenderToken {
-    const renderToken = this.inUse.get(source);
+    let renderToken = this.inUse.get(source);
+    // Wrap-around at the end of a keyframe list can cause this to happen.
     if (!renderToken) {
-      throw new Error("Can't reuse, token is not in use at this time!");
+      renderToken = this.require(target);
     }
     return { ...renderToken, x: target.x, y: target.y };
   }

@@ -226,9 +226,9 @@ describe("diff across multiple frames", () => {
     ];
     expect(diffAll([a, b, c, d])).toEqual([
       [
-        { type: "ADD", item: a[0] },
-        { type: "ADD", item: a[1] },
-        { type: "ADD", item: a[2] },
+        { type: "MOV", item: a[0], ref: d[0] },
+        { type: "MOV", item: a[1], ref: d[1] },
+        { type: "DEL", item: d[3] },
       ],
       [{ type: "ADD", item: b[3] }],
       [{ type: "ADD", item: c[3] }],
