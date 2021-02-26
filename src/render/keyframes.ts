@@ -37,11 +37,17 @@ class TokenPool {
   // For MOV: get the render token that was last used for a specific typed token
   public reuse(source: TypedToken, target: TypedToken): RenderToken {
     let renderToken = this.inUse.get(source);
-    // Wrap-around at the end of a keyframe list can cause this to happen.
+    // Wrap-around at the end of a keyframe list may require us to require a
+    // new token because for a MOV in the first frame there's nothing to re-use.
     if (!renderToken) {
-      renderToken = this.require(target);
+      return { ...this.require(target), x: target.x, y: target.y };
+    } else {
+      renderToken = { ...renderToken, x: target.x, y: target.y };
+      // update who's re-using the render token for next keyframe
+      this.inUse.delete(source);
+      this.inUse.set(target, renderToken);
+      return renderToken;
     }
-    return { ...renderToken, x: target.x, y: target.y };
   }
 
   // For DEL: free used token

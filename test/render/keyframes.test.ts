@@ -6,7 +6,8 @@ const json = type(language);
 
 describe.only("asdf", () => {
   test("asdf", () => {
-    const diffs = diffAll([json(`{ "a": 23 }`), json(`  { "a": 23 }`)]);
-    console.log(toKeyframes(diffs));
+    const diffs = diffAll([json("{}"), json("  {}"), json("    {}")]);
+    const keyframes = toKeyframes(diffs);
+    console.log(keyframes);
   });
 });
