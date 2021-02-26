@@ -217,7 +217,7 @@ describe("diff tokens", () => {
   });
 });
 
-describe.only("diff across multiple frames", () => {
+describe("diff across multiple frames", () => {
   test("diffing lines (addition at end)", () => {
     const a = [
       { x: 0, y: 0, hash: "a0", parent: { hash: 0 } },
@@ -237,7 +237,12 @@ describe.only("diff across multiple frames", () => {
       { x: 2, y: 1, hash: "b1", parent: { hash: 0 } }, // new item!
       { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
     ];
-    expect(diffAll(a, b, c)).toEqual([
+    expect(diffAll([a, b, c])).toEqual([
+      {
+        moved: [],
+        added: a,
+        deleted: [],
+      },
       {
         moved: [],
         added: [b[3]],

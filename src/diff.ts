@@ -110,7 +110,7 @@ const diffTokens = (
   return { added, deleted };
 };
 
-type DiffResult = {
+export type DiffResult = {
   moved: TokenLike[];
   added: TokenLike[];
   deleted: TokenLike[];
@@ -135,14 +135,10 @@ export const diff = (from: TokenLike[], to: TokenLike[]): DiffResult => {
   return { moved, added, deleted };
 };
 
-export const diffAll = (
-  from: TokenLike[],
-  to: TokenLike[],
-  ...rest: TokenLike[][]
-): DiffResult[] => {
-  const first = diff(from, to);
-  if (rest.length > 0) {
-    return [first, ...diffAll(to, rest[0], ...rest.slice(1))];
+export const diffAll = (frames: TokenLike[][]): DiffResult[] => {
+  const diffs: DiffResult[] = [{ moved: [], added: frames[0], deleted: [] }];
+  for (let i = 0; i < frames.length - 1; i++) {
+    diffs.push(diff(frames[i], frames[i + 1]));
   }
-  return [first];
+  return diffs;
 };
