@@ -1,4 +1,4 @@
-import { diff } from "../src/diff";
+import { diff, diffAll } from "../src/diff";
 
 describe("diff lines", () => {
   test("diffing lines (addition at end)", () => {
@@ -214,5 +214,40 @@ describe("diff tokens", () => {
       added: [b[2], b[0]],
       deleted: [a[0], a[2]],
     });
+  });
+});
+
+describe.only("diff across multiple frames", () => {
+  test("diffing lines (addition at end)", () => {
+    const a = [
+      { x: 0, y: 0, hash: "a0", parent: { hash: 0 } },
+      { x: 2, y: 0, hash: "a1", parent: { hash: 0 } },
+      { x: 0, y: 1, hash: "b0", parent: { hash: 0 } },
+    ];
+    const b = [
+      { x: 0, y: 0, hash: "a0", parent: { hash: 0 } },
+      { x: 2, y: 0, hash: "a1", parent: { hash: 0 } },
+      { x: 0, y: 1, hash: "b0", parent: { hash: 0 } },
+      { x: 0, y: 2, hash: "c0", parent: { hash: 0 } }, // new line!
+    ];
+    const c = [
+      { x: 0, y: 0, hash: "a0", parent: { hash: 0 } },
+      { x: 2, y: 0, hash: "a1", parent: { hash: 0 } },
+      { x: 0, y: 1, hash: "b0", parent: { hash: 0 } },
+      { x: 2, y: 1, hash: "b1", parent: { hash: 0 } }, // new item!
+      { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
+    ];
+    expect(diffAll(a, b, c)).toEqual([
+      {
+        moved: [],
+        added: [b[3]],
+        deleted: [],
+      },
+      {
+        moved: [],
+        added: [c[3]],
+        deleted: [],
+      },
+    ]);
   });
 });
