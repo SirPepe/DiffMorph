@@ -9,13 +9,13 @@ import {
   TextToken,
   HighlightToken,
   isTextToken,
-} from "./types";
+} from "../types";
 
 const ONLY_WHITESPACE_RE = /^\s+$/;
 const LINE_BREAK_RE = /[\r\n]/;
 
 const isHighlightBox = (token: CodeContainer): boolean =>
-  token.meta.tagName === "mark";
+  token.meta.isHighlight;
 
 const unwrapFirst = (token: TextToken | BoxToken): TextToken => {
   if (isTextToken(token)) {

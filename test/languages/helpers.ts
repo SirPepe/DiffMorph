@@ -1,5 +1,5 @@
 import { applyLanguage } from "../../src/language";
-import { tokenize } from "../../src/tokenizer";
+import { tokenize } from "../../src/input/tokenizer";
 import {
   Code,
   LanguageToken,

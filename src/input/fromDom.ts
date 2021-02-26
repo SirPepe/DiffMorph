@@ -1,6 +1,9 @@
-import { BoxToken, Code, HighlightToken } from "./types";
+// This module is a DOM frontend for the tokenizer. It takes code from an HTML
+// element's content and returns tokens.
+
+import { BoxToken, Code, HighlightToken } from "../types";
 import { tokenize } from "./tokenizer";
-import { hash } from "./lib";
+import { hash } from "../lib";
 
 const isHTMLElement = (arg: any): arg is HTMLElement => {
   if (!arg) {
@@ -48,7 +51,7 @@ const extractCode = (source: Element): Code[] => {
       const tagName = child.tagName.toLowerCase();
       const attributes = getAttributes(child);
       const hash = hashDOMBox(tagName, attributes);
-      const meta = { tagName, attributes };
+      const meta = { tagName, attributes, isHighlight: tagName === "mark" };
       extracted.push({ content, hash, meta });
     }
   }
@@ -59,7 +62,7 @@ export const processCode = (source: Element): [BoxToken, HighlightToken[]] => {
   const tagName = source.tagName.toLowerCase();
   const attributes = getAttributes(source);
   const hash = hashDOMBox(tagName, attributes);
-  const meta = { tagName, attributes };
+  const meta = { tagName, attributes, isHighlight: false };
   const { tokens, highlights } = tokenize(extractCode(source));
   return [{ x: 0, y: 0, hash, meta, tokens }, highlights];
 };

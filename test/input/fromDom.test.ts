@@ -1,6 +1,6 @@
-import { processCode } from "../src/dom";
+import { processCode } from "../../src/input/fromDom";
 
-describe("processing code", () => {
+describe("processing code from a DOM source", () => {
   const container = document.createElement("pre");
 
   test("it splits code", () => {
@@ -59,6 +59,7 @@ describe("processing code", () => {
         meta: {
           tagName: "span",
           attributes: [["foo", "bar"]],
+          isHighlight: false,
         },
         hash: expect.any(String),
         tokens: [
@@ -88,6 +89,7 @@ describe("processing code", () => {
         meta: {
           tagName: "span",
           attributes: [["foo", "bar"]],
+          isHighlight: false,
         },
         hash: expect.any(String),
         tokens: [{ x: 0, y: 0, text: "a" }],
@@ -123,6 +125,7 @@ describe("processing code", () => {
         meta: {
           tagName: "span",
           attributes: [["class", "a"]],
+          isHighlight: false,
         },
         hash: expect.any(String),
         tokens: [
@@ -151,6 +154,7 @@ describe("processing code", () => {
         meta: {
           tagName: "span",
           attributes: [["foo", "bar"]],
+          isHighlight: false,
         },
         hash: expect.any(String),
         tokens: [
@@ -162,6 +166,7 @@ describe("processing code", () => {
             meta: {
               tagName: "b",
               attributes: [],
+              isHighlight: false,
             },
             hash: expect.any(String),
             tokens: [
@@ -195,6 +200,7 @@ describe("processing code", () => {
         meta: {
           tagName: "span",
           attributes: [["foo", "bar"]],
+          isHighlight: false,
         },
         hash: expect.any(String),
         tokens: [
@@ -206,6 +212,7 @@ describe("processing code", () => {
             meta: {
               tagName: "b",
               attributes: [],
+              isHighlight: false,
             },
             hash: expect.any(String),
             tokens: [
@@ -241,6 +248,7 @@ describe("processing code", () => {
         meta: {
           tagName: "a",
           attributes: [],
+          isHighlight: false,
         },
         hash: expect.any(String),
         tokens: [
@@ -252,6 +260,7 @@ describe("processing code", () => {
             meta: {
               tagName: "b",
               attributes: [],
+              isHighlight: false,
             },
             hash: expect.any(String),
             tokens: [{ x: 0, y: 0, text: "42" }],
@@ -282,6 +291,7 @@ describe("processing code", () => {
         meta: {
           tagName: "mark",
           attributes: [],
+          isHighlight: true,
         },
         hash: expect.any(String),
         start: [16, 0],
@@ -311,6 +321,7 @@ describe("processing code", () => {
         meta: {
           tagName: "mark",
           attributes: [["class", "a"]],
+          isHighlight: true,
         },
         hash: expect.any(String),
         start: [6, 0],
@@ -320,6 +331,7 @@ describe("processing code", () => {
         meta: {
           tagName: "mark",
           attributes: [["class", "b"]],
+          isHighlight: true,
         },
         hash: expect.any(String),
         start: [16, 0],
@@ -354,6 +366,7 @@ describe("processing code", () => {
         meta: {
           tagName: "mark",
           attributes: [],
+          isHighlight: true,
         },
         hash: expect.any(String),
         start: [16, 0],
@@ -376,6 +389,7 @@ describe("processing code", () => {
         meta: {
           tagName: "span",
           attributes: [["foo", "bar"]],
+          isHighlight: false,
         },
         hash: expect.any(String),
         tokens: [
@@ -387,6 +401,7 @@ describe("processing code", () => {
             meta: {
               tagName: "b",
               attributes: [],
+              isHighlight: false,
             },
             hash: expect.any(String),
             tokens: [
@@ -405,6 +420,7 @@ describe("processing code", () => {
         meta: {
           tagName: "mark",
           attributes: [],
+          isHighlight: true,
         },
         hash: expect.any(String),
         start: [10, 0],

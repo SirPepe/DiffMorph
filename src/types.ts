@@ -1,11 +1,15 @@
 // Represents a bit of code
 export type Code = string | CodeContainer;
 
-// Represents some kind of element that contains bits of code
+// Represents some kind of container with bits of code inside. May be a highlight
+// container, in which case it gets a very special treatment (not as a box, but
+// as a kind of metadata)
 export type CodeContainer = {
   content: Code[];
   hash: string;
-  meta: Record<string, any>; // tag name and attributes for DOM sources
+  meta: {
+    isHighlight: boolean;
+  } & Record<string, any>; // tag name and attributes for DOM sources
 };
 
 // Represents a highlight token that takes up no space but has set dimensions
