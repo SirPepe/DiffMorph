@@ -73,10 +73,12 @@ const applyLanguageDefinition = (
     if (Array.isArray(type)) {
       while (token && type.length > 0) {
         token.type = type.shift();
+        token.hash = hash(hash(token.type) + hash(token.text));
         token = token.next;
       }
     } else {
       token.type = type;
+      token.hash = hash(hash(token.type) + hash(token.text));
       token = token.next;
     }
   }
@@ -107,7 +109,7 @@ export const applyLanguage = (
   const rootBox =
     tokens.length === 1 && !isTextToken(tokens[0])
       ? tokens[0]
-      : { x: 0, y: 0, tagName: "", hash: "", attributes: [], tokens };
+      : { x: 0, y: 0, meta: {}, hash: "", tokens };
   const firstTyped = applyLanguageDefinition(
     definitionFactory(),
     toLanguageTokens(rootBox)

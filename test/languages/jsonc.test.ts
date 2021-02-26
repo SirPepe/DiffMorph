@@ -1,5 +1,5 @@
 import language from "../../src/languages/jsonc";
-import { type } from "./helpers";
+import { type } from "../helpers";
 const jsonc = type(language);
 
 describe("JSONC", () => {

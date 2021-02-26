@@ -1,12 +1,28 @@
 import language from "../../src/languages/json";
-import { type } from "./helpers";
+import { type } from "../helpers";
 const json = type(language);
 
 describe("Basic JSON", () => {
   test("Empty object", () => {
     const tokens = json(`{}`);
-    const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["token", "token"]);
+    expect(tokens).toEqual([
+      {
+        x: 0,
+        y: 0,
+        text: "{",
+        type: "token",
+        hash: "pz3cxk",
+        parent: expect.any(Object),
+      },
+      {
+        x: 1,
+        y: 0,
+        text: "}",
+        type: "token",
+        hash: "6xavw7",
+        parent: expect.any(Object),
+      },
+    ]);
   });
 
   test("Empty array", () => {
@@ -100,6 +116,7 @@ describe("Boxes", () => {
         meta: {
           tagName: "span",
           attributes: [],
+          isHighlight: false,
         },
         hash: "asdf",
         content: ['"x": 42'],
@@ -121,6 +138,7 @@ describe("Boxes", () => {
         meta: {
           tagName: "span",
           attributes: [],
+          isHighlight: false,
         },
         hash: "asdf",
         content: ['bar"'],
@@ -143,12 +161,12 @@ describe("comments in regular JSON", () => {
   test("does not support line comments", () => {
     const tokens = json(`// Hello`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([ "token", "token", "token" ]);
+    expect(types).toEqual(["token", "token", "token"]);
   });
 
   test("does not support block comments", () => {
     const tokens = json(`/* Hello */`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([ "token", "token", "token", "token", "token" ]);
+    expect(types).toEqual(["token", "token", "token", "token", "token"]);
   });
 });

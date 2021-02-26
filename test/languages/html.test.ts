@@ -1,5 +1,5 @@
 import language from "../../src/languages/html";
-import { type } from "./helpers";
+import { type } from "../helpers";
 const html = type(language);
 
 describe("Basic HTML", () => {

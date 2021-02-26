@@ -14,7 +14,7 @@ type TokenLike = {
 type MOV<T extends TokenLike> = { readonly type: "MOV"; item: T; ref: T };
 type ADD<T extends TokenLike> = { readonly type: "ADD"; item: T };
 type DEL<T extends TokenLike> = { readonly type: "DEL"; item: T };
-type Diff<T extends TokenLike> = MOV<T> | ADD<T> | DEL<T>;
+export type Diff<T extends TokenLike> = MOV<T> | ADD<T> | DEL<T>;
 
 type Line<T extends TokenLike> = {
   readonly x: number;

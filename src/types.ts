@@ -81,3 +81,15 @@ export type TypedToken = {
   hash: string;
   parent: BoxToken;
 };
+
+// Represents a concrete token in the output
+export type RenderToken = {
+  x: number;
+  y: number;
+  text: string;
+  type: string;
+  hash: string;
+  id: string;
+  visible: boolean;
+  parent: BoxToken;
+};

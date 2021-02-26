@@ -1,11 +1,11 @@
-import { applyLanguage } from "../../src/language";
-import { tokenize } from "../../src/input/tokenizer";
+import { applyLanguage } from "../src/language";
+import { tokenize } from "../src/input/tokenizer";
 import {
   Code,
   LanguageToken,
   TypedLanguageToken,
   TypedToken,
-} from "../../src/types";
+} from "../src/types";
 
 export const type = (lang: {
   languageDefinition: () => (token: LanguageToken) => string | string[];
