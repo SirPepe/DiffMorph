@@ -10,6 +10,12 @@ type TokenLike = {
   };
 };
 
+// "ref" on MOV keeps track of the position a moved token had before it moved
+type MOV<T extends TokenLike> = { readonly type: "MOV"; item: T; ref: T };
+type ADD<T extends TokenLike> = { readonly type: "ADD"; item: T };
+type DEL<T extends TokenLike> = { readonly type: "DEL"; item: T };
+type Diff<T extends TokenLike> = MOV<T> | ADD<T> | DEL<T>;
+
 type Line<T extends TokenLike> = {
   readonly x: number;
   readonly y: number;
@@ -42,15 +48,15 @@ const asLines = <T extends TokenLike>(tokens: T[]): Line<T>[] => {
   });
 };
 
-const diffLines = (
-  from: Line<TokenLike>[],
-  to: Line<TokenLike>[]
+const diffLines = <T extends TokenLike>(
+  from: Line<T>[],
+  to: Line<T>[]
 ): {
-  moved: TokenLike[];
-  restFrom: TokenLike[];
-  restTo: TokenLike[];
+  result: Diff<T>[];
+  restFrom: T[];
+  restTo: T[];
 } => {
-  const moved = [];
+  const result: Diff<T>[] = [];
   const toById = new Map(to.map((line) => [line.id, line]));
   const fromById = new Map(from.map((line) => [line.id, line]));
   const changes = diffArrays(from, to, {
@@ -72,8 +78,16 @@ const diffLines = (
         throw new Error("Expected fromLine to be defined");
       }
       if (fromLine.x !== line.x || fromLine.y !== line.y) {
-        // Line was moved on some axis
-        moved.push(...line.items);
+        // Line was moved on some axis! Link tokens to their predecessors and
+        // push them to the moved list (and thus out of the way for the rest of
+        // the diffing process)
+        for (let i = 0; i < line.items.length; i++) {
+          result.push({
+            type: "MOV",
+            item: line.items[i],
+            ref: fromLine.items[i],
+          });
+        }
       }
       // Indented or unchanged, thus taken care of and can be removed
       fromById.delete(line.id);
@@ -81,45 +95,32 @@ const diffLines = (
     }
   }
   return {
-    moved,
+    result,
     restTo: Array.from(toById.values()).flatMap(({ items }) => items),
     restFrom: Array.from(fromById.values()).flatMap(({ items }) => items),
   };
 };
 
-const diffTokens = (
-  from: TokenLike[],
-  to: TokenLike[]
-): {
-  added: TokenLike[];
-  deleted: TokenLike[];
-} => {
-  const added = [];
-  const deleted = [];
+const diffTokens = <T extends TokenLike>(from: T[], to: T[]): Diff<T>[] => {
+  const result: Diff<T>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
     ignoreCase: false,
   });
   for (const change of changes) {
-    if (change.added) {
-      added.push(...change.value);
-    } else if (change.removed) {
-      deleted.push(...change.value);
+    for (const value of change.value) {
+      if (change.added) {
+        result.push({ type: "ADD", item: value });
+      } else if (change.removed) {
+        result.push({ type: "DEL", item: value });
+      }
     }
   }
-  return { added, deleted };
+  return result;
 };
 
-export type DiffResult = {
-  moved: TokenLike[];
-  added: TokenLike[];
-  deleted: TokenLike[];
-};
-
-export const diff = (from: TokenLike[], to: TokenLike[]): DiffResult => {
-  const moved = [];
-  const added = [];
-  const deleted = [];
+export const diff = <T extends TokenLike>(from: T[], to: T[]): Diff<T>[] => {
+  const result: Diff<T>[] = [];
   const fromByParent = groupBy(from, (token) => token.parent.hash);
   const toByParent = groupBy(to, (token) => token.parent.hash);
   const parentHashes = new Set([...fromByParent.keys(), ...toByParent.keys()]);
@@ -127,16 +128,14 @@ export const diff = (from: TokenLike[], to: TokenLike[]): DiffResult => {
     const fromTokens = fromByParent.get(parentHash) || [];
     const toTokens = toByParent.get(parentHash) || [];
     const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
-    moved.push(...lineDiff.moved);
-    const tokenDiff = diffTokens(lineDiff.restFrom, lineDiff.restTo);
-    added.push(...tokenDiff.added);
-    deleted.push(...tokenDiff.deleted);
+    result.push(...lineDiff.result);
+    result.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
   }
-  return { moved, added, deleted };
+  return result;
 };
 
-export const diffAll = (frames: TokenLike[][]): DiffResult[] => {
-  const diffs: DiffResult[] = [{ moved: [], added: frames[0], deleted: [] }];
+export const diffAll = <T extends TokenLike>(frames: T[][]): Diff<T>[][] => {
+  const diffs: Diff<T>[][] = [diff([], frames[0])];
   for (let i = 0; i < frames.length - 1; i++) {
     diffs.push(diff(frames[i], frames[i + 1]));
   }

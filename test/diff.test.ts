@@ -13,11 +13,7 @@ describe("diff lines", () => {
       { x: 0, y: 1, hash: "b0", parent: { hash: 0 } },
       { x: 0, y: 2, hash: "c0", parent: { hash: 0 } }, // new line!
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [],
-      added: [b[3]],
-      deleted: [],
-    });
+    expect(diff(a, b)).toEqual([{ type: "ADD", item: b[3] }]);
   });
 
   test("diffing lines (removal at end)", () => {
@@ -33,11 +29,7 @@ describe("diff lines", () => {
       { x: 0, y: 1, hash: "b0", parent: { hash: 0 } },
       // missing c0
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [],
-      added: [],
-      deleted: [a[3]],
-    });
+    expect(diff(a, b)).toEqual([{ type: "DEL", item: a[3] }]);
   });
 
   test("diffing lines (changed indent)", () => {
@@ -53,11 +45,10 @@ describe("diff lines", () => {
       { x: 0, y: 1, hash: "b0", parent: { hash: 0 } }, // decreased indent
       { x: 2, y: 2, hash: "c0", parent: { hash: 0 } }, // increased indent
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [b[2], b[3]],
-      added: [],
-      deleted: [],
-    });
+    expect(diff(a, b)).toEqual([
+      { type: "MOV", item: b[2], ref: a[2] },
+      { type: "MOV", item: b[3], ref: a[3] },
+    ]);
   });
 
   test("diffing lines (swap on y axis)", () => {
@@ -73,11 +64,10 @@ describe("diff lines", () => {
       { x: 4, y: 2, hash: "b0", parent: { hash: 0 } }, // was: y1
       { x: 0, y: 1, hash: "c0", parent: { hash: 0 } }, // was: y2
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [b[2], b[3]],
-      added: [],
-      deleted: [],
-    });
+    expect(diff(a, b)).toEqual([
+      { type: "MOV", item: b[2], ref: a[2] },
+      { type: "MOV", item: b[3], ref: a[3] },
+    ]);
   });
 });
 
@@ -98,11 +88,7 @@ describe("diff tokens", () => {
       { x: 0, y: 1, hash: "b2", parent: { hash: 0 } },
       { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [],
-      added: [b[1]],
-      deleted: [],
-    });
+    expect(diff(a, b)).toEqual([{ type: "ADD", item: b[1] }]);
   });
 
   test("diffing tokens (removal from end of line)", () => {
@@ -121,11 +107,7 @@ describe("diff tokens", () => {
       { x: 0, y: 1, hash: "b2", parent: { hash: 0 } },
       { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [],
-      added: [],
-      deleted: [a[1]],
-    });
+    expect(diff(a, b)).toEqual([{ type: "DEL", item: a[1] }]);
   });
 
   test("diffing tokens (replacement at end of line)", () => {
@@ -145,11 +127,10 @@ describe("diff tokens", () => {
       { x: 0, y: 1, hash: "b2", parent: { hash: 0 } },
       { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [],
-      added: [b[1]],
-      deleted: [a[1]],
-    });
+    expect(diff(a, b)).toEqual([
+      { type: "DEL", item: a[1] },
+      { type: "ADD", item: b[1] },
+    ]);
   });
 
   test("diffing tokens (replacement in middle of line)", () => {
@@ -167,11 +148,10 @@ describe("diff tokens", () => {
       { x: 0, y: 1, hash: "b0", parent: { hash: 0 } },
       { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [],
-      added: [b[1]],
-      deleted: [a[1]],
-    });
+    expect(diff(a, b)).toEqual([
+      { type: "DEL", item: a[1] },
+      { type: "ADD", item: b[1] },
+    ]);
   });
 
   test("diffing tokens (movement at end of line)", () => {
@@ -189,11 +169,10 @@ describe("diff tokens", () => {
       { x: 0, y: 1, hash: "b0", parent: { hash: 0 } },
       { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [],
-      added: [b[2]],
-      deleted: [a[2]],
-    });
+    expect(diff(a, b)).toEqual([
+      { type: "DEL", item: a[2] },
+      { type: "ADD", item: b[2] },
+    ]);
   });
 
   test("diffing tokens belonging to different parents", () => {
@@ -209,11 +188,12 @@ describe("diff tokens", () => {
       { x: 0, y: 1, hash: "a0", parent: { hash: 0 } }, // switch with other a0
       { x: 2, y: 1, hash: "a1", parent: { hash: 1 } },
     ];
-    expect(diff(a, b)).toEqual({
-      moved: [],
-      added: [b[2], b[0]],
-      deleted: [a[0], a[2]],
-    });
+    expect(diff(a, b)).toEqual([
+      { type: "DEL", item: a[0] },
+      { type: "ADD", item: b[2] },
+      { type: "DEL", item: a[2] },
+      { type: "ADD", item: b[0] },
+    ]);
   });
 });
 
@@ -237,22 +217,26 @@ describe("diff across multiple frames", () => {
       { x: 2, y: 1, hash: "b1", parent: { hash: 0 } }, // new item!
       { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
     ];
-    expect(diffAll([a, b, c])).toEqual([
-      {
-        moved: [],
-        added: a,
-        deleted: [],
-      },
-      {
-        moved: [],
-        added: [b[3]],
-        deleted: [],
-      },
-      {
-        moved: [],
-        added: [c[3]],
-        deleted: [],
-      },
+    const d = [
+      { x: 6, y: 0, hash: "a0", parent: { hash: 0 } }, // indent
+      { x: 8, y: 0, hash: "a1", parent: { hash: 0 } }, // indent
+      { x: 0, y: 1, hash: "b0", parent: { hash: 0 } },
+      // b1 went away
+      { x: 0, y: 2, hash: "c0", parent: { hash: 0 } },
+    ];
+    expect(diffAll([a, b, c, d])).toEqual([
+      [
+        { type: "ADD", item: a[0] },
+        { type: "ADD", item: a[1] },
+        { type: "ADD", item: a[2] },
+      ],
+      [{ type: "ADD", item: b[3] }],
+      [{ type: "ADD", item: c[3] }],
+      [
+        { type: "MOV", item: d[0], ref: c[0] },
+        { type: "MOV", item: d[1], ref: c[1] },
+        { type: "DEL", item: c[3] },
+      ],
     ]);
   });
 });
