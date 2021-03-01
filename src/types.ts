@@ -43,6 +43,16 @@ export const isTextToken = (
   x: TextToken | BoxToken | HighlightToken
 ): x is TextToken => "text" in x && typeof x.text === "string";
 
+// Represents an abstract token that the diffing functions can work with.
+export type TokenLike = {
+  x: number;
+  y: number;
+  hash: string;
+  parent: {
+    hash: any;
+  };
+};
+
 // Represents a text token that has been linked up to its siblings and parent
 // box. Gets passed into a language function in this format. Note that the type
 // of "prev" type is an already-typed token (as it has been passed through the

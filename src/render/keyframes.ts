@@ -1,4 +1,4 @@
-import { Diff } from "../diff";
+import { DiffOp } from "../diff";
 import { createIdGenerator } from "../lib";
 import { RenderToken, TypedToken } from "../types";
 
@@ -68,7 +68,7 @@ class TokenPool {
 
 type Keyframe = Map<string, RenderToken>; // id -> token
 
-export function toKeyframes(diffs: Diff<TypedToken>[][]): Keyframe[] {
+export function toKeyframes(diffs: DiffOp<TypedToken>[][]): Keyframe[] {
   const tokens = new TokenPool();
   const keyframes: Keyframe[] = [];
   for (let i = 0; i < diffs.length; i++) {

@@ -1,20 +1,15 @@
 import { diffArrays } from "diff";
 import { createIdGenerator, groupBy } from "./lib";
+import { TokenLike } from "./types";
 
-type TokenLike = {
-  x: number;
-  y: number;
-  hash: string;
-  parent: {
-    hash: any;
-  };
+export type ADD<T extends TokenLike> = { readonly type: "ADD"; item: T };
+export type DEL<T extends TokenLike> = { readonly type: "DEL"; item: T };
+export type MOV<T extends TokenLike> = {
+  readonly type: "MOV";
+  item: T;
+  ref: T; // keeps track of the position a moved token had before it moved
 };
-
-// "ref" on MOV keeps track of the position a moved token had before it moved
-type MOV<T extends TokenLike> = { readonly type: "MOV"; item: T; ref: T };
-type ADD<T extends TokenLike> = { readonly type: "ADD"; item: T };
-type DEL<T extends TokenLike> = { readonly type: "DEL"; item: T };
-export type Diff<T extends TokenLike> = MOV<T> | ADD<T> | DEL<T>;
+export type DiffOp<T extends TokenLike> = MOV<T> | ADD<T> | DEL<T>;
 
 type Line<T extends TokenLike> = {
   readonly x: number;
@@ -52,11 +47,11 @@ const diffLines = <T extends TokenLike>(
   from: Line<T>[],
   to: Line<T>[]
 ): {
-  result: Diff<T>[];
+  result: DiffOp<T>[];
   restFrom: T[];
   restTo: T[];
 } => {
-  const result: Diff<T>[] = [];
+  const result: DiffOp<T>[] = [];
   const toById = new Map(to.map((line) => [line.id, line]));
   const fromById = new Map(from.map((line) => [line.id, line]));
   const changes = diffArrays(from, to, {
@@ -101,8 +96,8 @@ const diffLines = <T extends TokenLike>(
   };
 };
 
-const diffTokens = <T extends TokenLike>(from: T[], to: T[]): Diff<T>[] => {
-  const result: Diff<T>[] = [];
+const diffTokens = <T extends TokenLike>(from: T[], to: T[]): DiffOp<T>[] => {
+  const result: DiffOp<T>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
     ignoreCase: false,
@@ -119,8 +114,8 @@ const diffTokens = <T extends TokenLike>(from: T[], to: T[]): Diff<T>[] => {
   return result;
 };
 
-export const diff = <T extends TokenLike>(from: T[], to: T[]): Diff<T>[] => {
-  const result: Diff<T>[] = [];
+export const diff = <T extends TokenLike>(from: T[], to: T[]): DiffOp<T>[] => {
+  const result: DiffOp<T>[] = [];
   const fromByParent = groupBy(from, (token) => token.parent.hash);
   const toByParent = groupBy(to, (token) => token.parent.hash);
   const parentHashes = new Set([...fromByParent.keys(), ...toByParent.keys()]);
@@ -134,11 +129,11 @@ export const diff = <T extends TokenLike>(from: T[], to: T[]): Diff<T>[] => {
   return result;
 };
 
-export const diffAll = <T extends TokenLike>(frames: T[][]): Diff<T>[][] => {
+export const diffAll = <T extends TokenLike>(frames: T[][]): DiffOp<T>[][] => {
   if (frames.length < 2) {
     throw new Error("Need at least two frames to diff");
   }
-  const diffs: Diff<T>[][] = [diff(frames[frames.length - 1], frames[0])];
+  const diffs: DiffOp<T>[][] = [diff(frames[frames.length - 1], frames[0])];
   for (let i = 0; i < frames.length - 1; i++) {
     diffs.push(diff(frames[i], frames[i + 1]));
   }
