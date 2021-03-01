@@ -66,7 +66,7 @@ class TokenPool {
   }
 }
 
-type Keyframe = Map<string, RenderToken>; // id -> token
+export type Keyframe = Map<string, RenderToken>; // id -> token
 
 export function toKeyframes(diffs: DiffOp<TypedToken>[][]): Keyframe[] {
   const tokens = new TokenPool();
