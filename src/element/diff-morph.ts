@@ -52,7 +52,9 @@ export class DiffMorph extends HTMLElement {
           processCode(source)[0],
         ]);
       });
-      this.content = toDom(toKeyframes(diffAll(tokens)));
+      const rendered = toDom(toKeyframes(diffAll(tokens)));
+      this.shadow.replaceChild(rendered, this.content);
+      this.content = rendered;
     } else {
       throw new Error("Fail");
     }

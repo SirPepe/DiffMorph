@@ -133,7 +133,7 @@ export const diffAll = <T extends TokenLike>(frames: T[][]): DiffOp<T>[][] => {
   if (frames.length < 2) {
     throw new Error("Need at least two frames to diff");
   }
-  const diffs: DiffOp<T>[][] = [diff(frames[frames.length - 1], frames[0])];
+  const diffs: DiffOp<T>[][] = [diff([], frames[0])];
   for (let i = 0; i < frames.length - 1; i++) {
     diffs.push(diff(frames[i], frames[i + 1]));
   }
