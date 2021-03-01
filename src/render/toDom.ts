@@ -4,7 +4,7 @@ import { Keyframe } from "./keyframes";
 const nextId = createIdGenerator();
 
 const DEFAULT_STYLES = `
-diff-morph { --transition-time: var(--dm-transition-time, 400ms) }
+:host { --transition-time: var(--dm-transition-time, 400ms) }
 .dm-code { transition: transform var(--transition-time); position: relative }
 .dm-token {transition: transform var(--transition-time), opacity var(--transition-time); opacity: 0; position: absolute }
 `;
