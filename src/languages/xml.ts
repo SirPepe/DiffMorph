@@ -1,6 +1,7 @@
-import html from "./html";
+import * as html from "./html";
 
-export default {
-  languageDefinition: () => html.languageDefinition({ xml: true }),
-  gluePredicate: html.gluePredicate,
-};
+export const languageDefinition = (): ReturnType<
+  typeof html["languageDefinition"]
+> => html.languageDefinition({ xml: true });
+
+export const gluePredicate = html.gluePredicate;

@@ -172,7 +172,7 @@ export const languageDefinition = (
   };
 };
 
-const gluePredicate = (token: TypedLanguageToken): boolean => {
+export const gluePredicate = (token: TypedLanguageToken): boolean => {
   // Fuse XML tags
   if (token.type === "tag-xml" && token?.prev?.type === "tag-xml") {
     return true;
@@ -241,9 +241,4 @@ const gluePredicate = (token: TypedLanguageToken): boolean => {
     return true;
   }
   return false;
-};
-
-export default {
-  languageDefinition,
-  gluePredicate,
 };

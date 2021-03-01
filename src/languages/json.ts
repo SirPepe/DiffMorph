@@ -122,7 +122,7 @@ export const languageDefinition = (
   };
 };
 
-const gluePredicate = (token: TypedLanguageToken): boolean => {
+export const gluePredicate = (token: TypedLanguageToken): boolean => {
   if (
     token.type !== "token" &&
     token.y === token?.prev?.y &&
@@ -137,9 +137,4 @@ const gluePredicate = (token: TypedLanguageToken): boolean => {
     return true;
   }
   return false;
-};
-
-export default {
-  languageDefinition,
-  gluePredicate,
 };

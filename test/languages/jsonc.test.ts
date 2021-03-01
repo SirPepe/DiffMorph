@@ -1,4 +1,4 @@
-import language from "../../src/languages/jsonc";
+import * as language from "../../src/languages/jsonc";
 import { type } from "../helpers";
 const jsonc = type(language);
 

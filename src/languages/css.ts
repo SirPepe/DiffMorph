@@ -63,7 +63,7 @@ export const languageDefinition = (): ((token: LanguageToken) => string) => {
   };
 };
 
-const gluePredicate = (token: TypedLanguageToken): boolean => {
+export const gluePredicate = (token: TypedLanguageToken): boolean => {
   // Join comment text and comment signifier, but not to each other
   if (token.type === "comment" && token?.prev?.type === "comment") {
     if (token.text === "*" && token?.prev?.text === "/") {
@@ -81,10 +81,4 @@ const gluePredicate = (token: TypedLanguageToken): boolean => {
     return false;
   }
   return false;
-};
-
-export default {
-  id: "css",
-  languageDefinition,
-  gluePredicate,
 };

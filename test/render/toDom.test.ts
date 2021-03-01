@@ -1,5 +1,5 @@
 import { diffAll } from "../../src/diff";
-import language from "../../src/languages/json";
+import * as language from "../../src/languages/json";
 import { toKeyframes } from "../../src/render/keyframes";
 import { toDom } from "../../src/render/toDom";
 import { type } from "../helpers";

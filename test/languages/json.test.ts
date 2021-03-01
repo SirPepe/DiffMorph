@@ -1,4 +1,4 @@
-import language from "../../src/languages/json";
+import * as language from "../../src/languages/json";
 import { type } from "../helpers";
 const json = type(language);
 

@@ -1,6 +1,7 @@
-import json from "./json";
+import * as json from "./json";
 
-export default {
-  languageDefinition: () => json.languageDefinition({ comments: true }),
-  gluePredicate: json.gluePredicate,
-};
+export const languageDefinition = (): ReturnType<
+  typeof json["languageDefinition"]
+> => json.languageDefinition({ comments: true });
+
+export const gluePredicate = json.gluePredicate;

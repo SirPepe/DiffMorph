@@ -1,4 +1,4 @@
-import language from "../../src/languages/html";
+import * as language from "../../src/languages/html";
 import { type } from "../helpers";
 const html = type(language);
 

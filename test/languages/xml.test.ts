@@ -1,4 +1,4 @@
-import language from "../../src/languages/xml";
+import * as language from "../../src/languages/xml";
 import { type } from "../helpers";
 const xml = type(language);
 
