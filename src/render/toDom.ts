@@ -4,8 +4,9 @@ import { Keyframe } from "./keyframes";
 const nextId = createIdGenerator();
 
 const DEFAULT_STYLES = `
-.dm-code { position: relative }
-.dm-token { opacity: 0; position: absolute }
+diff-morph { --transition-time: var(--dm-transition-time, 400ms) }
+.dm-code { transition: transform var(--transition-time); position: relative }
+.dm-token {transition: transform var(--transition-time), opacity var(--transition-time); opacity: 0; position: absolute }
 `;
 
 export function toDom(keyframes: Keyframe[]): HTMLElement {
@@ -30,11 +31,11 @@ function generateContent(
     for (const [id, renderToken] of keyframes[i]) {
       if (!tokens.has(id)) {
         const token = document.createElement("span");
-        token.className = "dm-token " + id + " " + renderToken.type;
+        token.className = "dm-token dm-" + id + " " + renderToken.type;
         token.innerText = renderToken.text;
         tokens.set(id, token);
       }
-      const selector = `.dm-${classPrefix}.frame${i} .dm-token.${id}`;
+      const selector = `.dm-${classPrefix}.frame${i} .dm-token.dm-${id}`;
       const rules = [
         `transform:translate(${renderToken.x}ch,${renderToken.y}%)`,
       ];
