@@ -14,6 +14,8 @@ export class DMFrame extends HTMLElement {
 }
 
 export class DiffMorph extends HTMLElement {
+  private numFrames = 0;
+  private currentFrame = -1;
   private shadow: ShadowRoot;
   private source: HTMLSlotElement;
   private content: HTMLElement;
@@ -38,6 +40,17 @@ export class DiffMorph extends HTMLElement {
     }
   }
 
+  private computeFrame(input: any): number {
+    let value = Number(input);
+    if (!value || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
+      value = 0;
+    }
+    if (value > this.numFrames - 1) {
+      value = this.numFrames - 1;
+    }
+    return value;
+  }
+
   public init = debounce(this._init);
   private async _init(): Promise<void> {
     if (LANGS.has(this.language)) {
@@ -47,6 +60,7 @@ export class DiffMorph extends HTMLElement {
       const sources = this.source.assignedElements().filter((element: any) => {
         return element[Symbol.toStringTag] === "DiffMorphFrameElement";
       });
+      this.numFrames = sources.length;
       const tokens = sources.map((source) => {
         return applyLanguage(languageDefinition, gluePredicate, [
           processCode(source)[0],
@@ -55,9 +69,44 @@ export class DiffMorph extends HTMLElement {
       const rendered = toDom(toKeyframes(diffAll(tokens)));
       this.shadow.replaceChild(rendered, this.content);
       this.content = rendered;
+      if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
+        this.frame = this.computeFrame(this.getAttribute("frame"));
+      }
     } else {
-      throw new Error("Fail");
+      throw new Error("LANGUAGE NOT SUPPORTED RIGHT NOW");
     }
+  }
+
+  public next(): void {
+    if (this.frame < this.frames - 1) {
+      this.frame = this.frame + 1;
+    } else {
+      this.frame = 0;
+    }
+  }
+
+  public prev(): void {
+    if (this.frame > 0) {
+      this.frame = this.frame - 1;
+    } else {
+      this.frame = this.frames - 1;
+    }
+  }
+
+  get frame(): number {
+    return this.currentFrame;
+  }
+
+  set frame(input: number) {
+    const value = this.computeFrame(input);
+    console.log(value);
+    this.content.classList.remove(`frame${this.currentFrame}`);
+    this.content.classList.add(`frame${value}`);
+    this.currentFrame = value;
+  }
+
+  get frames(): number {
+    return this.numFrames;
   }
 
   get language(): string {
