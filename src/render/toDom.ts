@@ -3,6 +3,11 @@ import { Keyframe } from "./keyframes";
 
 const nextId = createIdGenerator();
 
+const DEFAULT_STYLES = `
+.dm-code { position: relative }
+.dm-token { opacity: 0; position: absolute }
+`;
+
 export function toDom(keyframes: Keyframe[]): HTMLElement {
   const wrapper = document.createElement("div");
   const code = document.createElement("pre");
@@ -40,7 +45,7 @@ function generateContent(
     }
   }
   const style = document.createElement("style");
-  style.innerHTML = styles.join("\n");
+  style.innerHTML = DEFAULT_STYLES + styles.join("\n");
   return {
     style,
     tokens: Array.from(tokens.values()),
