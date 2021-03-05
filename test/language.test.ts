@@ -1,4 +1,4 @@
-import { toLanguageTokens } from "../src/language";
+import { toRawTokens } from "../src/language";
 
 describe("language", () => {
   test("turns tokens into a doubly-linked list", () => {
@@ -56,7 +56,7 @@ describe("language", () => {
     e1.next = e2;
     e2.next = e3;
     e3.next = e4;
-    expect(toLanguageTokens(input)).toEqual(e1);
+    expect(toRawTokens(input)).toEqual(e1);
   });
 
   test("adjusts for box offsets", () => {
@@ -137,6 +137,6 @@ describe("language", () => {
     e1.next = e2;
     e2.next = e3;
     e3.next = e4;
-    expect(toLanguageTokens(input)).toEqual(e1);
+    expect(toRawTokens(input)).toEqual(e1);
   });
 });

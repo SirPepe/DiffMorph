@@ -13,6 +13,9 @@ describe("Basic JSON", () => {
         type: "token",
         hash: "pz3cxk",
         parent: expect.any(Object),
+        source: expect.any(Object),
+        next: undefined,
+        prev: undefined,
       },
       {
         x: 1,
@@ -21,6 +24,9 @@ describe("Basic JSON", () => {
         type: "token",
         hash: "6xavw7",
         parent: expect.any(Object),
+        source: expect.any(Object),
+        next: undefined,
+        prev: undefined,
       },
     ]);
   });

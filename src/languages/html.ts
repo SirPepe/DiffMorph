@@ -1,8 +1,8 @@
 // Implements support for both HTML and XML. XML features are controlled by a
-// a flag, which the XML language definition bind to true.
+// a flag, which the XML language definition binds to true.
 
 import { isAdjacent, lookaheadText } from "../lib";
-import { LanguageToken, TypedLanguageToken } from "../types";
+import { RawToken, TypedToken } from "../types";
 
 type Flags = {
   xml: boolean;
@@ -29,11 +29,11 @@ const defaultState = (): State => ({
 
 export const languageDefinition = (
   flags: Flags = { xml: false }
-): ((token: LanguageToken) => string | string[]) => {
+): ((token: RawToken) => string | string[]) => {
   const state = defaultState();
   const { xml } = flags;
 
-  return (token: LanguageToken): string | string[] => {
+  return (token: RawToken): string | string[] => {
     // handle comments and doctypes
     if (
       state.commentState === false &&
@@ -172,7 +172,7 @@ export const languageDefinition = (
   };
 };
 
-export const gluePredicate = (token: TypedLanguageToken): boolean => {
+export const gluePredicate = (token: TypedToken): boolean => {
   // Fuse XML tags
   if (token.type === "tag-xml" && token?.prev?.type === "tag-xml") {
     return true;

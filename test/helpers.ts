@@ -1,15 +1,10 @@
 import { applyLanguage } from "../src/language";
 import { tokenize } from "../src/input/tokenizer";
-import {
-  Code,
-  LanguageToken,
-  TypedLanguageToken,
-  TypedToken,
-} from "../src/types";
+import { Code, RawToken, TypedToken } from "../src/types";
 
 export const type = (lang: {
-  languageDefinition: () => (token: LanguageToken) => string | string[];
-  gluePredicate: (token: TypedLanguageToken) => boolean;
+  languageDefinition: () => (token: RawToken) => string | string[];
+  gluePredicate: (token: TypedToken) => boolean;
 }) => (...input: Code[]): TypedToken[] =>
   applyLanguage(
     lang.languageDefinition,

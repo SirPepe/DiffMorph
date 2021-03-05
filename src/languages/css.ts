@@ -1,5 +1,5 @@
 import { isAdjacent } from "../lib";
-import { LanguageToken, TypedLanguageToken } from "../types";
+import { RawToken, TypedToken } from "../types";
 
 const STRINGS = ["'", '"', "`"];
 
@@ -63,7 +63,7 @@ function getContext(state: State) {
   return state.contextStack[state.contextStack.length - 1];
 }
 
-function parseNumeric (token: LanguageToken): string[] | null {
+function parseNumeric (token: RawToken): string[] | null {
   if (token.text === "." && token.next && isAdjacent(token, token.next)) {
     const rest = parseNumeric(token.next);
     if (rest) {
@@ -84,10 +84,10 @@ const defaultState = (): State => ({
   contextStack: [],
 });
 
-export const languageDefinition = (): ((token: LanguageToken) => string | string[]) => {
+export const languageDefinition = (): ((token: RawToken) => string | string[]) => {
   const state = defaultState();
 
-  return (token: LanguageToken): string | string[] => {
+  return (token: RawToken): string | string[] => {
     // exit comment state
     if (
       state.commentState === true &&
@@ -260,7 +260,7 @@ export const languageDefinition = (): ((token: LanguageToken) => string | string
   };
 };
 
-export const gluePredicate = (token: TypedLanguageToken): boolean => {
+export const gluePredicate = (token: TypedToken): boolean => {
   // Join @ sign and rule name
   if (token.type.startsWith("keyword-at") && token.type === token?.prev?.type) {
     return true;

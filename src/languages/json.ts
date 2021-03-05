@@ -1,6 +1,6 @@
 // Implements support for both HTML and XML
 
-import { LanguageToken, TypedLanguageToken } from "../types";
+import { RawToken, TypedToken } from "../types";
 
 type Flags = {
   comments: boolean;
@@ -18,11 +18,11 @@ const defaultState = () => ({
 
 export const languageDefinition = (
   flags: Flags = { comments: false }
-): ((token: LanguageToken) => string) => {
+): ((token: RawToken) => string) => {
   const state = defaultState();
   const { comments } = flags;
 
-  return (token: LanguageToken): string => {
+  return (token: RawToken): string => {
     if (comments) {
       // exit line comment state (on new line)
       if (state.lineComment && token.prev && token.y > token.prev.y) {
@@ -122,7 +122,7 @@ export const languageDefinition = (
   };
 };
 
-export const gluePredicate = (token: TypedLanguageToken): boolean => {
+export const gluePredicate = (token: TypedToken): boolean => {
   if (
     token.type !== "token" &&
     token.y === token?.prev?.y &&

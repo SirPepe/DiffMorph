@@ -1,9 +1,9 @@
 // Represents a bit of code
 export type Code = string | CodeContainer;
 
-// Represents some kind of container with bits of code inside. May be a highlight
-// container, in which case it gets a very special treatment (not as a box, but
-// as a kind of metadata)
+// Represents some kind of container with bits of code inside. May be a
+// highlight container, in which case it gets a very special treatment (not as
+// a box, but as a kind of metadata)
 export type CodeContainer = {
   content: Code[];
   hash: string;
@@ -29,8 +29,8 @@ export type TextToken = {
 };
 
 // Represents an element containing a bunch of other text or box tokens. The
-// source element can be reconstructed from tagName and attributes, which also
-// serve as the input to the box token's hash.
+// source element can be reconstructed from metadata, which also serve as the
+// input to the box token's hash.
 export type BoxToken = {
   x: number;
   y: number;
@@ -57,38 +57,27 @@ export type TokenLike = {
 // box. Gets passed into a language function in this format. Note that the type
 // of "prev" type is an already-typed token (as it has been passed through the
 // language function before the current token)
-export type LanguageToken = {
+export type RawToken = {
   x: number;
   y: number;
   text: string;
-  prev: TypedLanguageToken | undefined;
-  next: LanguageToken | undefined;
+  prev: TypedToken | undefined;
+  next: RawToken | undefined;
   source: TextToken;
   parent: BoxToken;
 };
 
 // Represents a text token that has been passed through a language function and
 // has thus been assigned a type.
-export type TypedLanguageToken = {
-  x: number;
-  y: number;
-  text: string;
-  type: string;
-  hash: string;
-  prev: TypedLanguageToken | undefined;
-  next: TypedLanguageToken | undefined;
-  source: TextToken;
-  parent: BoxToken;
-};
-
-// Represents text tokens that were first passed through a language function and
-// then a glue function.
 export type TypedToken = {
   x: number;
   y: number;
   text: string;
   type: string;
   hash: string;
+  prev: TypedToken | undefined;
+  next: TypedToken | undefined;
+  source: TextToken;
   parent: BoxToken;
 };
 

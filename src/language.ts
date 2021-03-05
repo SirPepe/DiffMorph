@@ -2,18 +2,17 @@ import { hash, last } from "./lib";
 import {
   BoxToken,
   isTextToken,
-  LanguageToken,
-  TextToken,
-  TypedLanguageToken,
+  RawToken,
   TypedToken,
+  TextToken,
 } from "./types";
 
-const toLanguageToken = (
+const toRawToken = (
   source: BoxToken | TextToken,
   parent: BoxToken,
   x: number,
   y: number
-): LanguageToken => {
+): RawToken => {
   if (isTextToken(source)) {
     return {
       ...source,
@@ -25,19 +24,19 @@ const toLanguageToken = (
       parent,
     };
   } else {
-    return toLanguageTokens(source, source.x, source.y);
+    return toRawTokens(source, source.x, source.y);
   }
 };
 
-export const toLanguageTokens = (
+export const toRawTokens = (
   root: BoxToken,
   x = 0,
   y = 0
-): LanguageToken => {
-  let head: LanguageToken | undefined;
-  let tail: LanguageToken | undefined;
+): RawToken => {
+  let head: RawToken | undefined;
+  let tail: RawToken | undefined;
   for (const token of root.tokens) {
-    const languageToken = toLanguageToken(token, root, x, y);
+    const languageToken = toRawToken(token, root, x, y);
     if (!head || !tail) {
       head = tail = languageToken;
       continue;
@@ -63,9 +62,9 @@ export const toLanguageTokens = (
 };
 
 const applyLanguageDefinition = (
-  language: (token: LanguageToken) => string | string[],
-  input: LanguageToken
-): TypedLanguageToken => {
+  language: (token: RawToken) => string | string[],
+  input: RawToken
+): TypedToken => {
   const head: any = input;
   let token: any = input;
   while (token) {
@@ -85,25 +84,20 @@ const applyLanguageDefinition = (
   return head;
 };
 
-const toTypedTokens = (token: TypedLanguageToken | undefined): TypedToken[] => {
+const flattenTypedTokens = (token: TypedToken | undefined): TypedToken[] => {
   const result: TypedToken[] = [];
   while (token) {
-    result.push({
-      x: token.x,
-      y: token.y,
-      text: token.text,
-      type: token.type,
-      hash: token.hash,
-      parent: token.parent,
-    });
+    result.push({ ...token, prev: undefined, next: undefined });
     token = token.next;
   }
   return result;
 };
 
+// Returns tokens as an array for easier diffing. The tokens are still linked to
+// each other as that is important for other bits of the program.
 export const applyLanguage = (
-  definitionFactory: () => (token: LanguageToken) => string | string[],
-  gluePredicate: (token: TypedLanguageToken) => boolean,
+  definitionFactory: () => (token: RawToken) => string | string[],
+  gluePredicate: (token: TypedToken) => boolean,
   tokens: (BoxToken | TextToken)[]
 ): TypedToken[] => {
   const rootBox =
@@ -112,11 +106,11 @@ export const applyLanguage = (
       : { x: 0, y: 0, meta: {}, hash: "", tokens };
   const firstTyped = applyLanguageDefinition(
     definitionFactory(),
-    toLanguageTokens(rootBox)
+    toRawTokens(rootBox)
   );
   // This joins the token in-place so that the glue function can benefit from
   // working with already-glued previous tokens.
-  let token: TypedLanguageToken | undefined = firstTyped;
+  let token: TypedToken | undefined = firstTyped;
   while (token) {
     if (
       token.prev &&
@@ -132,5 +126,5 @@ export const applyLanguage = (
     }
     token = token.next;
   }
-  return toTypedTokens(firstTyped);
+  return flattenTypedTokens(firstTyped);
 };
