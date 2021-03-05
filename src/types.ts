@@ -51,6 +51,8 @@ export type TokenLike = {
   parent: {
     hash: any;
   };
+  next: TokenLike | undefined;
+  prev: TokenLike | undefined;
 };
 
 // Represents a text token that has been linked up to its siblings and parent
