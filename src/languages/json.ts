@@ -1,5 +1,6 @@
 // Implements support for both HTML and XML
 
+import { isAdjacent } from "../lib";
 import { RawToken, TypedToken } from "../types";
 
 type Flags = {
@@ -123,6 +124,9 @@ export const languageDefinition = (
 };
 
 export const gluePredicate = (token: TypedToken): boolean => {
+  if (token.type.startsWith("comment")) {
+    return isAdjacent(token, token.prev);
+  }
   if (
     token.type !== "token" &&
     token.y === token?.prev?.y &&

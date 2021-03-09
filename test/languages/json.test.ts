@@ -10,6 +10,7 @@ describe("Basic JSON", () => {
         x: 0,
         y: 0,
         text: "{",
+        size: 1,
         type: "token",
         hash: "pz3cxk",
         parent: expect.any(Object),
@@ -21,8 +22,27 @@ describe("Basic JSON", () => {
         x: 1,
         y: 0,
         text: "}",
+        size: 1,
         type: "token",
         hash: "6xavw7",
+        parent: expect.any(Object),
+        source: expect.any(Object),
+        next: undefined,
+        prev: undefined,
+      },
+    ]);
+  });
+
+  test("Content processed by the glue function", () => {
+    const tokens = json(`"string"`);
+    expect(tokens).toEqual([
+      {
+        x: 0,
+        y: 0,
+        text: '"string"',
+        size: 8,
+        type: "string",
+        hash: "wbp31a",
         parent: expect.any(Object),
         source: expect.any(Object),
         next: undefined,

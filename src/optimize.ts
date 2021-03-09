@@ -43,7 +43,11 @@ function resolveOptimizations<T extends TokenLike>(
   for (const deletion of deletions) {
     const alternative = pickAlternative(deletion, additions);
     if (alternative) {
-      movements.push({ type: "MOV", item: alternative.item, ref: deletion.item });
+      movements.push({
+        type: "MOV",
+        item: alternative.item,
+        ref: deletion.item,
+      });
       additions.delete(alternative);
       deletions.delete(deletion);
       continue;
@@ -55,6 +59,30 @@ function resolveOptimizations<T extends TokenLike>(
   return [...additions, ...deletions, ...movements];
 }
 
+/*function getOffset(item: TokenLike): {
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+} {
+  const { x: left, y: top } = item;
+  let bottom: number | undefined = undefined;
+  let right: number | undefined = undefined;
+  while (true) {
+    if (!item.next) {
+      bottom = item.y - top;
+      break;
+    }
+    if (typeof bottom === "undefined" && item.next.y === top + 1) {
+      right = left +  item.x
+    }
+    item = item.next;
+  }
+  bottom = bottom || 0;
+  right = right || 0;
+  return { top, left, bottom, right };
+}*/
+
 function pickAlternative<T extends TokenLike>(
   deletion: DEL<T>,
   candidates: Set<ADD<T>>
@@ -62,5 +90,8 @@ function pickAlternative<T extends TokenLike>(
   if (candidates.size === 1) {
     return Array.from(candidates)[0];
   }
+  // Try to find an alternative with the same offset from the end of the line
+  // const xOffset =
+  // if (deletion.item.)
   return null;
 }

@@ -47,6 +47,7 @@ export const isTextToken = (
 export type TokenLike = {
   x: number;
   y: number;
+  size: number;
   hash: string;
   parent: {
     hash: any;
@@ -63,6 +64,7 @@ export type RawToken = {
   x: number;
   y: number;
   text: string;
+  size: number;
   prev: TypedToken | undefined;
   next: RawToken | undefined;
   source: TextToken;
@@ -75,6 +77,7 @@ export type TypedToken = {
   x: number;
   y: number;
   text: string;
+  size: number;
   type: string;
   hash: string;
   prev: TypedToken | undefined;
@@ -88,6 +91,7 @@ export type RenderToken = {
   x: number;
   y: number;
   text: string;
+  size: number;
   type: string;
   hash: string;
   id: string;

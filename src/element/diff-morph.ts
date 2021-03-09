@@ -99,7 +99,6 @@ export class DiffMorph extends HTMLElement {
 
   set frame(input: number) {
     const value = this.computeFrame(input);
-    console.log(value);
     this.content.classList.remove(`frame${this.currentFrame}`);
     this.content.classList.add(`frame${value}`);
     this.currentFrame = value;

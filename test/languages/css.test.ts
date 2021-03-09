@@ -23,7 +23,9 @@ describe("Basic CSS", () => {
     ]);
   });
   test("Simple rule with non-trivial selector", () => {
-    const tokens = css(`div + .foo, :host([disabled="true"]) ~ a { color: red; }`);
+    const tokens = css(
+      `div + .foo, :host([disabled="true"]) ~ a { color: red; }`
+    );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "value-selector",
@@ -146,7 +148,9 @@ describe("At-rules", () => {
   });
 
   test("Nested media queries", () => {
-    const tokens = css(`@media screen and (min-width: 800px) { @media print {} }`);
+    const tokens = css(
+      `@media screen and (min-width: 800px) { @media print {} }`
+    );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword-at-media",

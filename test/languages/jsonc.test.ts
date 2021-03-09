@@ -12,13 +12,19 @@ describe("JSONC", () => {
   test("Line comment", () => {
     const tokens = jsonc("// a\n{}");
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["comment-line", "token", "token"]);
+    expect(types).toEqual(["comment-line", "comment-line", "token", "token"]);
   });
 
   test("Single-line block comment", () => {
     const tokens = jsonc("/* a */\n{}");
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["comment-block", "token", "token"]);
+    expect(types).toEqual([
+      "comment-block",
+      "comment-block",
+      "comment-block",
+      "token",
+      "token",
+    ]);
   });
 
   test("Multi-line block comment", () => {

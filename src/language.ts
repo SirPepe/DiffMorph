@@ -16,6 +16,7 @@ const toRawToken = (
   if (isTextToken(source)) {
     return {
       ...source,
+      size: source.text.length,
       x: source.x + x,
       y: source.y + y,
       next: undefined,
@@ -28,11 +29,7 @@ const toRawToken = (
   }
 };
 
-export const toRawTokens = (
-  root: BoxToken,
-  x = 0,
-  y = 0
-): RawToken => {
+export const toRawTokens = (root: BoxToken, x = 0, y = 0): RawToken => {
   let head: RawToken | undefined;
   let tail: RawToken | undefined;
   for (const token of root.tokens) {
@@ -118,6 +115,7 @@ export const applyLanguage = (
       token.parent.hash === token.prev.parent.hash // don't join across boxes
     ) {
       token.prev.text += token.text;
+      token.prev.size += token.size;
       token.prev.hash = hash(hash(token.prev.type) + hash(token.prev.text));
       token.prev.next = token.next;
       if (token.next) {
