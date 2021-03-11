@@ -15,6 +15,8 @@ const defaultState = () => ({
   stringValue: false,
   lineComment: false,
   blockComment: false,
+  arrayDepth: 0,
+  objectDepth: 0,
 });
 
 export const languageDefinition = (
@@ -116,6 +118,24 @@ export const languageDefinition = (
     // is token a keyword?
     if (KEYWORDS.includes(token.text)) {
       return `keyword-${token.text}`;
+    }
+
+    // Objects and arrays
+    if (token.text === "{") {
+      return `token-object-start-${state.objectDepth++}`;
+    }
+    if (token.text === "[") {
+      return `token-array-start-${state.arrayDepth++}`;
+    }
+    if (token.text === "]") {
+      return `token-array-end-${--state.arrayDepth}`;
+    }
+    if (token.text === "}") {
+      return `token-object-end-${--state.objectDepth}`;
+    }
+
+    if (token.text === "," || token.text === ":") {
+      return "punctuation";
     }
 
     // no special token
