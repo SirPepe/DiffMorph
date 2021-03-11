@@ -16,6 +16,7 @@ module.exports = {
   },
 
   rules: {
+    "eslint:recommended": ["checkLoops", false ],
     "@typescript-eslint/indent": ["error", 2],
     "@typescript-eslint/object-literal-key-quotes": "off",
     "@typescript-eslint/prefer-interface": "off",
