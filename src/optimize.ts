@@ -59,13 +59,19 @@ function resolveOptimizations<T extends TokenLike>(
   return [...additions, ...deletions, ...movements];
 }
 
-/*function getOffset(item: TokenLike): {
+type Offset = {
   top: number;
   left: number;
   bottom: number;
   right: number;
-} {
-  const { x: left, y: top } = item;
+  // nthFromStartOfLine: number;
+  // nthFromEndOfLine: number;
+}
+
+function getOffset(
+  item: TokenLike
+): Offset {
+  const { x: left, y: top, size } = item;
   let bottom: number | undefined = undefined;
   let right: number | undefined = undefined;
   while (true) {
@@ -74,24 +80,33 @@ function resolveOptimizations<T extends TokenLike>(
       break;
     }
     if (typeof bottom === "undefined" && item.next.y === top + 1) {
-      right = left +  item.x
+      right = item.x + item.size - left + size;
     }
     item = item.next;
   }
   bottom = bottom || 0;
   right = right || 0;
   return { top, left, bottom, right };
-}*/
+}
 
 function pickAlternative<T extends TokenLike>(
   deletion: DEL<T>,
-  candidates: Set<ADD<T>>
+  additions: Set<ADD<T>>
 ): ADD<T> | null {
-  if (candidates.size === 1) {
-    return Array.from(candidates)[0];
+  if (additions.size === 1) {
+    return Array.from(additions)[0];
   }
-  // Try to find an alternative with the same offset from the end of the line
-  // const xOffset =
-  // if (deletion.item.)
+  const offset = getOffset(deletion.item);
+  const candidates = new Map(Array.from(additions, (addition) => {
+    return [ addition, getOffset(addition.item) ];
+  }));
+  // First attempt: try to find an alternative with the same offset from the end
+  // of the same line
+  for (const [candidate, { right }] of candidates) {
+    if (candidate.item.y === deletion.item.y && offset.right === right) {
+      return candidate;
+    }
+  }
+  // Last attempt: take whatever is closest
   return null;
 }

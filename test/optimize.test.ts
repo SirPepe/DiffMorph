@@ -1,23 +1,24 @@
 import { diffAll } from "../src/diff";
-import * as language from "../src/languages/json";
+import * as language from "../src/languages/none";
 import { optimize } from "../src/optimize";
 import { type } from "./helpers";
-const json = type(language);
+const tokenize = type(language);
 
 describe("Optimizer", () => {
   test("It turns a single addition/deletion into a movement", () => {
-    const res = optimize(diffAll([json("{}"), json("{ }")]));
+    const res = optimize(diffAll([tokenize(".."), tokenize(". .")]));
     expect(res.length).toBe(2);
     expect(res[0].map((op) => op.type)).toEqual(["ADD", "ADD"]);
     expect(res[1].length).toBe(1);
-    expect(res[1][0].item).toMatchObject({ x: 2, y: 0 });
-    expect((res[1][0] as any).ref).toMatchObject({ x: 1, y: 0 });
+    expect(res[1][0]).toMatchObject({ item: { x: 2, y: 0 }, ref: { x: 1, y: 0 } });
   });
 
-  test.skip("It keeps the last token on the end of the line", () => {
-    const res = optimize(diffAll([json("[]"), json("[[]]")]));
+  test("It turns two additions/deletions into movements", () => {
+    const res = optimize(diffAll([tokenize(".."), tokenize("  .  .")]));
     expect(res.length).toBe(2);
     expect(res[0].map((op) => op.type)).toEqual(["ADD", "ADD"]);
-    console.log(res[1]);
+    expect(res[1].map((op) => op.type)).toEqual(["MOV", "MOV"]);
+    expect(res[1][0]).toMatchObject({ item: { x: 2, y: 0 }, ref: { x: 0, y: 0 } });
+    expect(res[1][1]).toMatchObject({ item: { x: 5, y: 0 }, ref: { x: 1, y: 0 } });
   });
 });
