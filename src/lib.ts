@@ -84,6 +84,31 @@ type Tuple<
   : never;
 /* eslint-enable */
 
+export function findMax<T>(
+  items: Iterable<T>,
+  computer: (item: T) => number,
+): T {
+  let max: number | undefined = undefined;
+  let pick: T | undefined = undefined;
+  for (const item of items) {
+    const value = computer(item);
+    if (typeof max === "undefined" || value > max) {
+      max = value;
+      pick = item;
+    }
+  }
+  if (typeof max === "undefined") {
+    throw new Error("Can't search empty list");
+  }
+  return pick as T; // can't not be T when max is not undefined
+}
+export function findMin<T>(
+  items: Iterable<T>,
+  computer: (item: T) => number,
+): T {
+  return findMax(items, (item: T) => computer(item) * -1 );
+}
+
 export const lookaheadText = <
   T extends { text: string; next: T | undefined },
   N extends number

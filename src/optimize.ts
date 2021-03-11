@@ -2,6 +2,7 @@
 // into movements.
 
 import { ADD, DEL, MOV, DiffOp } from "./diff";
+import { findMin } from "./lib";
 import { TokenLike } from "./types";
 
 export function optimize<T extends TokenLike>(
@@ -64,8 +65,6 @@ type Offset = {
   left: number;
   bottom: number;
   right: number;
-  // nthFromStartOfLine: number;
-  // nthFromEndOfLine: number;
 }
 
 function getOffset(
@@ -93,20 +92,42 @@ function pickAlternative<T extends TokenLike>(
   deletion: DEL<T>,
   additions: Set<ADD<T>>
 ): ADD<T> | null {
+  // Too easy
   if (additions.size === 1) {
     return Array.from(additions)[0];
   }
+  // Setup and pre-calulate data for picking the best alternative
   const offset = getOffset(deletion.item);
-  const candidates = new Map(Array.from(additions, (addition) => {
-    return [ addition, getOffset(addition.item) ];
-  }));
-  // First attempt: try to find an alternative with the same offset from the end
-  // of the same line
-  for (const [candidate, { right }] of candidates) {
-    if (candidate.item.y === deletion.item.y && offset.right === right) {
+  const sameLineCandidates = new Map<ADD<T>, Offset>();
+  const allCandidates = new Map<ADD<T>, Offset>();
+  for (const addition of additions) {
+    const additionOffset = getOffset(addition.item);
+    if (additionOffset.top === offset.top) {
+      sameLineCandidates.set(addition, additionOffset);
+    }
+    allCandidates.set(addition, additionOffset);
+  }
+  // If there is exactly one alternative on the same line, just pick that
+  if (sameLineCandidates.size === 1) {
+    return Array.from(sameLineCandidates.keys())[0];
+  }
+  // Try to find an alternative with the same offset from right of the same line
+  for (const [candidate, { right }] of sameLineCandidates) {
+    if (offset.right === right) {
       return candidate;
     }
   }
+  // Try to find an alternative that's the closest on the same line
+  if (sameLineCandidates.size > 0) {
+    const [ closest ] = findMin(sameLineCandidates, ([, candidateOffset]) => {
+      return Math.abs(candidateOffset.left - offset.left);
+    });
+    return closest;
+  }
   // Last attempt: take whatever is closest
-  return null;
+  return findMin(sameLineCandidates, ([, candidateOffset]) => {
+    const deltaX = Math.abs(candidateOffset.left - offset.left);
+    const deltaY = Math.abs(candidateOffset.top - offset.top);
+    return deltaX + deltaY;
+  })[0];
 }
