@@ -1,5 +1,7 @@
-import { DiffOp } from "../lib/diff";
-import { createIdGenerator } from "../lib/util";
+// Turns diffing operations into rendering information.
+
+import { DiffOp } from "./diff";
+import { createIdGenerator } from "./util";
 import { RenderToken, TypedToken } from "../types";
 
 // Manages the available render tokens. The goal is to use as few render tokens

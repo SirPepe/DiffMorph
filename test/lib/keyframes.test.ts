@@ -1,6 +1,6 @@
 import { diffAll } from "../../src/lib/diff";
 import * as language from "../../src/languages/json";
-import { toKeyframes } from "../../src/output/keyframes";
+import { toKeyframes } from "../../src/lib/keyframes";
 import { type } from "../helpers";
 const json = type(language);
 

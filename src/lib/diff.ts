@@ -1,3 +1,7 @@
+// This module's diffAll() function turns frames of typed tokens into diffing
+// operations. It first attempts to diff the source code on a line-by-line level
+// and only looks at individual tokens in a second pass.
+
 import { diffArrays } from "diff";
 import { createIdGenerator, groupBy } from "./util";
 import { TokenLike } from "../types";
@@ -114,6 +118,7 @@ const diffTokens = <T extends TokenLike>(from: T[], to: T[]): DiffOp<T>[] => {
   return result;
 };
 
+// Only exported for unit tests
 export const diff = <T extends TokenLike>(from: T[], to: T[]): DiffOp<T>[] => {
   const result: DiffOp<T>[] = [];
   const fromByParent = groupBy(from, (token) => token.parent.hash);

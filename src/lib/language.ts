@@ -1,3 +1,7 @@
+// This module's applyLanguage() function calls language definitions on frames
+// of untyped tokens and thereby transforms bits of context-free text into typed
+// tokens that can then be diffed, highlighted and rendered.
+
 import { hash, last } from "./util";
 import {
   BoxToken,

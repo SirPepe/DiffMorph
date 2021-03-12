@@ -1,4 +1,5 @@
-// Implements support for both HTML and XML
+// Implements support for both JSON and JSONC. Comments (a feature of JSONC
+// only) can be enabled by a flag, which the JSONC definition binds to true.
 
 import { isAdjacent } from "../lib/util";
 import { RawToken, TypedToken } from "../types";

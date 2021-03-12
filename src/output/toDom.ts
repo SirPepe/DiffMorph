@@ -1,5 +1,5 @@
 import { createIdGenerator } from "../lib/util";
-import { Keyframe } from "./keyframes";
+import { Keyframe } from "../lib/keyframes";
 
 const nextId = createIdGenerator();
 
@@ -14,22 +14,6 @@ const DEFAULT_STYLES = `
   opacity: 0;
   position: absolute;
 }`;
-
-export function toDom(
-  keyframes: Keyframe[]
-): [Content: HTMLElement, MaxWidth: number, MaxHeight: number] {
-  const wrapper = document.createElement("div");
-  const code = document.createElement("pre");
-  code.className = "dm-code";
-  const id = nextId("dom", "container");
-  wrapper.className = `dm dm-${id}`;
-  const { style, tokens } = generateContent(keyframes, id);
-  const maxWidth = Math.max(...keyframes.map(({ width }) => width));
-  const maxHeight = Math.max(...keyframes.map(({ height }) => height));
-  code.append(...tokens);
-  wrapper.append(code, style);
-  return [wrapper, maxWidth, maxHeight];
-}
 
 function generateContent(
   keyframes: Keyframe[],
@@ -61,4 +45,20 @@ function generateContent(
     style,
     tokens: Array.from(tokens.values()),
   };
+}
+
+export function toDom(
+  keyframes: Keyframe[]
+): [Content: HTMLElement, MaxWidth: number, MaxHeight: number] {
+  const wrapper = document.createElement("div");
+  const code = document.createElement("pre");
+  code.className = "dm-code";
+  const id = nextId("dom", "container");
+  wrapper.className = `dm dm-${id}`;
+  const { style, tokens } = generateContent(keyframes, id);
+  const maxWidth = Math.max(...keyframes.map(({ width }) => width));
+  const maxHeight = Math.max(...keyframes.map(({ height }) => height));
+  code.append(...tokens);
+  wrapper.append(code, style);
+  return [wrapper, maxWidth, maxHeight];
 }

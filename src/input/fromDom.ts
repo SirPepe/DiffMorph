@@ -1,10 +1,10 @@
-// This module is a DOM frontend for the tokenizer. It takes code from an HTML
-// element's content and returns tokens.
+// This module is a DOM frontend for the tokenizer. Its fromDom() function takes
+// elements as input and turns their text content into optimized keyframes.
 
 import { BoxToken, Code, HighlightToken, RawToken, TypedToken } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { hash } from "../lib/util";
-import { toKeyframes, Keyframe } from "../output/keyframes";
+import { toKeyframes, Keyframe } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
 import { diffAll } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
