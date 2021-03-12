@@ -42,6 +42,43 @@ describe("Basic HTML", () => {
     ]);
   });
 
+  test("Nested elements", () => {
+    const tokens = html(`<p class="foo"><b id=bold>Text</b></p>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "tag",
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "tag",
+      "token",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test("Custom element", () => {
+    const tokens = html(`<hello-world id="foo"></hello-world>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "tag",
+      "tag"
+    ]);
+  });
+
   test("Basic comment", () => {
     const tokens = html(`<!-- Hello World -->`);
     const types = tokens.map((token) => token.type);

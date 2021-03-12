@@ -12,16 +12,14 @@ const QUOTES = ["'", '"'];
 const ATTR_RE = /^[a-z]+[a-z0-9]*$/i;
 
 type State = {
-  attrState: boolean | string; // string indicates the quote used
-  xmlDeclarationState: boolean; // when true, tag state must also be true
+  attrState: false | string; // string indicates the quote used
   commentState: false | "cdata" | "comment";
-  tagState: boolean;
+  tagState: false | string; // string indicates the current tag
   doctypeState: boolean;
 };
 
 const defaultState = (): State => ({
   attrState: false,
-  xmlDeclarationState: false,
   commentState: false,
   tagState: false,
   doctypeState: false,
@@ -89,32 +87,30 @@ export const languageDefinition = (
 
     // handle tags
     if (state.tagState === false && token.text === "<") {
-      state.tagState = true;
       if (
         xml &&
         token?.next?.text === "?" &&
         token?.next?.next?.text === "xml"
       ) {
-        state.xmlDeclarationState = true;
+        state.tagState = "__XML_DECLARATION";
         return ["tag-xml", "tag-xml", "tag-xml"];
       }
+      state.tagState = "tag";
       return "tag";
     }
     if (
-      state.tagState === true &&
-      state.xmlDeclarationState === true &&
+      state.tagState === "__XML_DECLARATION" &&
       token.text === "?" &&
       token?.next?.text === ">"
     ) {
       state.tagState = false;
-      state.xmlDeclarationState = false;
       return ["tag-xml", "tag-xml"];
     }
-    if (state.tagState === true && token.text === ">") {
+    if (state.tagState && token.text === ">") {
       state.tagState = false;
       return "tag";
     }
-    if (state.tagState === true) {
+    if (state.tagState) {
       // Continue after namespace operator
       if (xml && token.prev?.type === "operator-namespace") {
         if (token?.prev.prev) {
@@ -177,6 +173,14 @@ export const gluePredicate = (token: TypedToken): boolean => {
   if (token.type === "tag-xml" && token?.prev?.type === "tag-xml") {
     return true;
   }
+  // Fuse custom element tags
+  if (
+    token.type === "tag" &&
+    (token.text.startsWith("-") || token?.prev?.text.endsWith("-")) &&
+    token?.prev?.type === "tag"
+  ) {
+    return true;
+  }
   // Fuse closing slashes to end tags' closing bracket
   if (
     token.type === "tag" &&
@@ -196,7 +200,7 @@ export const gluePredicate = (token: TypedToken): boolean => {
     return true;
   }
   // Fuse closing tag names to opening brackets and closing slash
-  if (token.type === "tag") {
+  if (token.type === "tag" && token.text !== "<") {
     if (token?.prev?.text.startsWith("</")) {
       return true;
     }
