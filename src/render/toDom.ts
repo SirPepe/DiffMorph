@@ -41,7 +41,7 @@ function generateContent(
       }
       const selector = `.dm-${classPrefix}.frame${i} .dm-token.dm-${id}`;
       const rules = [
-        `transform:translate(${renderToken.x}ch,${renderToken.y}%)`,
+        `transform:translate(${renderToken.x}ch,${renderToken.y * 100}%)`,
       ];
       if (renderToken.visible) {
         rules.push(`opacity:1`);
