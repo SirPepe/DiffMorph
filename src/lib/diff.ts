@@ -1,6 +1,6 @@
 import { diffArrays } from "diff";
-import { createIdGenerator, groupBy } from "./lib";
-import { TokenLike } from "./types";
+import { createIdGenerator, groupBy } from "./util";
+import { TokenLike } from "../types";
 
 export type ADD<T extends TokenLike> = { readonly type: "ADD"; item: T };
 export type DEL<T extends TokenLike> = { readonly type: "DEL"; item: T };

@@ -1,9 +1,6 @@
 import debounce from "debounce";
-import { diffAll } from "../diff";
-import { processCode } from "../input/fromDom";
-import { applyLanguage } from "../language";
-import { toKeyframes } from "../render/keyframes";
-import { toDom } from "../render/toDom";
+import { fromDom } from "../input/fromDom";
+import { toDom } from "../output/toDom";
 
 function isElement(x: any): x is Element {
   if (!x || typeof x !== "object") {
@@ -136,13 +133,8 @@ export class DiffMorph extends HTMLElement {
         return element[Symbol.toStringTag] === "DiffMorphFrameElement";
       });
       this.numFrames = sources.length;
-      const tokens = sources.map((source) => {
-        return applyLanguage(languageDefinition, gluePredicate, [
-          processCode(source)[0],
-        ]);
-      });
       const [newContent, maxWidth, maxHeight] = toDom(
-        toKeyframes(diffAll(tokens))
+        fromDom(sources, languageDefinition, gluePredicate)
       );
       if (!this.content.parentElement) {
         throw new Error();

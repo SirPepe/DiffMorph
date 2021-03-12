@@ -1,11 +1,11 @@
-import { hash, last } from "./lib";
+import { hash, last } from "./util";
 import {
   BoxToken,
   isTextToken,
   RawToken,
   TypedToken,
   TextToken,
-} from "./types";
+} from "../types";
 
 const toRawToken = (
   source: BoxToken | TextToken,

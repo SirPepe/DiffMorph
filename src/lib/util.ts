@@ -102,6 +102,7 @@ export function findMax<T>(
   }
   return pick as T; // can't not be T when max is not undefined
 }
+
 export function findMin<T>(
   items: Iterable<T>,
   computer: (item: T) => number

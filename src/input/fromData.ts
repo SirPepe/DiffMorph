@@ -2,7 +2,7 @@
 // and objects (representing boxes) and returns tokens.
 
 import { BoxToken, Code, HighlightToken } from "../types";
-import { tokenize } from "./tokenizer";
+import { tokenize } from "../lib/tokenizer";
 
 export type InputContainer = {
   content: Input[];

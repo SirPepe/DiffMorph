@@ -1,9 +1,13 @@
 // This module is a DOM frontend for the tokenizer. It takes code from an HTML
 // element's content and returns tokens.
 
-import { BoxToken, Code, HighlightToken } from "../types";
-import { tokenize } from "./tokenizer";
-import { hash } from "../lib";
+import { BoxToken, Code, HighlightToken, RawToken, TypedToken } from "../types";
+import { tokenize } from "../lib/tokenizer";
+import { hash } from "../lib/util";
+import { toKeyframes, Keyframe } from "../output/keyframes";
+import { optimize } from "../lib/optimize";
+import { diffAll } from "../lib/diff";
+import { applyLanguage } from "../lib/language";
 
 const isHTMLElement = (arg: any): arg is HTMLElement => {
   if (!arg) {
@@ -66,3 +70,16 @@ export const processCode = (source: Element): [BoxToken, HighlightToken[]] => {
   const { tokens, highlights } = tokenize(extractCode(source));
   return [{ x: 0, y: 0, hash, meta, tokens }, highlights];
 };
+
+export function fromDom(
+  sourceElements: Element[],
+  languageDefinition: () => (token: RawToken) => string | string[],
+  gluePredicate: (token: TypedToken) => boolean
+): Keyframe[] {
+  const tokens = sourceElements.map((sourceElement) => {
+    return applyLanguage(languageDefinition, gluePredicate, [
+      processCode(sourceElement)[0],
+    ]);
+  });
+  return toKeyframes(optimize(diffAll(tokens)));
+}

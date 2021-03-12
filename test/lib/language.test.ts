@@ -1,4 +1,4 @@
-import { toRawTokens } from "../src/language";
+import { toRawTokens } from "../../src/lib/language";
 
 describe("language", () => {
   test("turns tokens into a doubly-linked list", () => {

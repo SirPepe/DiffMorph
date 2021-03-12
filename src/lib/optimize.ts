@@ -2,8 +2,8 @@
 // into movements.
 
 import { ADD, DEL, MOV, DiffOp } from "./diff";
-import { findMin } from "./lib";
-import { TokenLike } from "./types";
+import { findMin } from "./util";
+import { TokenLike } from "../types";
 
 export function optimize<T extends TokenLike>(
   diffs: DiffOp<T>[][]
@@ -123,7 +123,7 @@ function pickAlternative<T extends TokenLike>(
     return closest;
   }
   // Last attempt: take whatever is closest
-  return findMin(sameLineCandidates, ([, candidateOffset]) => {
+  return findMin(allCandidates, ([, candidateOffset]) => {
     const deltaX = Math.abs(candidateOffset.left - offset.left);
     const deltaY = Math.abs(candidateOffset.top - offset.top);
     return deltaX + deltaY;

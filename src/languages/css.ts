@@ -1,4 +1,4 @@
-import { isAdjacent } from "../lib";
+import { isAdjacent } from "../lib/util";
 import { RawToken, TypedToken } from "../types";
 
 const STRINGS = ["'", '"', "`"];

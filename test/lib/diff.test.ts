@@ -1,5 +1,5 @@
-import { diff, diffAll } from "../src/diff";
-import { TokenLike } from "../src/types";
+import { diff, diffAll } from "../../src/lib/diff";
+import { TokenLike } from "../../src/types";
 
 // Makes creating linked lists simpler
 function link<T extends TokenLike>(list: Omit<T, "prev" | "next">[]): T[] {

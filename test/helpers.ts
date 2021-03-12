@@ -1,5 +1,5 @@
-import { applyLanguage } from "../src/language";
-import { tokenize } from "../src/input/tokenizer";
+import { applyLanguage } from "../src/lib/language";
+import { tokenize } from "../src/lib/tokenizer";
 import { Code, RawToken, TypedToken } from "../src/types";
 
 export const type = (lang: {

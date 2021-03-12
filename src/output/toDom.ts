@@ -1,4 +1,4 @@
-import { createIdGenerator } from "../lib";
+import { createIdGenerator } from "../lib/util";
 import { Keyframe } from "./keyframes";
 
 const nextId = createIdGenerator();

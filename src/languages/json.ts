@@ -1,6 +1,6 @@
 // Implements support for both HTML and XML
 
-import { isAdjacent } from "../lib";
+import { isAdjacent } from "../lib/util";
 import { RawToken, TypedToken } from "../types";
 
 type Flags = {
