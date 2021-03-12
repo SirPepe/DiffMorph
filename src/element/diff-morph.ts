@@ -5,12 +5,67 @@ import { applyLanguage } from "../language";
 import { toKeyframes } from "../render/keyframes";
 import { toDom } from "../render/toDom";
 
+function isElement(x: any): x is Element {
+  if (!x || typeof x !== "object") {
+    return false;
+  }
+  return x.nodeType === 1;
+}
+
 const LANGS = new Set(["json"]);
 
 export class DMFrame extends HTMLElement {
   public get [Symbol.toStringTag](): string {
     return "DiffMorphFrameElement";
   }
+  public get title(): string {
+    return this.getAttribute("title") || "";
+  }
+}
+
+function createControls(): HTMLElement {
+  const element = document.createElement("div");
+  element.className = "dm-controls";
+  element.innerHTML = `
+    <button class="dm-controls-prev"><span>Prev</span></button>
+    <button class="dm-controls-next"><span>Next</span></button>
+  `;
+  return element;
+}
+
+function createStyles(): HTMLStyleElement {
+  const element = document.createElement("style");
+  element.innerHTML = `
+  :host {
+    display: block;
+  }
+  .dm-wrapper {
+    display: flex;
+    flex-direction: column;
+  }
+  .dm-controls {
+    display: none;
+  }
+  :host([controls]) .dm-controls {
+    display: block;
+  }
+`;
+  return element;
+}
+
+function createShadowDom(): [
+  HTMLDivElement, // wrapper element
+  HTMLDivElement, // keyframe container
+  HTMLStyleElement, // element styles
+  HTMLSlotElement // data source
+] {
+  const slot = document.createElement("slot");
+  slot.hidden = true; // Slot content is just am invisible data source
+  const wrapper = document.createElement("div");
+  wrapper.className = "dm-wrapper";
+  const content = document.createElement("div");
+  wrapper.append(content, createControls());
+  return [wrapper, content, createStyles(), slot];
 }
 
 export class DiffMorph extends HTMLElement {
@@ -23,15 +78,30 @@ export class DiffMorph extends HTMLElement {
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
-    this.source = document.createElement("slot");
-    this.source.hidden = true;
+    const [wrapper, content, styles, source] = createShadowDom();
+    this.content = content;
+    this.source = source;
+    this.shadow.append(source, wrapper, styles);
+  }
+
+  public connectedCallback(): void {
     this.source.addEventListener("slotchange", () => this.init());
-    this.content = document.createElement("div");
-    this.shadow.append(this.source, this.content);
+    this.shadow.addEventListener("click", ({ target }) => {
+      console.log("CLICK");
+      if (!isElement(target)) {
+        return;
+      }
+      if (target.matches(".dm-controls-prev, .dm-controls-prev *")) {
+        this.prev();
+      }
+      if (target.matches(".dm-controls-next, .dm-controls-next *")) {
+        this.next();
+      }
+    });
   }
 
   static get observedAttributes(): string[] {
-    return ["class"];
+    return ["class", "controls"];
   }
 
   public attributeChangedCallback(name: string): void {
@@ -67,7 +137,10 @@ export class DiffMorph extends HTMLElement {
         ]);
       });
       const rendered = toDom(toKeyframes(diffAll(tokens)));
-      this.shadow.replaceChild(rendered, this.content);
+      if (!this.content.parentElement) {
+        throw new Error();
+      }
+      this.content.parentElement.replaceChild(rendered, this.content);
       this.content = rendered;
       if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
         this.frame = this.computeFrame(this.getAttribute("frame"));
