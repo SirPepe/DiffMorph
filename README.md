@@ -1,5 +1,28 @@
 # DiffMorph
 
+## <diff-morph>
+
+Example:
+
+```html
+<diff-morph class="language-json" controls>
+  <dm-frame>{}</dm-frame>
+  <dm-frame>{ "hello": 42 }</dm-frame>
+  <dm-frame>{ "hello": 42, "world": 42 }</dm-frame>
+</diff-morph>
+```
+
+### Attributes
+
+* **`class`** must contain the programming languages as `language-whatever`
+  (eg. `language-javascriptclass`)
+* **`controls`** changes whether the element shows a toolbar with controls
+
+### Custom Properties
+
+* **`--dm-transition-time`** controls the transition duration for animations.
+  Defaults to `400ms`
+
 ## Language support
 
 ### Tier 1

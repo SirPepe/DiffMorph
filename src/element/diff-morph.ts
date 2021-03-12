@@ -51,9 +51,9 @@ function createStyles(): HTMLStyleElement {
   }
   .dm-code {
     margin: 0;
-    line-height: 1ch;
-    height: var(--max-height);
-    width: var(--max-width);
+    line-height: 2ch;
+    height: calc(var(--max-height) * 2ch);
+    width: calc(var(--max-width) * 1ch);
   }
 `;
   return element;
@@ -149,7 +149,7 @@ export class DiffMorph extends HTMLElement {
       }
       this.content.parentElement.setAttribute(
         "style",
-        `--max-width:${maxWidth}ch; --max-height:${maxHeight}ch`
+        `--max-width:${maxWidth}; --max-height:${maxHeight}`
       );
       this.content.parentElement.replaceChild(newContent, this.content);
       this.content = newContent;

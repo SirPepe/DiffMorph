@@ -4,10 +4,16 @@ import { Keyframe } from "./keyframes";
 const nextId = createIdGenerator();
 
 const DEFAULT_STYLES = `
-:host { --transition-time: var(--dm-transition-time, 400ms) }
-.dm-code { transition: transform var(--transition-time); position: relative }
-.dm-token {transition: transform var(--transition-time), opacity var(--transition-time); opacity: 0; position: absolute }
-`;
+.dm-code {
+  transition: transform var(--dm-transition-time, 400ms);
+  position: relative
+}
+.dm-token {
+  transition: transform var(--dm-transition-time, 400ms),
+              opacity var(--dm-transition-time, 400ms);
+  opacity: 0;
+  position: absolute;
+}`;
 
 export function toDom(
   keyframes: Keyframe[]
