@@ -76,10 +76,12 @@ export function fromDom(
   languageDefinition: () => (token: RawToken) => string | string[],
   gluePredicate: (token: TypedToken) => boolean
 ): Keyframe[] {
-  const tokens = sourceElements.map((sourceElement) => {
-    return applyLanguage(languageDefinition, gluePredicate, [
-      processCode(sourceElement)[0],
-    ]);
-  });
-  return toKeyframes(optimize(diffAll(tokens)));
+  const tokens = [];
+  const highlights = [];
+  for (const sourceElement of sourceElements) {
+    const [rootBox, highlightTokens] = processCode(sourceElement);
+    tokens.push(applyLanguage(languageDefinition, gluePredicate, [rootBox]));
+    highlights.push(highlightTokens);
+  }
+  return toKeyframes(optimize(diffAll(tokens)), highlights);
 }

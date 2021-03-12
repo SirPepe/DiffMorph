@@ -47,10 +47,12 @@ export function fromData(
   languageDefinition: () => (token: RawToken) => string | string[],
   gluePredicate: (token: TypedToken) => boolean
 ): Keyframe[] {
-  const tokens = inputContainers.map((inputContainer) => {
-    return applyLanguage(languageDefinition, gluePredicate, [
-      processCode(inputContainer)[0],
-    ]);
-  });
-  return toKeyframes(optimize(diffAll(tokens)));
+  const tokens = [];
+  const highlights = [];
+  for (const inputContainer of inputContainers) {
+    const [rootBox, highlightTokens] = processCode(inputContainer);
+    tokens.push(applyLanguage(languageDefinition, gluePredicate, [rootBox]));
+    highlights.push(highlightTokens);
+  }
+  return toKeyframes(optimize(diffAll(tokens)), highlights);
 }

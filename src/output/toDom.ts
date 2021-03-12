@@ -22,7 +22,7 @@ function generateContent(
   const styles = [];
   const tokens = new Map<string, HTMLSpanElement>();
   for (let i = 0; i < keyframes.length; i++) {
-    for (const [id, renderToken] of keyframes[i].data) {
+    for (const [id, renderToken] of keyframes[i].tokens) {
       if (!tokens.has(id)) {
         const token = document.createElement("span");
         token.className = "dm-token dm-" + id + " " + renderToken.type;
