@@ -22,4 +22,10 @@ describe("Keyframes", () => {
     expect(keyframes[1].height).toBe(1);
     expect(keyframes[2].height).toBe(2);
   });
+
+  test("does not explode when a line break gets inserted after two identical frames", () => {
+    const diffs = diffAll([json("{}"), json("{}"), json("{\n}")]);
+    const keyframes = toKeyframes(diffs);
+    expect(keyframes.length).toBe(3);
+  });
 });
