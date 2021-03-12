@@ -70,6 +70,12 @@ export function isAdjacent<T extends { x: number; y: number; text: string }>(
   return false;
 }
 
+export function isNewLine<T extends { y: number; prev: T | undefined }>(
+  token: T
+): boolean {
+  return Boolean(token.prev && token.y > token.prev.y);
+}
+
 /* eslint-disable */
 type Tuple<
   T,
