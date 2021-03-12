@@ -1,2 +1,2 @@
 export const languageDefinition = () => (): string | string[] => "token";
-export const gluePredicate = () => false;
+export const gluePredicate = (): boolean => false;

@@ -86,7 +86,7 @@ type Tuple<
 
 export function findMax<T>(
   items: Iterable<T>,
-  computer: (item: T) => number,
+  computer: (item: T) => number
 ): T {
   let max: number | undefined = undefined;
   let pick: T | undefined = undefined;
@@ -104,9 +104,9 @@ export function findMax<T>(
 }
 export function findMin<T>(
   items: Iterable<T>,
-  computer: (item: T) => number,
+  computer: (item: T) => number
 ): T {
-  return findMax(items, (item: T) => computer(item) * -1 );
+  return findMax(items, (item: T) => computer(item) * -1);
 }
 
 export const lookaheadText = <

@@ -65,11 +65,9 @@ type Offset = {
   left: number;
   bottom: number;
   right: number;
-}
+};
 
-function getOffset(
-  item: TokenLike
-): Offset {
+function getOffset(item: TokenLike): Offset {
   const { x: left, y: top, size } = item;
   let bottom: number | undefined = undefined;
   let right: number | undefined = undefined;
@@ -119,7 +117,7 @@ function pickAlternative<T extends TokenLike>(
   }
   // Try to find an alternative that's the closest on the same line
   if (sameLineCandidates.size > 0) {
-    const [ closest ] = findMin(sameLineCandidates, ([, candidateOffset]) => {
+    const [closest] = findMin(sameLineCandidates, ([, candidateOffset]) => {
       return Math.abs(candidateOffset.left - offset.left);
     });
     return closest;

@@ -45,7 +45,9 @@ const UNITS = [
   "dppx",
 ];
 
-const NUMERIC_RE = new RegExp(`^(\\d+(\\.\\d+)?|\\.\\d+)(${ UNITS.join("|") })?$`);
+const NUMERIC_RE = new RegExp(
+  `^(\\d+(\\.\\d+)?|\\.\\d+)(${UNITS.join("|")})?$`
+);
 
 type State = {
   stringState: boolean | string; // string indicates the quote used
@@ -58,19 +60,19 @@ type State = {
 
 function getContext(state: State) {
   if (state.contextStack.length === 0) {
-    return "none"
+    return "none";
   }
   return state.contextStack[state.contextStack.length - 1];
 }
 
-function parseNumeric (token: RawToken): string[] | null {
+function parseNumeric(token: RawToken): string[] | null {
   if (token.text === "." && token.next && isAdjacent(token, token.next)) {
     const rest = parseNumeric(token.next);
     if (rest) {
       return ["number", ...rest];
     }
   } else if (NUMERIC_RE.test(token.text)) {
-    return ["number"]
+    return ["number"];
   }
   return null;
 }
@@ -84,7 +86,9 @@ const defaultState = (): State => ({
   contextStack: [],
 });
 
-export const languageDefinition = (): ((token: RawToken) => string | string[]) => {
+export const languageDefinition = (): ((
+  token: RawToken
+) => string | string[]) => {
   const state = defaultState();
 
   return (token: RawToken): string | string[] => {
@@ -172,7 +176,10 @@ export const languageDefinition = (): ((token: RawToken) => string | string[]) =
         return value;
       }
       if (state.atHeaderState) {
-        if (getContext(state).endsWith("media") && MEDIA_TYPES.has(token.text)) {
+        if (
+          getContext(state).endsWith("media") &&
+          MEDIA_TYPES.has(token.text)
+        ) {
           return "keyword-media-type";
         }
         if (token.text === "(" || token.text === ")") {
@@ -190,7 +197,7 @@ export const languageDefinition = (): ((token: RawToken) => string | string[]) =
         }
         const numeric = parseNumeric(token);
         if (numeric) {
-          return numeric.map( (type) => `${type}-${getContext(state)}`);
+          return numeric.map((type) => `${type}-${getContext(state)}`);
         }
       }
     }
@@ -198,7 +205,7 @@ export const languageDefinition = (): ((token: RawToken) => string | string[]) =
     // exit css rule selector state, enter rule state
     if (getContext(state) === "selector" && token.text === "{") {
       state.contextStack[state.contextStack.length - 1] = "rule";
-      state.ruleContext = "left"
+      state.ruleContext = "left";
       return "punctuation-rule-start";
     }
     // enter css rule selector state
