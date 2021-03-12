@@ -66,26 +66,42 @@ class TokenPool {
   }
 }
 
-export type Keyframe = Map<string, RenderToken>; // id -> token
+export type Keyframe = {
+  data: Map<string, RenderToken>; // id -> token
+  width: number;
+  height: number;
+};
 
 export function toKeyframes(diffs: DiffOp<TypedToken>[][]): Keyframe[] {
   const tokens = new TokenPool();
   const keyframes: Keyframe[] = [];
   for (let i = 0; i < diffs.length; i++) {
-    const keyframe = new Map(keyframes[i - 1] || []);
+    const data = new Map(keyframes[i - 1]?.data || []);
+    let width = 0;
+    let height = 0;
     for (const op of diffs[i]) {
       if (op.type === "ADD") {
         const token = tokens.require(op.item);
-        keyframe.set(token.id, token);
+        data.set(token.id, token);
       } else if (op.type === "DEL") {
         const id = tokens.free(op.item);
-        keyframe.delete(id);
+        data.delete(id);
       } else if (op.type === "MOV") {
         const token = tokens.reuse(op.ref, op.item);
-        keyframe.set(token.id, token);
+        data.set(token.id, token);
+      }
+      if (op.item.x > width) {
+        width = op.item.x;
+      }
+      if (op.item.y > height) {
+        height = op.item.y;
       }
     }
-    keyframes.push(keyframe);
+    // Width and height are at this point the largest _offsets_, not dimensions,
+    // so we compensate for that
+    width++;
+    height++;
+    keyframes.push({ data, width, height });
   }
   return keyframes;
 }

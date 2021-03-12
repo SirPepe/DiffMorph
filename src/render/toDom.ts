@@ -9,16 +9,20 @@ const DEFAULT_STYLES = `
 .dm-token {transition: transform var(--transition-time), opacity var(--transition-time); opacity: 0; position: absolute }
 `;
 
-export function toDom(keyframes: Keyframe[]): HTMLElement {
+export function toDom(
+  keyframes: Keyframe[]
+): [Content: HTMLElement, MaxWidth: number, MaxHeight: number] {
   const wrapper = document.createElement("div");
   const code = document.createElement("pre");
   code.className = "dm-code";
   const id = nextId("dom", "container");
   wrapper.className = `dm dm-${id}`;
   const { style, tokens } = generateContent(keyframes, id);
+  const maxWidth = Math.max(...keyframes.map(({ width }) => width));
+  const maxHeight = Math.max(...keyframes.map(({ height }) => height));
   code.append(...tokens);
   wrapper.append(code, style);
-  return wrapper;
+  return [wrapper, maxWidth, maxHeight];
 }
 
 function generateContent(
@@ -28,7 +32,7 @@ function generateContent(
   const styles = [];
   const tokens = new Map<string, HTMLSpanElement>();
   for (let i = 0; i < keyframes.length; i++) {
-    for (const [id, renderToken] of keyframes[i]) {
+    for (const [id, renderToken] of keyframes[i].data) {
       if (!tokens.has(id)) {
         const token = document.createElement("span");
         token.className = "dm-token dm-" + id + " " + renderToken.type;

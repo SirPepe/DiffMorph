@@ -8,8 +8,10 @@ const json = type(language);
 describe("toDom", () => {
   test("renders to DOM", () => {
     const keyframes = toKeyframes(
-      diffAll([json("{}"), json("  {}"), json("    {}")])
+      diffAll([json("{}"), json("  {}"), json("    {\n}")])
     );
-    toDom(keyframes);
+    const [element, maxWidth, maxHeight] = toDom(keyframes);
+    expect(maxWidth).toBe(5);
+    expect(maxHeight).toBe(2);
   });
 });

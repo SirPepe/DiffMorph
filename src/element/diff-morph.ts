@@ -49,6 +49,12 @@ function createStyles(): HTMLStyleElement {
   :host([controls]) .dm-controls {
     display: block;
   }
+  .dm-code {
+    margin: 0;
+    line-height: 1ch;
+    height: var(--max-height);
+    width: var(--max-width);
+  }
 `;
   return element;
 }
@@ -87,7 +93,6 @@ export class DiffMorph extends HTMLElement {
   public connectedCallback(): void {
     this.source.addEventListener("slotchange", () => this.init());
     this.shadow.addEventListener("click", ({ target }) => {
-      console.log("CLICK");
       if (!isElement(target)) {
         return;
       }
@@ -136,12 +141,18 @@ export class DiffMorph extends HTMLElement {
           processCode(source)[0],
         ]);
       });
-      const rendered = toDom(toKeyframes(diffAll(tokens)));
+      const [newContent, maxWidth, maxHeight] = toDom(
+        toKeyframes(diffAll(tokens))
+      );
       if (!this.content.parentElement) {
         throw new Error();
       }
-      this.content.parentElement.replaceChild(rendered, this.content);
-      this.content = rendered;
+      this.content.parentElement.setAttribute(
+        "style",
+        `--max-width:${maxWidth}ch; --max-height:${maxHeight}ch`
+      );
+      this.content.parentElement.replaceChild(newContent, this.content);
+      this.content = newContent;
       if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
         this.frame = this.computeFrame(this.getAttribute("frame"));
       }
