@@ -126,7 +126,7 @@ export class DiffMorph extends HTMLElement {
   public init = debounce(this._init);
   private async _init(): Promise<void> {
     if (LANGS.has(this.language)) {
-      const { languageDefinition, gluePredicate } = await import(
+      const { languageDefinition } = await import(
         `../languages/${this.language}`
       );
       const sources = this.source.assignedElements().filter((element: any) => {
@@ -134,7 +134,7 @@ export class DiffMorph extends HTMLElement {
       });
       this.numFrames = sources.length;
       const [newContent, maxWidth, maxHeight] = toDom(
-        fromDom(sources, languageDefinition, gluePredicate)
+        fromDom(sources, languageDefinition)
       );
       if (!this.content.parentElement) {
         throw new Error();

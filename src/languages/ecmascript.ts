@@ -2,8 +2,8 @@
 // TS features are controlled by a flag, which the TypeScript language
 // definition binds to true.
 
-import { isNewLine } from "../lib/util";
-import { RawToken } from "../types";
+import { isNewLine, lookaheadText } from "../lib/util";
+import { LanguageDefinition, RawToken } from "../types";
 
 type Flags = {
   types: boolean;
@@ -16,16 +16,18 @@ type State = {
   stringState: false | string; // string indicates the type of quotes used
 };
 
-const defaultState = (): State => ({
-  lineCommentState: false,
-  blockCommentState: false,
-  regexState: false,
-  stringState: false,
-});
+function defaultState(): State {
+  return {
+    lineCommentState: false,
+    blockCommentState: false,
+    regexState: false,
+    stringState: false,
+  };
+}
 
-export const languageDefinition = (
+function defineECMAScript(
   flags: Flags = { types: false }
-): ((token: RawToken) => string | string[]) => {
+): (token: RawToken) => string | string[] {
   const { types } = flags;
   const state = defaultState();
   return (token: RawToken): string | string[] => {
@@ -79,8 +81,20 @@ export const languageDefinition = (
       return "comment-line";
     }
 
+    // Exit embedded state
+    if (lookaheadText(token, 4, ["<", "/", "script", ">"])) {
+      // TODO: enter HTML
+    }
+
     return "token";
   };
-};
+}
 
-export const gluePredicate = (): boolean => false;
+function glueECMAScript(): boolean {
+  return false;
+}
+
+export const languageDefinition: LanguageDefinition<Flags> = {
+  definitionFactory: defineECMAScript,
+  gluePredicate: glueECMAScript,
+};

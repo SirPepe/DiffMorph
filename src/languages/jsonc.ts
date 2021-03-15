@@ -1,7 +1,13 @@
-import * as json from "./json";
+import { LanguageDefinition } from "../types";
+import { languageDefinition as JSON } from "./json";
 
-export const languageDefinition = (): ReturnType<
-  typeof json["languageDefinition"]
-> => json.languageDefinition({ comments: true });
+function defineJSONC(): ReturnType<
+  typeof languageDefinition["definitionFactory"]
+> {
+  return JSON.definitionFactory({ comments: true });
+}
 
-export const gluePredicate = json.gluePredicate;
+export const languageDefinition: LanguageDefinition<Record<never, never>> = {
+  definitionFactory: defineJSONC,
+  gluePredicate: JSON.gluePredicate,
+};

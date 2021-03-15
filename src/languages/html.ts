@@ -2,7 +2,7 @@
 // a flag, which the XML language definition binds to true.
 
 import { isAdjacent, lookaheadText } from "../lib/util";
-import { RawToken, TypedToken } from "../types";
+import { LanguageDefinition, RawToken, TypedToken } from "../types";
 
 type Flags = {
   xml: boolean;
@@ -18,16 +18,18 @@ type State = {
   doctypeState: boolean;
 };
 
-const defaultState = (): State => ({
-  attrState: false,
-  commentState: false,
-  tagState: false,
-  doctypeState: false,
-});
+function defaultState(): State {
+  return {
+    attrState: false,
+    commentState: false,
+    tagState: false,
+    doctypeState: false,
+  };
+}
 
-export const languageDefinition = (
+function defineHTML(
   flags: Flags = { xml: false }
-): ((token: RawToken) => string | string[]) => {
+): (token: RawToken) => string | string[] {
   const state = defaultState();
   const { xml } = flags;
 
@@ -85,7 +87,7 @@ export const languageDefinition = (
       return "doctype";
     }
 
-    // handle tags
+    // handle tag state entry
     if (state.tagState === false && token.text === "<") {
       if (
         xml &&
@@ -98,6 +100,7 @@ export const languageDefinition = (
       state.tagState = "tag";
       return "tag";
     }
+    // exit XML declarations
     if (
       state.tagState === "__XML_DECLARATION" &&
       token.text === "?" &&
@@ -106,10 +109,22 @@ export const languageDefinition = (
       state.tagState = false;
       return ["tag-xml", "tag-xml"];
     }
+    // exit tag state. If the tag state is either script or style, switch to the
+    // appropriate language.
     if (state.tagState && token.text === ">") {
+      if (token.next?.text !== "<" && token.prev?.prev?.text !== "/") {
+        if (state.tagState.endsWith("style")) {
+          state.tagState = false;
+          return "tag"; // TODO: return css tokens
+        } else if (state.tagState.endsWith("script")) {
+          state.tagState = false;
+          return "tag"; // TODO: return js tokens
+        }
+      }
       state.tagState = false;
       return "tag";
     }
+    // handle tag contents
     if (state.tagState) {
       // Continue after namespace operator
       if (xml && token.prev?.type === "operator-namespace") {
@@ -133,6 +148,7 @@ export const languageDefinition = (
       }
       // custom element tags contain dashes
       if (token.text === "-") {
+        state.tagState += token.text;
         return "tag";
       }
       // self-closing slash
@@ -147,7 +163,7 @@ export const languageDefinition = (
       if (token.text === "=") {
         return "operator";
       }
-
+      // Attribute value
       if (
         token.text.match(ATTR_RE) &&
         token.prev &&
@@ -156,7 +172,15 @@ export const languageDefinition = (
       ) {
         return "value";
       }
+      // Consume actual tag name. The tag state must be modified to, at the end
+      // of the tag, include the whole tag name so that we can determine when to
+      // switch to another language (eg. CSS, JS).
       if (token.prev && isAdjacent(token.prev, token)) {
+        if (state.tagState === "tag") {
+          state.tagState = token.text;
+        } else {
+          state.tagState += token.text;
+        }
         return "tag";
       } else {
         return "attribute";
@@ -166,9 +190,9 @@ export const languageDefinition = (
     // no special token
     return "token";
   };
-};
+}
 
-export const gluePredicate = (token: TypedToken): boolean => {
+function glueHTML(token: TypedToken): boolean {
   // Fuse XML tags
   if (token.type === "tag-xml" && token?.prev?.type === "tag-xml") {
     return true;
@@ -245,4 +269,9 @@ export const gluePredicate = (token: TypedToken): boolean => {
     return true;
   }
   return false;
+}
+
+export const languageDefinition: LanguageDefinition<Flags> = {
+  definitionFactory: defineHTML,
+  gluePredicate: glueHTML,
 };

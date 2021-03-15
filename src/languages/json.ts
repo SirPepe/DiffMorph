@@ -2,7 +2,7 @@
 // only) can be enabled by a flag, which the JSONC definition binds to true.
 
 import { isAdjacent } from "../lib/util";
-import { RawToken, TypedToken } from "../types";
+import { LanguageDefinition, RawToken, TypedToken } from "../types";
 
 type Flags = {
   comments: boolean;
@@ -11,18 +11,20 @@ type Flags = {
 const KEYWORDS = ["null", "true", "false"];
 const NUMBER_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
 
-const defaultState = () => ({
-  key: false,
-  stringValue: false,
-  lineComment: false,
-  blockComment: false,
-  arrayDepth: 0,
-  objectDepth: 0,
-});
+function defaultState() {
+  return {
+    key: false,
+    stringValue: false,
+    lineComment: false,
+    blockComment: false,
+    arrayDepth: 0,
+    objectDepth: 0,
+  };
+}
 
-export const languageDefinition = (
+function defineJSON(
   flags: Flags = { comments: false }
-): ((token: RawToken) => string) => {
+): (token: RawToken) => string {
   const state = defaultState();
   const { comments } = flags;
 
@@ -142,9 +144,9 @@ export const languageDefinition = (
     // no special token
     return "token";
   };
-};
+}
 
-export const gluePredicate = (token: TypedToken): boolean => {
+function glueJSON(token: TypedToken): boolean {
   if (token.type.startsWith("comment")) {
     return isAdjacent(token, token.prev);
   }
@@ -162,4 +164,9 @@ export const gluePredicate = (token: TypedToken): boolean => {
     return true;
   }
   return false;
+}
+
+export const languageDefinition: LanguageDefinition<Flags> = {
+  definitionFactory: defineJSON,
+  gluePredicate: glueJSON,
 };

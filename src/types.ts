@@ -98,3 +98,8 @@ export type RenderToken = {
   visible: boolean;
   parent: BoxToken;
 };
+
+export type LanguageDefinition<Flags extends Record<string, any>> = {
+  definitionFactory: (flags?: Flags) => (token: RawToken) => string | string[];
+  gluePredicate: (token: TypedToken) => boolean;
+};

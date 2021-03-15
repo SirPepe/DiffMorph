@@ -1,5 +1,5 @@
-import { isAdjacent } from "../lib/util";
-import { RawToken, TypedToken } from "../types";
+import { isAdjacent, lookaheadText } from "../lib/util";
+import { LanguageDefinition, RawToken, TypedToken } from "../types";
 
 const STRINGS = ["'", '"', "`"];
 
@@ -77,18 +77,18 @@ function parseNumeric(token: RawToken): string[] | null {
   return null;
 }
 
-const defaultState = (): State => ({
-  stringState: false,
-  commentState: false,
-  urlState: false,
-  atHeaderState: false,
-  ruleContext: "none",
-  contextStack: [],
-});
+function defaultState(): State {
+  return {
+    stringState: false,
+    commentState: false,
+    urlState: false,
+    atHeaderState: false,
+    ruleContext: "none",
+    contextStack: [],
+  };
+}
 
-export const languageDefinition = (): ((
-  token: RawToken
-) => string | string[]) => {
+function defineCss(): (token: RawToken) => string | string[] {
   const state = defaultState();
 
   return (token: RawToken): string | string[] => {
@@ -154,6 +154,11 @@ export const languageDefinition = (): ((
     // are we in url state? If the url is quoted, string logic takes over
     if (state.urlState) {
       return "string-url";
+    }
+
+    // Exit embedded state
+    if (lookaheadText(token, 4, ["<", "/", "script", ">"])) {
+      // TODO: enter HTML
     }
 
     // enter @rule
@@ -265,9 +270,9 @@ export const languageDefinition = (): ((
     // no special token
     return "token";
   };
-};
+}
 
-export const gluePredicate = (token: TypedToken): boolean => {
+function glueCss(token: TypedToken): boolean {
   // Join @ sign and rule name
   if (token.type.startsWith("keyword-at") && token.type === token?.prev?.type) {
     return true;
@@ -313,4 +318,9 @@ export const gluePredicate = (token: TypedToken): boolean => {
     return false;
   }
   return false;
+}
+
+export const languageDefinition: LanguageDefinition<Record<never, never>> = {
+  definitionFactory: defineCss,
+  gluePredicate: glueCss,
 };

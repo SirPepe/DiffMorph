@@ -1,8 +1,8 @@
 import { diffAll } from "../../src/lib/diff";
-import * as language from "../../src/languages/json";
+import { languageDefinition } from "../../src/languages/json";
 import { toKeyframes } from "../../src/lib/keyframes";
 import { type } from "../helpers";
-const json = type(language);
+const json = type(languageDefinition);
 
 describe("Keyframes", () => {
   test("It turns some JSON into keyframes", () => {

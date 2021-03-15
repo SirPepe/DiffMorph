@@ -1,7 +1,13 @@
-import * as ecmascript from "./ecmascript";
+import { LanguageDefinition } from "../types";
+import { languageDefinition as ECMAScript } from "./ecmascript";
 
-export const languageDefinition = (): ReturnType<
-  typeof ecmascript["languageDefinition"]
-> => ecmascript.languageDefinition({ types: false });
+function defineJavaScript(): ReturnType<
+  typeof languageDefinition["definitionFactory"]
+> {
+  return ECMAScript.definitionFactory({ types: false });
+}
 
-export const gluePredicate = ecmascript.gluePredicate;
+export const languageDefinition: LanguageDefinition<Record<never, never>> = {
+  definitionFactory: defineJavaScript,
+  gluePredicate: ECMAScript.gluePredicate,
+};

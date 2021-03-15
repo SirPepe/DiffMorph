@@ -1,6 +1,6 @@
-import * as language from "../../src/languages/css";
+import { languageDefinition } from "../../src/languages/css";
 import { type } from "../helpers";
-const css = type(language);
+const css = type(languageDefinition);
 
 describe("Basic CSS", () => {
   test("Simple rule", () => {

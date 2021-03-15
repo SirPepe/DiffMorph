@@ -1,6 +1,6 @@
-import * as language from "../../src/languages/jsonc";
+import { languageDefinition } from "../../src/languages/jsonc";
 import { type } from "../helpers";
-const jsonc = type(language);
+const jsonc = type(languageDefinition);
 
 describe("JSONC", () => {
   test("Key and string value", () => {
@@ -11,7 +11,7 @@ describe("JSONC", () => {
       "string",
       "punctuation",
       "value",
-      "token-object-end-0"
+      "token-object-end-0",
     ]);
   });
 
@@ -22,7 +22,7 @@ describe("JSONC", () => {
       "comment-line",
       "comment-line",
       "token-object-start-0",
-      "token-object-end-0"
+      "token-object-end-0",
     ]);
   });
 
@@ -60,7 +60,7 @@ describe("JSONC", () => {
       "string",
       "punctuation",
       "value",
-      "token-object-end-0"
+      "token-object-end-0",
     ]);
   });
 });

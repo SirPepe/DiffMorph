@@ -1,7 +1,7 @@
 // This module is a DOM frontend for the tokenizer. Its fromDom() function takes
 // elements as input and turns their text content into optimized keyframes.
 
-import { BoxToken, Code, HighlightToken, RawToken, TypedToken } from "../types";
+import { BoxToken, Code, HighlightToken, LanguageDefinition } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { hash } from "../lib/util";
 import { toKeyframes, Keyframe } from "../lib/keyframes";
@@ -73,14 +73,13 @@ export const processCode = (source: Element): [BoxToken, HighlightToken[]] => {
 
 export function fromDom(
   sourceElements: Element[],
-  languageDefinition: () => (token: RawToken) => string | string[],
-  gluePredicate: (token: TypedToken) => boolean
+  language: LanguageDefinition<Record<never, never>>
 ): Keyframe[] {
   const tokens = [];
   const highlights = [];
   for (const sourceElement of sourceElements) {
     const [rootBox, highlightTokens] = processCode(sourceElement);
-    tokens.push(applyLanguage(languageDefinition, gluePredicate, [rootBox]));
+    tokens.push(applyLanguage(language, [rootBox]));
     highlights.push(highlightTokens);
   }
   return toKeyframes(optimize(diffAll(tokens)), highlights);

@@ -1,6 +1,6 @@
-import * as language from "../../src/languages/xml";
+import { languageDefinition } from "../../src/languages/xml";
 import { type } from "../helpers";
-const xml = type(language);
+const xml = type(languageDefinition);
 
 describe("XML features", () => {
   test("XML declaration", () => {

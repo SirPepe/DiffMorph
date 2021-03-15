@@ -2,7 +2,7 @@
 // code in the form of strings and objects (the latter representing boxes) and
 // returns optimized keyframes.
 
-import { BoxToken, Code, HighlightToken, RawToken, TypedToken } from "../types";
+import { BoxToken, Code, HighlightToken, LanguageDefinition } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
 import { Keyframe, toKeyframes } from "../lib/keyframes";
@@ -44,14 +44,13 @@ export const processCode = (
 
 export function fromData(
   inputContainers: InputContainer[],
-  languageDefinition: () => (token: RawToken) => string | string[],
-  gluePredicate: (token: TypedToken) => boolean
+  language: LanguageDefinition<Record<never, never>>
 ): Keyframe[] {
   const tokens = [];
   const highlights = [];
   for (const inputContainer of inputContainers) {
     const [rootBox, highlightTokens] = processCode(inputContainer);
-    tokens.push(applyLanguage(languageDefinition, gluePredicate, [rootBox]));
+    tokens.push(applyLanguage(language, [rootBox]));
     highlights.push(highlightTokens);
   }
   return toKeyframes(optimize(diffAll(tokens)), highlights);

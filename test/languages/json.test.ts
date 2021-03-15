@@ -1,6 +1,6 @@
-import * as language from "../../src/languages/json";
+import { languageDefinition } from "../../src/languages/json";
 import { type } from "../helpers";
-const json = type(language);
+const json = type(languageDefinition);
 
 describe("Basic JSON", () => {
   test("Empty object", () => {
@@ -82,7 +82,7 @@ describe("Basic JSON", () => {
       "string",
       "punctuation",
       "value",
-      "token-object-end-0"
+      "token-object-end-0",
     ]);
   });
 
@@ -106,7 +106,7 @@ describe("Basic JSON", () => {
       "string",
       "punctuation",
       "number",
-      "token-object-end-0"
+      "token-object-end-0",
     ]);
   });
 
@@ -225,11 +225,11 @@ describe("Boxes", () => {
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "token-object-start-0", // {
-      "string",               // "foo
-      "string",               // bar" (inside box, must not be joined with rest)
-      "punctuation",          // :
-      "number",               // 42
-      "token-object-end-0",   // }
+      "string", // "foo
+      "string", // bar" (inside box, must not be joined with rest)
+      "punctuation", // :
+      "number", // 42
+      "token-object-end-0", // }
     ]);
   });
 });

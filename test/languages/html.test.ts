@@ -1,6 +1,6 @@
-import * as language from "../../src/languages/html";
+import { languageDefinition } from "../../src/languages/html";
 import { type } from "../helpers";
-const html = type(language);
+const html = type(languageDefinition);
 
 describe("Basic HTML", () => {
   test("Simple element", () => {
@@ -75,7 +75,7 @@ describe("Basic HTML", () => {
       "value",
       "value",
       "tag",
-      "tag"
+      "tag",
     ]);
   });
 
@@ -95,6 +95,14 @@ describe("Basic HTML", () => {
     const tokens = html(`<!-- -> -->`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual(["comment", "comment", "comment", "comment"]);
+  });
+});
+
+describe("embedded CSS", () => {
+  test.skip("Basic embedded CSS", () => {
+    const tokens = html(`<style>.foo{ color: red }</style>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["tag", "tag", "tag"]);
   });
 });
 

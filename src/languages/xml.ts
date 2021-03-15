@@ -1,7 +1,13 @@
-import * as html from "./html";
+import { LanguageDefinition } from "../types";
+import { languageDefinition as HTML } from "./html";
 
-export const languageDefinition = (): ReturnType<
-  typeof html["languageDefinition"]
-> => html.languageDefinition({ xml: true });
+function defineJavaScript(): ReturnType<
+  typeof languageDefinition["definitionFactory"]
+> {
+  return HTML.definitionFactory({ xml: true });
+}
 
-export const gluePredicate = html.gluePredicate;
+export const languageDefinition: LanguageDefinition<Record<never, never>> = {
+  definitionFactory: defineJavaScript,
+  gluePredicate: HTML.gluePredicate,
+};

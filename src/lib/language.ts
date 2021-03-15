@@ -9,6 +9,7 @@ import {
   RawToken,
   TypedToken,
   TextToken,
+  LanguageDefinition,
 } from "../types";
 
 const toRawToken = (
@@ -97,8 +98,7 @@ const flattenTypedTokens = (token: TypedToken | undefined): TypedToken[] => {
 // Returns tokens as an array for easier diffing. The tokens are still linked to
 // each other as that is important for other bits of the program.
 export const applyLanguage = (
-  definitionFactory: () => (token: RawToken) => string | string[],
-  gluePredicate: (token: TypedToken) => boolean,
+  languageDefinition: LanguageDefinition<Record<never, never>>,
   tokens: (BoxToken | TextToken)[]
 ): TypedToken[] => {
   const rootBox =
@@ -106,7 +106,7 @@ export const applyLanguage = (
       ? tokens[0]
       : { x: 0, y: 0, meta: {}, hash: "", tokens };
   const firstTyped = applyLanguageDefinition(
-    definitionFactory(),
+    languageDefinition.definitionFactory({}),
     toRawTokens(rootBox)
   );
   // This joins the token in-place so that the glue function can benefit from
@@ -115,7 +115,7 @@ export const applyLanguage = (
   while (token) {
     if (
       token.prev &&
-      gluePredicate(token) &&
+      languageDefinition.gluePredicate(token) &&
       token.parent.hash === token.prev.parent.hash // don't join across boxes
     ) {
       token.prev.text += token.text;
