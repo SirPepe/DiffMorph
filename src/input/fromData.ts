@@ -44,7 +44,7 @@ export const processCode = (
 
 export function fromData(
   inputContainers: InputContainer[],
-  language: LanguageDefinition<Record<never, never>>
+  language: LanguageDefinition<Record<string, any>>
 ): Keyframe[] {
   const tokens = [];
   const highlights = [];

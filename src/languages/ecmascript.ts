@@ -2,8 +2,14 @@
 // TS features are controlled by a flag, which the TypeScript language
 // definition binds to true.
 
-import { isNewLine, lookaheadText } from "../lib/util";
-import { LanguageDefinition, RawToken } from "../types";
+import { isNewLine, lookaheadText, prev } from "../lib/util";
+import {
+  LanguageDefinition,
+  LanguageFunction,
+  LanguageFunctionResult,
+  RawToken,
+} from "../types";
+import { languageDefinition as HTML } from "./html";
 
 type Flags = {
   types: boolean;
@@ -25,12 +31,36 @@ function defaultState(): State {
   };
 }
 
-function defineECMAScript(
-  flags: Flags = { types: false }
-): (token: RawToken) => string | string[] {
+// Wrap the actual ES definition function with something that, after each
+// token, checks if the next token signifies a return to HTML.
+function exitDecorator(language: LanguageFunction): LanguageFunction {
+  return function (token: RawToken): LanguageFunctionResult {
+    const res = language(token);
+    const steps = Array.isArray(res) ? res.length : 1;
+    const base = prev(token, steps);
+    if (base) {
+      if (lookaheadText(token, 4, ["<", "/", "script", ">"])) {
+        const result = Array.isArray(res) ? res : [res];
+        return [
+          ...result,
+          {
+            definitionFactory: () => HTML.definitionFactory({ xml: false }),
+            postprocessor: HTML.postprocessor,
+          },
+        ];
+      }
+    }
+    return res;
+  };
+}
+
+function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
   const { types } = flags;
   const state = defaultState();
-  return (token: RawToken): string | string[] => {
+
+  return exitDecorator(function ecmaScript(
+    token: RawToken
+  ): LanguageFunctionResult {
     // exit line comment state (on new line)
     if (state.lineCommentState && isNewLine(token)) {
       state.lineCommentState = false;
@@ -81,20 +111,15 @@ function defineECMAScript(
       return "comment-line";
     }
 
-    // Exit embedded state
-    if (lookaheadText(token, 4, ["<", "/", "script", ">"])) {
-      // TODO: enter HTML
-    }
-
     return "token";
-  };
+  });
 }
 
-function glueECMAScript(): boolean {
+function postprocessECMAScript(): boolean {
   return false;
 }
 
 export const languageDefinition: LanguageDefinition<Flags> = {
   definitionFactory: defineECMAScript,
-  gluePredicate: glueECMAScript,
+  postprocessor: postprocessECMAScript,
 };

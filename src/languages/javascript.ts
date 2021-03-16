@@ -7,7 +7,7 @@ function defineJavaScript(): ReturnType<
   return ECMAScript.definitionFactory({ types: false });
 }
 
-export const languageDefinition: LanguageDefinition<Record<never, never>> = {
+export const languageDefinition: LanguageDefinition<Record<string, any>> = {
   definitionFactory: defineJavaScript,
-  gluePredicate: ECMAScript.gluePredicate,
+  postprocessor: ECMAScript.postprocessor,
 };

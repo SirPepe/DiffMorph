@@ -146,7 +146,7 @@ function defineJSON(
   };
 }
 
-function glueJSON(token: TypedToken): boolean {
+function postprocessJSON(token: TypedToken): boolean {
   if (token.type.startsWith("comment")) {
     return isAdjacent(token, token.prev);
   }
@@ -168,5 +168,5 @@ function glueJSON(token: TypedToken): boolean {
 
 export const languageDefinition: LanguageDefinition<Flags> = {
   definitionFactory: defineJSON,
-  gluePredicate: glueJSON,
+  postprocessor: postprocessJSON,
 };

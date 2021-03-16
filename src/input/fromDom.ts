@@ -73,7 +73,7 @@ export const processCode = (source: Element): [BoxToken, HighlightToken[]] => {
 
 export function fromDom(
   sourceElements: Element[],
-  language: LanguageDefinition<Record<never, never>>
+  language: LanguageDefinition<Record<string, any>>
 ): Keyframe[] {
   const tokens = [];
   const highlights = [];

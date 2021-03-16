@@ -1,8 +1,16 @@
 // Implements support for both HTML and XML. XML features are controlled by a
 // a flag, which the XML language definition binds to true.
 
+import { languageDefinition as CSSLanguageDefinition } from "./css";
+import { languageDefinition as JSLanguageDefinition } from "./javascript";
 import { isAdjacent, lookaheadText } from "../lib/util";
-import { LanguageDefinition, RawToken, TypedToken } from "../types";
+import {
+  LanguageDefinition,
+  LanguageFunction,
+  LanguageFunctionResult,
+  RawToken,
+  TypedToken,
+} from "../types";
 
 type Flags = {
   xml: boolean;
@@ -27,13 +35,11 @@ function defaultState(): State {
   };
 }
 
-function defineHTML(
-  flags: Flags = { xml: false }
-): (token: RawToken) => string | string[] {
+function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
   const state = defaultState();
   const { xml } = flags;
 
-  return (token: RawToken): string | string[] => {
+  return (token: RawToken): LanguageFunctionResult => {
     // handle comments and doctypes
     if (
       state.commentState === false &&
@@ -115,10 +121,10 @@ function defineHTML(
       if (token.next?.text !== "<" && token.prev?.prev?.text !== "/") {
         if (state.tagState.endsWith("style")) {
           state.tagState = false;
-          return "tag"; // TODO: return css tokens
+          return ["tag", CSSLanguageDefinition];
         } else if (state.tagState.endsWith("script")) {
           state.tagState = false;
-          return "tag"; // TODO: return js tokens
+          return ["tag", JSLanguageDefinition];
         }
       }
       state.tagState = false;
@@ -273,5 +279,5 @@ function glueHTML(token: TypedToken): boolean {
 
 export const languageDefinition: LanguageDefinition<Flags> = {
   definitionFactory: defineHTML,
-  gluePredicate: glueHTML,
+  postprocessor: glueHTML,
 };

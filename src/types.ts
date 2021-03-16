@@ -99,7 +99,19 @@ export type RenderToken = {
   parent: BoxToken;
 };
 
+export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;
+export type LanguagePostprocessor = (token: TypedToken) => boolean;
+
+export type LanguageFunctionResult =
+  | string
+  | LanguageDefinition<Record<string, any>>
+  | (string | LanguageDefinition<Record<string, any>>)[];
+
+type LanguageFunctionFactory<Flags extends Record<string, any>> = (
+  flags?: Flags
+) => LanguageFunction;
+
 export type LanguageDefinition<Flags extends Record<string, any>> = {
-  definitionFactory: (flags?: Flags) => (token: RawToken) => string | string[];
-  gluePredicate: (token: TypedToken) => boolean;
+  definitionFactory: LanguageFunctionFactory<Flags>;
+  postprocessor: LanguagePostprocessor;
 };

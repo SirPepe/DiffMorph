@@ -1,6 +1,7 @@
 // This module's applyLanguage() function calls language definitions on frames
 // of untyped tokens and thereby transforms bits of context-free text into typed
-// tokens that can then be diffed, highlighted and rendered.
+// tokens that can then be diffed, highlighted and rendered. This is one big
+// mess of mucking around with doubly-linked lists in-place. Beware!
 
 import { hash, last } from "./util";
 import {
@@ -10,14 +11,23 @@ import {
   TypedToken,
   TextToken,
   LanguageDefinition,
+  LanguagePostprocessor,
 } from "../types";
 
-const toRawToken = (
+function ensureBox(tokens: (BoxToken | TextToken)[]): BoxToken {
+  if (tokens.length === 1 && !isTextToken(tokens[0])) {
+    return tokens[0];
+  } else {
+    return { x: 0, y: 0, meta: {}, hash: "", tokens };
+  }
+}
+
+function toRawToken(
   source: BoxToken | TextToken,
   parent: BoxToken,
   x: number,
   y: number
-): RawToken => {
+): RawToken {
   if (isTextToken(source)) {
     return {
       ...source,
@@ -32,9 +42,9 @@ const toRawToken = (
   } else {
     return toRawTokens(source, source.x, source.y);
   }
-};
+}
 
-export const toRawTokens = (root: BoxToken, x = 0, y = 0): RawToken => {
+export function toRawTokens(root: BoxToken, x = 0, y = 0): RawToken {
   let head: RawToken | undefined;
   let tail: RawToken | undefined;
   for (const token of root.tokens) {
@@ -61,61 +71,27 @@ export const toRawTokens = (root: BoxToken, x = 0, y = 0): RawToken => {
     throw new Error("Can't create language tokens from empty box");
   }
   return head;
-};
+}
 
-const applyLanguageDefinition = (
-  language: (token: RawToken) => string | string[],
-  input: RawToken
-): TypedToken => {
-  const head: any = input;
-  let token: any = input;
-  while (token) {
-    const type = language(token);
-    if (Array.isArray(type)) {
-      while (token && type.length > 0) {
-        token.type = type.shift();
-        token.hash = hash(hash(token.type) + hash(token.text));
-        token = token.next;
-      }
-    } else {
-      token.type = type;
-      token.hash = hash(hash(token.type) + hash(token.text));
-      token = token.next;
-    }
-  }
-  return head;
-};
-
-const flattenTypedTokens = (token: TypedToken | undefined): TypedToken[] => {
+function flattenTypedTokens(token: TypedToken | undefined): TypedToken[] {
   const result: TypedToken[] = [];
   while (token) {
     result.push({ ...token, prev: undefined, next: undefined });
     token = token.next;
   }
   return result;
-};
+}
 
-// Returns tokens as an array for easier diffing. The tokens are still linked to
-// each other as that is important for other bits of the program.
-export const applyLanguage = (
-  languageDefinition: LanguageDefinition<Record<never, never>>,
-  tokens: (BoxToken | TextToken)[]
-): TypedToken[] => {
-  const rootBox =
-    tokens.length === 1 && !isTextToken(tokens[0])
-      ? tokens[0]
-      : { x: 0, y: 0, meta: {}, hash: "", tokens };
-  const firstTyped = applyLanguageDefinition(
-    languageDefinition.definitionFactory({}),
-    toRawTokens(rootBox)
-  );
-  // This joins the token in-place so that the glue function can benefit from
-  // working with already-glued previous tokens.
-  let token: TypedToken | undefined = firstTyped;
-  while (token) {
+// Joins the token in-place so that the glue function can benefit from working
+// with already-glued previous tokens.
+function applyPostprocessor(
+  token: TypedToken,
+  postprocessor: LanguagePostprocessor
+): void {
+  while (true) {
     if (
       token.prev &&
-      languageDefinition.gluePredicate(token) &&
+      postprocessor(token) &&
       token.parent.hash === token.prev.parent.hash // don't join across boxes
     ) {
       token.prev.text += token.text;
@@ -126,7 +102,53 @@ export const applyLanguage = (
         token.next.prev = token.prev;
       }
     }
-    token = token.next;
+    if (token.next) {
+      token = token.next;
+    } else {
+      return;
+    }
   }
-  return flattenTypedTokens(firstTyped);
+}
+
+// Returns tokens as an array for easier diffing. The tokens are still linked to
+// each other as that is important for other bits of the program.
+export const applyLanguage = (
+  languageDefinition: LanguageDefinition<Record<string, any>>,
+  inputTokens: (BoxToken | TextToken)[]
+): TypedToken[] => {
+  //
+  const done: TypedToken[] = [];
+  //
+  let currentLanguage = languageDefinition.definitionFactory({});
+  let currentPostprocessor = languageDefinition.postprocessor;
+  //
+  const root = toRawTokens(ensureBox(inputTokens));
+  let head: any = root;
+  let token: any = root;
+  while (token) {
+    const results = currentLanguage(token);
+    const types = Array.isArray(results) ? results : [results];
+    while (types.length > 0) {
+      const type = types[0];
+      if (typeof type === "string") {
+        token.type = type;
+        token.hash = hash(hash(token.type) + hash(token.text));
+        token = token.next;
+      } else if (typeof type === "object") {
+        token.prev.next = undefined;
+        token.prev = undefined;
+        applyPostprocessor(head, currentPostprocessor);
+        currentLanguage = type.definitionFactory({});
+        currentPostprocessor = type.postprocessor;
+        done.push(head);
+        head = token;
+      }
+      types.shift();
+    }
+  }
+  applyPostprocessor(head, currentPostprocessor);
+  done.push(head);
+  // Join everything into one long list of tokens. The tokens that belong to the
+  // same language chunk remain connected.
+  return done.flatMap(flattenTypedTokens);
 };

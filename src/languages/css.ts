@@ -1,5 +1,12 @@
-import { isAdjacent, lookaheadText } from "../lib/util";
-import { LanguageDefinition, RawToken, TypedToken } from "../types";
+import { isAdjacent, lookaheadText, prev } from "../lib/util";
+import {
+  LanguageDefinition,
+  LanguageFunction,
+  LanguageFunctionResult,
+  RawToken,
+  TypedToken,
+} from "../types";
+import { languageDefinition as HTML } from "./html";
 
 const STRINGS = ["'", '"', "`"];
 
@@ -88,10 +95,33 @@ function defaultState(): State {
   };
 }
 
-function defineCss(): (token: RawToken) => string | string[] {
+// Wrap the actual CSS definition function with something that, after each
+// token, checks if the next token signifies a return to HTML.
+function exitDecorator(language: LanguageFunction): LanguageFunction {
+  return function (token: RawToken): LanguageFunctionResult {
+    const res = language(token);
+    const steps = Array.isArray(res) ? res.length : 1;
+    const base = prev(token, steps);
+    if (base) {
+      if (lookaheadText(token, 4, ["<", "/", "style", ">"])) {
+        const result = Array.isArray(res) ? res : [res];
+        return [
+          ...result,
+          {
+            definitionFactory: () => HTML.definitionFactory({ xml: false }),
+            postprocessor: HTML.postprocessor,
+          },
+        ];
+      }
+    }
+    return res;
+  };
+}
+
+function defineCss(): LanguageFunction {
   const state = defaultState();
 
-  return (token: RawToken): string | string[] => {
+  return exitDecorator(function css(token: RawToken): LanguageFunctionResult {
     // exit comment state
     if (
       state.commentState === true &&
@@ -154,11 +184,6 @@ function defineCss(): (token: RawToken) => string | string[] {
     // are we in url state? If the url is quoted, string logic takes over
     if (state.urlState) {
       return "string-url";
-    }
-
-    // Exit embedded state
-    if (lookaheadText(token, 4, ["<", "/", "script", ">"])) {
-      // TODO: enter HTML
     }
 
     // enter @rule
@@ -269,10 +294,10 @@ function defineCss(): (token: RawToken) => string | string[] {
 
     // no special token
     return "token";
-  };
+  });
 }
 
-function glueCss(token: TypedToken): boolean {
+function postprocessCss(token: TypedToken): boolean {
   // Join @ sign and rule name
   if (token.type.startsWith("keyword-at") && token.type === token?.prev?.type) {
     return true;
@@ -320,7 +345,7 @@ function glueCss(token: TypedToken): boolean {
   return false;
 }
 
-export const languageDefinition: LanguageDefinition<Record<never, never>> = {
+export const languageDefinition: LanguageDefinition<Record<string, any>> = {
   definitionFactory: defineCss,
-  gluePredicate: glueCss,
+  postprocessor: postprocessCss,
 };

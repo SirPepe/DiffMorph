@@ -99,10 +99,20 @@ describe("Basic HTML", () => {
 });
 
 describe("embedded CSS", () => {
-  test.skip("Basic embedded CSS", () => {
-    const tokens = html(`<style>.foo{ color: red }</style>`);
+  test("Basic embedded CSS", () => {
+    const tokens = html(`<style>.foo { color: red }</style>`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["tag", "tag", "tag"]);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "value-selector",
+      "punctuation-rule-start",
+      "property",
+      "punctuation",
+      "token",
+      "punctuation-rule-end",
+      "tag",
+    ]);
   });
 });
 

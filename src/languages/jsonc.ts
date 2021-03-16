@@ -7,7 +7,7 @@ function defineJSONC(): ReturnType<
   return JSON.definitionFactory({ comments: true });
 }
 
-export const languageDefinition: LanguageDefinition<Record<never, never>> = {
+export const languageDefinition: LanguageDefinition<Record<string, any>> = {
   definitionFactory: defineJSONC,
-  gluePredicate: JSON.gluePredicate,
+  postprocessor: JSON.postprocessor,
 };

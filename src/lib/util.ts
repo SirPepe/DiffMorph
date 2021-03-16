@@ -1,9 +1,25 @@
 import fnv1a from "@sindresorhus/fnv1a";
+import { LanguageFunction } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
-export const prev = <T extends { prev: T | undefined }>(x: T): T =>
-  x.prev ? prev(x.prev) : x;
+export const first = <T extends { prev: T | undefined }>(x: T): T =>
+  x.prev ? first(x.prev) : x;
+
+export const prev = <T extends { prev: T | undefined }>(
+  x: T,
+  steps: number
+): T | undefined => {
+  while (steps > 0) {
+    if (x.prev) {
+      x = x.prev;
+      steps--;
+    } else {
+      return undefined;
+    }
+  }
+  return x.prev;
+};
 
 export const last = <T extends { next: T | undefined }>(x: T): T =>
   x.next ? last(x.next) : x;
