@@ -92,20 +92,6 @@ export function isNewLine<T extends { y: number; prev: T | undefined }>(
   return Boolean(token.prev && token.y > token.prev.y);
 }
 
-/* eslint-disable */
-type Tuple<
-  T,
-  Length extends number,
-  Rest extends unknown[] = []
-> = Length extends Length
-  ? number extends Length
-    ? T[]
-    : Rest["length"] extends Length
-      ? Rest
-      : Tuple<T, Length, [T, ...Rest]>
-  : never;
-/* eslint-enable */
-
 export function findMax<T>(
   items: Iterable<T>,
   computer: (item: T) => number
@@ -132,20 +118,15 @@ export function findMin<T>(
   return findMax(items, (item: T) => computer(item) * -1);
 }
 
-export const lookaheadText = <
-  T extends { text: string; next: T | undefined },
-  N extends number
->(
+export const lookaheadText = <T extends { text: string; next: T | undefined }>(
   token: T,
-  steps: N,
-  expected: Tuple<string, N>
+  expected: string[]
 ): boolean => {
-  let step = 0;
-  while (step < steps) {
-    if (!token.next || token.next.text !== expected[step]) {
+  while (expected.length) {
+    const nextText = expected.shift();
+    if (!token.next || token.next.text !== nextText) {
       return false;
     } else {
-      step++;
       token = token.next;
     }
   }

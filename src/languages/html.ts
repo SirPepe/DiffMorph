@@ -64,7 +64,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     if (
       state.commentState === "cdata" &&
       token.text === "]" &&
-      lookaheadText(token, 2, ["]", ">"])
+      lookaheadText(token, ["]", ">"])
     ) {
       state.commentState = false;
       return ["comment-cdata", "comment-cdata", "comment-cdata"];
