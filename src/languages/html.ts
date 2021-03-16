@@ -1,8 +1,6 @@
 // Implements support for both HTML and XML. XML features are controlled by a
 // a flag, which the XML language definition binds to true.
 
-import { languageDefinition as CSSLanguageDefinition } from "./css";
-import { languageDefinition as JSLanguageDefinition } from "./javascript";
 import { isAdjacent, lookaheadText } from "../lib/util";
 import {
   LanguageDefinition,
@@ -115,18 +113,8 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       state.tagState = false;
       return ["tag-xml", "tag-xml"];
     }
-    // exit tag state. If the tag state is either script or style, switch to the
-    // appropriate language.
+    // exit tag state
     if (state.tagState && token.text === ">") {
-      if (token.next?.text !== "<" && token.prev?.prev?.text !== "/") {
-        if (state.tagState.endsWith("style")) {
-          state.tagState = false;
-          return ["tag", CSSLanguageDefinition];
-        } else if (state.tagState.endsWith("script")) {
-          state.tagState = false;
-          return ["tag", JSLanguageDefinition];
-        }
-      }
       state.tagState = false;
       return "tag";
     }
@@ -154,7 +142,6 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       }
       // custom element tags contain dashes
       if (token.text === "-") {
-        state.tagState += token.text;
         return "tag";
       }
       // self-closing slash

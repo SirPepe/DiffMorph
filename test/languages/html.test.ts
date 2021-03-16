@@ -98,8 +98,8 @@ describe("Basic HTML", () => {
   });
 });
 
-describe("embedded CSS", () => {
-  test("Basic embedded CSS", () => {
+describe("embedded languages", () => {
+  test.skip("Embedded CSS", () => {
     const tokens = html(`<style>.foo { color: red }</style>`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([

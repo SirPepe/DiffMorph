@@ -1,4 +1,4 @@
-import { isAdjacent, lookaheadText, prev } from "../lib/util";
+import { isAdjacent } from "../lib/util";
 import {
   LanguageDefinition,
   LanguageFunction,
@@ -6,7 +6,6 @@ import {
   RawToken,
   TypedToken,
 } from "../types";
-import { languageDefinition as HTML } from "./html";
 
 const STRINGS = ["'", '"', "`"];
 
@@ -95,33 +94,10 @@ function defaultState(): State {
   };
 }
 
-// Wrap the actual CSS definition function with something that, after each
-// token, checks if the next token signifies a return to HTML.
-function exitDecorator(language: LanguageFunction): LanguageFunction {
-  return function (token: RawToken): LanguageFunctionResult {
-    const res = language(token);
-    const steps = Array.isArray(res) ? res.length : 1;
-    const base = prev(token, steps);
-    if (base) {
-      if (lookaheadText(token, 4, ["<", "/", "style", ">"])) {
-        const result = Array.isArray(res) ? res : [res];
-        return [
-          ...result,
-          {
-            definitionFactory: () => HTML.definitionFactory({ xml: false }),
-            postprocessor: HTML.postprocessor,
-          },
-        ];
-      }
-    }
-    return res;
-  };
-}
-
 function defineCss(): LanguageFunction {
   const state = defaultState();
 
-  return exitDecorator(function css(token: RawToken): LanguageFunctionResult {
+  return function css(token: RawToken): LanguageFunctionResult {
     // exit comment state
     if (
       state.commentState === true &&
@@ -294,7 +270,7 @@ function defineCss(): LanguageFunction {
 
     // no special token
     return "token";
-  });
+  };
 }
 
 function postprocessCss(token: TypedToken): boolean {

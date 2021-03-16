@@ -101,11 +101,7 @@ export type RenderToken = {
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;
 export type LanguagePostprocessor = (token: TypedToken) => boolean;
-
-export type LanguageFunctionResult =
-  | string
-  | LanguageDefinition<Record<string, any>>
-  | (string | LanguageDefinition<Record<string, any>>)[];
+export type LanguageFunctionResult = string | string[];
 
 type LanguageFunctionFactory<Flags extends Record<string, any>> = (
   flags?: Flags

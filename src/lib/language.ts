@@ -116,39 +116,20 @@ export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
   inputTokens: (BoxToken | TextToken)[]
 ): TypedToken[] => {
-  //
-  const done: TypedToken[] = [];
-  //
-  let currentLanguage = languageDefinition.definitionFactory({});
-  let currentPostprocessor = languageDefinition.postprocessor;
-  //
   const root = toRawTokens(ensureBox(inputTokens));
-  let head: any = root;
+  const language = languageDefinition.definitionFactory({});
+  const head: any = root;
   let token: any = root;
   while (token) {
-    const results = currentLanguage(token);
+    const results = language(token);
     const types = Array.isArray(results) ? results : [results];
     while (types.length > 0) {
-      const type = types[0];
-      if (typeof type === "string") {
-        token.type = type;
-        token.hash = hash(hash(token.type) + hash(token.text));
-        token = token.next;
-      } else if (typeof type === "object") {
-        token.prev.next = undefined;
-        token.prev = undefined;
-        applyPostprocessor(head, currentPostprocessor);
-        currentLanguage = type.definitionFactory({});
-        currentPostprocessor = type.postprocessor;
-        done.push(head);
-        head = token;
-      }
-      types.shift();
+      const type = types.shift();
+      token.type = type;
+      token.hash = hash(hash(token.type) + hash(token.text));
+      token = token.next;
     }
   }
-  applyPostprocessor(head, currentPostprocessor);
-  done.push(head);
-  // Join everything into one long list of tokens. The tokens that belong to the
-  // same language chunk remain connected.
-  return done.flatMap(flattenTypedTokens);
+  applyPostprocessor(head, languageDefinition.postprocessor);
+  return flattenTypedTokens(head);
 };
