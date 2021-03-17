@@ -64,6 +64,10 @@ type State = {
   contextStack: string[];
 };
 
+type Flags = {
+  inline?: boolean;
+};
+
 function getContext(state: State) {
   if (state.contextStack.length === 0) {
     return "none";
@@ -94,8 +98,15 @@ function defaultState(): State {
   };
 }
 
-function defineCss(): LanguageFunction {
+function defineCss(flags: Flags = { inline: false }): LanguageFunction {
   const state = defaultState();
+  const { inline } = flags;
+
+  // Assume start at the property level when in inline mode
+  if (inline) {
+    state.contextStack = ["rule"];
+    state.ruleContext = "left";
+  }
 
   return function css(token: RawToken): LanguageFunctionResult {
     // exit comment state
@@ -321,7 +332,7 @@ function postprocessCss(token: TypedToken): boolean {
   return false;
 }
 
-export const languageDefinition: LanguageDefinition<Record<string, any>> = {
+export const languageDefinition: LanguageDefinition<Flags> = {
   definitionFactory: defineCss,
   postprocessor: postprocessCss,
 };

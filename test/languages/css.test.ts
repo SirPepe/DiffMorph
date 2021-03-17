@@ -1,6 +1,11 @@
 import { languageDefinition } from "../../src/languages/css";
 import { type } from "../helpers";
 const css = type(languageDefinition);
+const inlineCss = type({
+  definitionFactory: () =>
+    languageDefinition.definitionFactory({ inline: true }),
+  postprocessor: languageDefinition.postprocessor,
+});
 
 describe("Basic CSS", () => {
   test("Simple rule", () => {
@@ -268,6 +273,24 @@ describe("At-rules", () => {
       "punctuation",
       "punctuation-rule-end",
       "punctuation-at-keyframes-end",
+    ]);
+  });
+});
+
+describe("Inline CSS", () => {
+  test("Inline CSS", () => {
+    const tokens = inlineCss(`color: red; font-family: sans-serif`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "property",
+      "punctuation",
+      "token",
+      "punctuation",
+      "property",
+      "punctuation",
+      "token",
+      "token",
+      "token",
     ]);
   });
 });
