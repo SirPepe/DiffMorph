@@ -29,6 +29,41 @@ describe("Basic HTML", () => {
     ]);
   });
 
+  test("Simple self-closing with boolean attribute", () => {
+    const tokens = html(`<input disabled type="text" />`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "tag",
+    ]);
+  });
+
+  test("Simple self-closing element with attribute name with dashes", () => {
+    const tokens = html(`<img data-src="foo.png" />`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "tag",
+    ]);
+  });
+
+  test("Simple self-closing element with unquoted attribute", () => {
+    const tokens = html(`<br id=foo />`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["tag", "attribute", "operator", "value", "tag"]);
+  });
+
   test("Simple self-closing element with empty attribute value", () => {
     const tokens = html(`<img src="" />`);
     const types = tokens.map((token) => token.type);
@@ -99,7 +134,7 @@ describe("Basic HTML", () => {
 });
 
 describe("embedded languages", () => {
-  test.skip("Embedded CSS", () => {
+  test.skip("Inline CSS", () => {
     const tokens = html(`<style>.foo { color: red }</style>`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([

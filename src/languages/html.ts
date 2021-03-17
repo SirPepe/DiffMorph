@@ -18,7 +18,8 @@ const QUOTES = ["'", '"'];
 const ATTR_RE = /^[a-z]+[a-z0-9]*$/i;
 
 type State = {
-  attrState: false | string; // string indicates the quote used
+  attrState: false | string; // string indicates the attribute name
+  attrValueState: false | string; // string indicates the quote used
   commentState: false | "cdata" | "comment";
   tagState: false | string; // string indicates the current tag
   doctypeState: boolean;
@@ -27,6 +28,7 @@ type State = {
 function defaultState(): State {
   return {
     attrState: false,
+    attrValueState: false,
     commentState: false,
     tagState: false,
     doctypeState: false,
@@ -98,7 +100,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         token?.next?.text === "?" &&
         token?.next?.next?.text === "xml"
       ) {
-        state.tagState = "__XML_DECLARATION";
+        state.tagState = "__XML_DECLARATION__";
         return ["tag-xml", "tag-xml", "tag-xml"];
       }
       state.tagState = "tag";
@@ -106,7 +108,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     }
     // exit XML declarations
     if (
-      state.tagState === "__XML_DECLARATION" &&
+      state.tagState === "__XML_DECLARATION__" &&
       token.text === "?" &&
       token?.next?.text === ">"
     ) {
@@ -126,36 +128,45 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
           return token?.prev.prev.type;
         }
       }
-      // exit attribute value state
-      if (token.text === state.attrState) {
+
+      // exit attribute value state on matching quote
+      if (token.text === state.attrValueState) {
         state.attrState = false;
+        state.attrValueState = false;
         return "value";
       }
+
       // enter attribute value state
-      if (QUOTES.includes(token.text) && state.attrState === false) {
-        state.attrState = token.text;
+      if (QUOTES.includes(token.text) && state.attrValueState === false) {
+        state.attrValueState = token.text;
         return "value";
       }
+
       // are we in attribute value state?
-      if (state.attrState) {
+      if (state.attrValueState) {
         return "value";
       }
+
       // custom element tags contain dashes
-      if (token.text === "-") {
+      if (token.text === "-" && token?.prev?.type === "tag") {
         return "tag";
       }
+
       // self-closing slash
       if (token.text === "/") {
         return "tag";
       }
+
       // Namespace
       if (xml && token.text === ":") {
         return "operator-namespace";
       }
+
       // Attribute value coming up
       if (token.text === "=") {
         return "operator";
       }
+
       // Attribute value
       if (
         token.text.match(ATTR_RE) &&
@@ -168,7 +179,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       // Consume actual tag name. The tag state must be modified to, at the end
       // of the tag, include the whole tag name so that we can determine when to
       // switch to another language (eg. CSS, JS).
-      if (token.prev && isAdjacent(token.prev, token)) {
+      if (
+        token.prev &&
+        token.prev.type === "tag" &&
+        isAdjacent(token.prev, token)
+      ) {
         if (state.tagState === "tag") {
           state.tagState = token.text;
         } else {
@@ -176,6 +191,9 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         }
         return "tag";
       } else {
+        state.attrState = state.attrState
+          ? state.attrState + token.text
+          : token.text;
         return "attribute";
       }
     }
@@ -195,6 +213,14 @@ function glueHTML(token: TypedToken): boolean {
     token.type === "tag" &&
     (token.text.startsWith("-") || token?.prev?.text.endsWith("-")) &&
     token?.prev?.type === "tag"
+  ) {
+    return true;
+  }
+  // Fuse attribute names
+  if (
+    token.type === "attribute" &&
+    token?.prev?.type === "attribute" &&
+    isAdjacent(token, token.prev)
   ) {
     return true;
   }
