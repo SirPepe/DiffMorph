@@ -8,9 +8,7 @@ describe("processing code from a data source", () => {
       id: "root",
       isHighlight: false,
     };
-    const [{ x, y, tokens }, highlights] = processCode(rootContainer);
-    expect(x).toBe(0);
-    expect(y).toBe(0);
+    const [{ tokens }, highlights] = processCode(rootContainer);
     expect(tokens).toEqual([
       { x: 0, y: 0, text: "const", prev: undefined, next: tokens[1] },
       { x: 6, y: 0, text: "a", prev: tokens[0], next: tokens[2] },
@@ -34,9 +32,7 @@ describe("processing code from a data source", () => {
       isHighlight: false,
     };
     /* eslint-enable */
-    const [{ x, y, tokens }, highlights] = processCode(rootContainer);
-    expect(x).toBe(0);
-    expect(y).toBe(0);
+    const [{ tokens }, highlights] = processCode(rootContainer);
     expect(tokens).toEqual([
       { x: 0, y: 0, text: "const", next: tokens[1], prev: undefined },
       { x: 6, y: 0, text: "a", next: tokens[2], prev: tokens[0] },
@@ -61,9 +57,7 @@ describe("processing code from a data source", () => {
       id: "root",
       isHighlight: false,
     };
-    const [{ x, y, tokens }, highlights] = processCode(rootContainer);
-    expect(x).toBe(0);
-    expect(y).toBe(0);
+    const [{ tokens }, highlights] = processCode(rootContainer);
     expect(tokens).toEqual([
       { x: 0, y: 0, text: "const", next: tokens[1], prev: undefined },
       { x: 6, y: 0, text: "a", next: tokens[2], prev: tokens[0] },
@@ -91,9 +85,7 @@ describe("processing code from a data source", () => {
       id: "root",
       isHighlight: false,
     };
-    const [{ x, y, tokens }, highlights] = processCode(rootContainer);
-    expect(x).toBe(0);
-    expect(y).toBe(0);
+    const [{ tokens }, highlights] = processCode(rootContainer);
     const txt = tokens[0] as TextToken;
     const box = tokens[1] as BoxToken;
     expect(txt).toEqual({
@@ -104,8 +96,6 @@ describe("processing code from a data source", () => {
       next: box.tokens[0],
     });
     expect(box).toMatchObject({
-      x: 6,
-      y: 0,
       meta: {
         id: "box",
         isHighlight: false,
@@ -114,13 +104,13 @@ describe("processing code from a data source", () => {
       tokens: expect.any(Array),
     });
     expect(box.tokens).toEqual([
-      { x: 0, y: 0, text: "a", next: box.tokens[1], prev: txt },
-      { x: 2, y: 0, text: "=", next: box.tokens[2], prev: box.tokens[0] },
-      { x: 4, y: 0, text: "(", next: box.tokens[3], prev: box.tokens[1] },
-      { x: 5, y: 0, text: ")", next: box.tokens[4], prev: box.tokens[2] },
-      { x: 7, y: 0, text: "=", next: box.tokens[5], prev: box.tokens[3] },
-      { x: 8, y: 0, text: ">", next: box.tokens[6], prev: box.tokens[4] },
-      { x: 10, y: 0, text: "42", next: undefined, prev: box.tokens[5] },
+      { x: 6, y: 0, text: "a", next: box.tokens[1], prev: txt },
+      { x: 8, y: 0, text: "=", next: box.tokens[2], prev: box.tokens[0] },
+      { x: 10, y: 0, text: "(", next: box.tokens[3], prev: box.tokens[1] },
+      { x: 11, y: 0, text: ")", next: box.tokens[4], prev: box.tokens[2] },
+      { x: 13, y: 0, text: "=", next: box.tokens[5], prev: box.tokens[3] },
+      { x: 14, y: 0, text: ">", next: box.tokens[6], prev: box.tokens[4] },
+      { x: 16, y: 0, text: "42", next: undefined, prev: box.tokens[5] },
     ]);
     expect(highlights).toEqual([]);
   });
@@ -145,9 +135,7 @@ describe("processing code from a data source", () => {
       id: "root",
       isHighlight: false,
     };
-    const [{ x, y, tokens }, highlights] = processCode(rootContainer);
-    expect(x).toBe(0);
-    expect(y).toBe(0);
+    const [{ tokens }, highlights] = processCode(rootContainer);
     const txt = tokens[0] as TextToken;
     const box1 = tokens[1] as BoxToken;
     const box2 = box1.tokens[6] as BoxToken;
@@ -159,8 +147,6 @@ describe("processing code from a data source", () => {
       next: box1.tokens[0],
     });
     expect(box1).toMatchObject({
-      x: 6,
-      y: 0,
       meta: {
         id: "box",
         isHighlight: false,
@@ -169,20 +155,20 @@ describe("processing code from a data source", () => {
       tokens: expect.any(Array),
     });
     expect(box1.tokens).toEqual([
-      { x: 0, y: 0, text: "a", next: box1.tokens[1], prev: txt },
-      { x: 2, y: 0, text: "=", next: box1.tokens[2], prev: box1.tokens[0] },
-      { x: 4, y: 0, text: "(", next: box1.tokens[3], prev: box1.tokens[1] },
-      { x: 5, y: 0, text: ")", next: box1.tokens[4], prev: box1.tokens[2] },
-      { x: 7, y: 0, text: "=", next: box1.tokens[5], prev: box1.tokens[3] },
-      { x: 8, y: 0, text: ">", next: box2.tokens[0], prev: box1.tokens[4] },
+      { x: 6, y: 0, text: "a", next: box1.tokens[1], prev: txt },
+      { x: 8, y: 0, text: "=", next: box1.tokens[2], prev: box1.tokens[0] },
+      { x: 10, y: 0, text: "(", next: box1.tokens[3], prev: box1.tokens[1] },
+      { x: 11, y: 0, text: ")", next: box1.tokens[4], prev: box1.tokens[2] },
+      { x: 13, y: 0, text: "=", next: box1.tokens[5], prev: box1.tokens[3] },
+      { x: 14, y: 0, text: ">", next: box2.tokens[0], prev: box1.tokens[4] },
       box2,
     ]);
     expect(box2.tokens).toEqual([
-      { x: 0, y: 0, text: "{", next: box2.tokens[1], prev: box1.tokens[5] },
-      { x: 2, y: 0, text: "return", next: box2.tokens[2], prev: box2.tokens[0] }, // eslint-disable-line
-      { x: 9, y: 0, text: "42", next: box2.tokens[3], prev: box2.tokens[1] },
-      { x: 11, y: 0, text: ";", next: box2.tokens[4], prev: box2.tokens[2] },
-      { x: 13, y: 0, text: "}", next: undefined, prev: box2.tokens[3] },
+      { x: 16, y: 0, text: "{", next: box2.tokens[1], prev: box1.tokens[5] },
+      { x: 18, y: 0, text: "return", next: box2.tokens[2], prev: box2.tokens[0] }, // eslint-disable-line
+      { x: 25, y: 0, text: "42", next: box2.tokens[3], prev: box2.tokens[1] },
+      { x: 27, y: 0, text: ";", next: box2.tokens[4], prev: box2.tokens[2] },
+      { x: 29, y: 0, text: "}", next: undefined, prev: box2.tokens[3] },
     ]);
     expect(highlights).toEqual([]);
   });
@@ -196,9 +182,7 @@ describe("processing code from a data source", () => {
       id: "root",
       isHighlight: false,
     };
-    const [{ x, y, tokens }, highlights] = processCode(rootContainer);
-    expect(x).toBe(0);
-    expect(y).toBe(0);
+    const [{ tokens }, highlights] = processCode(rootContainer);
     expect(tokens).toEqual([
       { x: 0, y: 0, text: "const", next: tokens[1], prev: undefined },
       { x: 6, y: 0, text: "a", next: tokens[2], prev: tokens[0] },

@@ -34,8 +34,6 @@ export type TextToken = {
 // source element can be reconstructed from metadata, which also serve as the
 // input to the box token's hash.
 export type BoxToken = {
-  x: number;
-  y: number;
   hash: string;
   meta: Record<string, any>; // tag name and attributes for DOM sources
   tokens: (TextToken | BoxToken)[];
