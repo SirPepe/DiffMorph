@@ -16,8 +16,8 @@ export type CodeContainer = {
 export type HighlightToken = {
   hash: string;
   meta: Record<string, any>; // tag name and attributes for DOM sources
-  start: [number, number];
-  end: [number, number];
+  start: [number, number]; // x/y
+  end: [number, number]; // x/y
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
@@ -26,6 +26,8 @@ export type TextToken = {
   x: number;
   y: number;
   text: string;
+  next: TextToken | undefined;
+  prev: TextToken | undefined;
 };
 
 // Represents an element containing a bunch of other text or box tokens. The
