@@ -79,7 +79,7 @@ export function fromDom(
   const highlights = [];
   for (const sourceElement of sourceElements) {
     const [rootBox, highlightTokens] = processCode(sourceElement);
-    tokens.push(applyLanguage(language, [rootBox]));
+    tokens.push(applyLanguage(language, rootBox));
     highlights.push(highlightTokens);
   }
   return toKeyframes(optimize(diffAll(tokens)), highlights);

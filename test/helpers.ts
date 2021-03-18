@@ -4,4 +4,12 @@ import { Code, LanguageDefinition, TypedToken } from "../src/types";
 
 export const type = (lang: LanguageDefinition<any>) => (
   ...input: Code[]
-): TypedToken[] => applyLanguage(lang, tokenize(input).tokens);
+): TypedToken[] => {
+  return applyLanguage(lang, {
+    x: 0,
+    y: 0,
+    meta: {},
+    hash: "",
+    tokens: tokenize(input).tokens,
+  });
+};

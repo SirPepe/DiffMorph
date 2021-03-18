@@ -50,7 +50,7 @@ export function fromData(
   const highlights = [];
   for (const inputContainer of inputContainers) {
     const [rootBox, highlightTokens] = processCode(inputContainer);
-    tokens.push(applyLanguage(language, [rootBox]));
+    tokens.push(applyLanguage(language, rootBox));
     highlights.push(highlightTokens);
   }
   return toKeyframes(optimize(diffAll(tokens)), highlights);

@@ -14,14 +14,6 @@ import {
   LanguagePostprocessor,
 } from "../types";
 
-function ensureBox(tokens: (BoxToken | TextToken)[]): BoxToken {
-  if (tokens.length === 1 && !isTextToken(tokens[0])) {
-    return tokens[0];
-  } else {
-    return { x: 0, y: 0, meta: {}, hash: "", tokens };
-  }
-}
-
 function toRawToken(
   source: BoxToken | TextToken,
   parent: BoxToken,
@@ -114,9 +106,9 @@ function applyPostprocessor(
 // each other as that is important for other bits of the program.
 export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
-  inputTokens: (BoxToken | TextToken)[]
+  inputBox: BoxToken
 ): TypedToken[] => {
-  const root = toRawTokens(ensureBox(inputTokens));
+  const root = toRawTokens(inputBox);
   const language = languageDefinition.definitionFactory({});
   const head: any = root;
   let token: any = root;
