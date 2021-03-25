@@ -89,11 +89,9 @@ export type RenderToken = {
   size: number;
   type: string;
   hash: string;
-  prev: RenderToken | undefined;
-  next: RenderToken | undefined;
   id: string;
   visible: boolean;
-  parent: BoxToken<RenderToken>;
+  parent: BoxToken<TypedToken>;
 };
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;

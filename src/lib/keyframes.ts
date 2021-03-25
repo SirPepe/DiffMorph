@@ -38,9 +38,15 @@ class TokenPool {
         this.reserved.set(token.hash, []);
       }
       const renderToken = {
-        ...token,
-        visible: true,
+        x: token.x,
+        y: token.y,
+        text: token.text,
+        size: token.size,
+        type: token.type,
+        hash: token.hash,
+        parent: token.parent,
         id: this.nextId(null, token.hash),
+        visible: true,
       };
       this.inUse.set(this.hashTypedToken(token), renderToken);
       return renderToken;

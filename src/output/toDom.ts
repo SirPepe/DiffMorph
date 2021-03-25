@@ -49,7 +49,7 @@ function generateContent(
 
 export function toDom(
   keyframes: Keyframe[]
-): [Content: HTMLElement, MaxWidth: number, MaxHeight: number] {
+): [Wrapper: HTMLElement, MaxWidth: number, MaxHeight: number] {
   const wrapper = document.createElement("div");
   const code = document.createElement("pre");
   code.className = "dm-code";
