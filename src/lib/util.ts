@@ -1,5 +1,5 @@
 import fnv1a from "@sindresorhus/fnv1a";
-import { BoxToken, HighlightToken, TextToken, TokenLike } from "../types";
+import { Box, HighlightToken, TextToken, TokenLike } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
@@ -25,11 +25,24 @@ export const last = <T extends { next: T | undefined }>(x: T): T =>
   x.next ? last(x.next) : x;
 
 export const isTextToken = (
-  x: TextToken | BoxToken<TextToken> | HighlightToken
+  x: TextToken | Box<TextToken> | HighlightToken
 ): x is TextToken => "text" in x && typeof x.text === "string";
 
+export function isBox<T>(x: any): x is Box<T> {
+  if (
+    typeof x === "object" &&
+    typeof x.id === "string" &&
+    typeof x.hash === "string" &&
+    typeof x.meta === "object" &&
+    Array.isArray(x.tokens)
+  ) {
+    return true;
+  }
+  return false;
+}
+
 export const unwrapFirst = (
-  token: TextToken | BoxToken<TextToken>
+  token: TextToken | Box<TextToken>
 ): TextToken => {
   if (isTextToken(token)) {
     return token;
@@ -39,7 +52,7 @@ export const unwrapFirst = (
 };
 
 export const unwrapLast = (
-  token: TextToken | BoxToken<TextToken>
+  token: TextToken | Box<TextToken>
 ): TextToken => {
   if (isTextToken(token)) {
     return token;
@@ -92,6 +105,30 @@ export const groupBy: GroupFunction = (values: Iterable<any>, select: any) => {
   }
   return result;
 };
+
+export function partition<T>(
+  input: Iterable<T>,
+  selector: (x: T) => boolean
+): [T[], T[]];
+export function partition<T, U>(
+  input: Iterable<T | U>,
+  selector: (x: T | U) => x is T
+): [T[], U[]];
+export function partition<T>(
+  input: Iterable<T>,
+  selector: (item: T) => boolean
+): [T[], T[]] {
+  const a = [];
+  const b = [];
+  for (const item of input) {
+    if (selector(item)) {
+      a.push(item);
+    } else {
+      b.push(item);
+    }
+  }
+  return [a, b];
+}
 
 export function isSameLine<T extends { y: number }>(a: T, b: T): boolean {
   if (a.y === b.y) {

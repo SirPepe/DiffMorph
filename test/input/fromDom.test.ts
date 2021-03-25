@@ -1,5 +1,5 @@
 import { processCode } from "../../src/input/fromDom";
-import { BoxToken, TextToken } from "../../src/types";
+import { Box, TextToken } from "../../src/types";
 
 describe("processing code from a DOM source", () => {
   const container = document.createElement("pre");
@@ -55,7 +55,7 @@ describe("processing code from a DOM source", () => {
     const { root, highlights } = processCode(container);
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box = tokens[1] as BoxToken<TextToken>;
+    const box = tokens[1] as Box<TextToken>;
     expect(txt).toEqual({
       x: 0,
       y: 0,
@@ -93,7 +93,7 @@ describe("processing code from a DOM source", () => {
     const { root, highlights } = processCode(container);
     const [txt, box, ...rest] = root.tokens as [
       TextToken,
-      BoxToken<TextToken>,
+      Box<TextToken>,
       ...TextToken[]
     ];
     expect(txt).toEqual({
@@ -144,7 +144,7 @@ describe("processing code from a DOM source", () => {
 }</span>;`;
     const { root, highlights } = processCode(container);
     const textTokens = root.tokens.slice(0, 7);
-    const box = root.tokens[7] as BoxToken<TextToken>;
+    const box = root.tokens[7] as Box<TextToken>;
     expect(textTokens).toEqual([
       /* eslint-disable */
       { x: 0, y: 0, text: "const", size: 5, prev: undefined, next: textTokens[1], parent: root },
@@ -181,8 +181,8 @@ describe("processing code from a DOM source", () => {
     const { root, highlights } = processCode(container);
     const tokens = root.tokens;
     const firstToken = tokens[0] as TextToken;
-    const outerBox = tokens[1] as BoxToken<TextToken>;
-    const innerBox = outerBox.tokens[2] as BoxToken<TextToken>;
+    const outerBox = tokens[1] as Box<TextToken>;
+    const innerBox = outerBox.tokens[2] as Box<TextToken>;
     expect(firstToken).toEqual({
       x: 0,
       y: 0,
@@ -237,8 +237,8 @@ describe("processing code from a DOM source", () => {
 ]</span>;`;
     const { root, highlights } = processCode(container);
     const firstToken = root.tokens[0] as TextToken;
-    const outerBox = root.tokens[1] as BoxToken<TextToken>;
-    const innerBox = outerBox.tokens[2] as BoxToken<TextToken>;
+    const outerBox = root.tokens[1] as Box<TextToken>;
+    const innerBox = outerBox.tokens[2] as Box<TextToken>;
     const lastToken = root.tokens[2] as TextToken;
     expect(firstToken).toEqual({
       x: 0,
@@ -410,8 +410,8 @@ describe("processing code from a DOM source", () => {
       "const <span foo='bar'>a = <b><mark>()</mark></b> => 42</span>";
     const { root, highlights } = processCode(container);
     const firstToken = root.tokens[0] as TextToken;
-    const outerBox = root.tokens[1] as BoxToken<TextToken>;
-    const innerBox = outerBox.tokens[2] as BoxToken<TextToken>;
+    const outerBox = root.tokens[1] as Box<TextToken>;
+    const innerBox = outerBox.tokens[2] as Box<TextToken>;
     expect(firstToken).toEqual({
       x: 0,
       y: 0,

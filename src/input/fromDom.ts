@@ -2,7 +2,7 @@
 // elements as input and turns their text content into optimized keyframes.
 
 import {
-  BoxToken,
+  Box,
   Code,
   CodeContainer,
   HighlightToken,
@@ -73,7 +73,7 @@ const extractCode = (source: Element): CodeContainer => {
 // Only exported for unit tests
 export const processCode = (
   source: Element
-): { root: BoxToken<TextToken>; highlights: HighlightToken[] } => {
+): { root: Box<TextToken>; highlights: HighlightToken[] } => {
   return tokenize(extractCode(source));
 };
 

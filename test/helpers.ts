@@ -7,14 +7,14 @@ export const type = (lang: LanguageDefinition<any>) => (
   ...input: Code[]
 ): TypedToken[] => {
   return flattenTokens(
-    applyLanguage(lang, {
-      meta: {},
-      hash: "",
-      tokens: tokenize({
+    applyLanguage(
+      lang,
+      tokenize({
         content: input,
-        hash: "",
+        hash: "root",
+        id: "root",
         meta: { isHighlight: false },
-      }).root.tokens,
-    })
+      }).root
+    )
   );
 };

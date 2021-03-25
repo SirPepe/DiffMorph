@@ -8,7 +8,7 @@
 import {
   Code,
   CodeContainer,
-  BoxToken,
+  Box,
   TextToken,
   HighlightToken,
 } from "../types";
@@ -21,7 +21,7 @@ const isHighlightBox = (token: CodeContainer): boolean =>
   token.meta.isHighlight;
 
 const measureSpan = (
-  content: (TextToken | BoxToken<any>)[]
+  content: (TextToken | Box<any>)[]
 ): [start: [number, number], end: [number, number]] => {
   const first = unwrapFirst(content[0]);
   const last = unwrapLast(content[content.length - 1]);
@@ -64,7 +64,7 @@ const measureWhitespace = (
   };
 };
 
-type TokenizerResult<T extends TextToken | BoxToken<TextToken>> = {
+type TokenizerResult<T extends TextToken | Box<TextToken>> = {
   lastX: number;
   lastY: number;
   tokens: T[];
@@ -73,7 +73,7 @@ type TokenizerResult<T extends TextToken | BoxToken<TextToken>> = {
 
 const tokenizeText = (
   text: string,
-  parent: BoxToken<TextToken>,
+  parent: Box<TextToken>,
   x: number,
   y: number,
   prev: TextToken | undefined
@@ -120,8 +120,8 @@ const tokenizeContainer = (
   x: number,
   y: number,
   prev: TextToken | undefined
-): TokenizerResult<BoxToken<TextToken>> => {
-  const box: BoxToken<TextToken> = {
+): TokenizerResult<Box<TextToken>> => {
+  const box: Box<TextToken> = {
     id: container.id,
     hash: container.hash,
     meta: container.meta,
@@ -145,12 +145,12 @@ const tokenizeContainer = (
 
 const tokenizeCode = (
   codes: Code[],
-  parent: BoxToken<TextToken>,
+  parent: Box<TextToken>,
   x: number,
   y: number,
   prev: TextToken | undefined
-): TokenizerResult<TextToken | BoxToken<TextToken>> => {
-  const tokens: (BoxToken<TextToken> | TextToken)[] = [];
+): TokenizerResult<TextToken | Box<TextToken>> => {
+  const tokens: (Box<TextToken> | TextToken)[] = [];
   const highlights: HighlightToken[] = [];
   for (const code of codes) {
     if (typeof code === "string") {
@@ -198,7 +198,7 @@ const tokenizeCode = (
 
 export const tokenize = (
   root: CodeContainer
-): { root: BoxToken<TextToken>; highlights: HighlightToken[] } => {
+): { root: Box<TextToken>; highlights: HighlightToken[] } => {
   const { tokens, highlights } = tokenizeContainer(root, 0, 0, undefined);
   return { root: tokens[0], highlights };
 };

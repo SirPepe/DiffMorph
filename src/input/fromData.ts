@@ -3,7 +3,7 @@
 // returns optimized keyframes.
 
 import {
-  BoxToken,
+  Box,
   Code,
   CodeContainer,
   HighlightToken,
@@ -42,7 +42,7 @@ const extractCode = (source: InputContainer): CodeContainer => {
 // Only exported for unit tests
 export const processCode = (
   source: InputContainer
-): { root: BoxToken<TextToken>; highlights: HighlightToken[] } => {
+): { root: Box<TextToken>; highlights: HighlightToken[] } => {
   return tokenize(extractCode(source));
 };
 

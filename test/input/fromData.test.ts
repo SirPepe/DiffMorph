@@ -1,5 +1,5 @@
 import { processCode } from "../../src/input/fromData";
-import { BoxToken, TextToken } from "../../src/types";
+import { Box, TextToken } from "../../src/types";
 
 describe("processing code from a data source", () => {
   test("it splits code", () => {
@@ -98,7 +98,7 @@ describe("processing code from a data source", () => {
     const { root, highlights } = processCode(rootContainer);
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box = tokens[1] as BoxToken<TextToken>;
+    const box = tokens[1] as Box<TextToken>;
     expect(txt).toEqual({
       x: 0,
       y: 0,
@@ -153,8 +153,8 @@ describe("processing code from a data source", () => {
     const { root, highlights } = processCode(rootContainer);
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box1 = tokens[1] as BoxToken<TextToken>;
-    const box2 = box1.tokens[6] as BoxToken<TextToken>;
+    const box1 = tokens[1] as Box<TextToken>;
+    const box2 = box1.tokens[6] as Box<TextToken>;
     expect(txt).toEqual({
       x: 0,
       y: 0,
@@ -215,7 +215,6 @@ describe("processing code from a data source", () => {
     };
     const { root, highlights } = processCode(rootContainer);
     const contentBox = (root as any).tokens[0].tokens[0];
-    console.log(contentBox.tokens);
     expect(root.tokens).toEqual([
       {
         id: "box",

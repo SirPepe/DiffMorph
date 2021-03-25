@@ -1,11 +1,13 @@
 // This module's applyLanguage() function calls language definitions on frames
 // of untyped tokens and thereby transforms bits of context-free text into typed
 // tokens that can then be diffed, highlighted and rendered. This is one big
-// mess of mucking around with doubly-linked lists in-place. Beware!
+// mess of mucking around with doubly-linked lists in-place. Beware of
+// applyLanguage() in particular as it WILL modify its input with extreme
+// prejudice.
 
 import { hash, unwrapFirst } from "./util";
 import {
-  BoxToken,
+  Box,
   TypedToken,
   LanguageDefinition,
   LanguagePostprocessor,
@@ -18,19 +20,25 @@ function applyPostprocessor(
   token: TypedToken,
   postprocessor: LanguagePostprocessor
 ): void {
+  let index = 0;
   while (true) {
     if (
       token.prev &&
-      postprocessor(token) &&
-      token.parent.hash === token.prev.parent.hash // don't join across boxes
+      token.prev.y === token.y &&
+      token.parent.hash === token.prev.parent.hash && // don't join across boxes
+      postprocessor(token)
     ) {
-      token.prev.text += token.text;
-      token.prev.size += token.size;
+      const padding = Math.abs(token.prev.x + token.prev.size - token.x);
+      token.prev.text += " ".repeat(padding) + token.text;
+      token.prev.size += padding + token.size;
       token.prev.hash = hash(hash(token.prev.type) + hash(token.prev.text));
       token.prev.next = token.next;
+      token.parent.tokens.splice(index, 1);
       if (token.next) {
         token.next.prev = token.prev;
       }
+    } else {
+      index++; // no increment if we've just removed a token
     }
     if (token.next) {
       token = token.next;
@@ -42,21 +50,21 @@ function applyPostprocessor(
 
 export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
-  root: BoxToken<TextToken>
+  root: Box<TextToken>
 ): TypedToken => {
   const language = languageDefinition.definitionFactory({});
-  const head: any = unwrapFirst(root);
-  let token: any = unwrapFirst(root);
-  while (token) {
-    const results = language(token);
+  const first: any = unwrapFirst(root);
+  let current: any = unwrapFirst(root);
+  while (current) {
+    const results = language(current);
     const types = Array.isArray(results) ? results : [results];
     while (types.length > 0) {
       const type = types.shift();
-      token.type = type;
-      token.hash = hash(hash(token.type) + hash(token.text));
-      token = token.next;
+      current.type = type;
+      current.hash = hash(hash(current.type) + hash(current.text));
+      current = current.next;
     }
   }
-  applyPostprocessor(head, languageDefinition.postprocessor);
-  return head;
+  applyPostprocessor(first, languageDefinition.postprocessor);
+  return first;
 };
