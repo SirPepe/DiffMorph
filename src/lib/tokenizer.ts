@@ -122,6 +122,7 @@ const tokenizeContainer = (
   prev: TextToken | undefined
 ): TokenizerResult<BoxToken<TextToken>> => {
   const box: BoxToken<TextToken> = {
+    id: container.id,
     hash: container.hash,
     meta: container.meta,
     tokens: [],

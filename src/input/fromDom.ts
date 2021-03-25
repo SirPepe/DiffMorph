@@ -10,7 +10,7 @@ import {
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
-import { flattenTokens, hash } from "../lib/util";
+import { createIdGenerator, flattenTokens, hash } from "../lib/util";
 import { toKeyframes, Keyframe } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
 import { diffAll } from "../lib/diff";
@@ -52,6 +52,7 @@ const hashDOMBox = (tagName: string, attributes: [string, string][]): string =>
   hash(tagName + "|" + attributes.map((pair) => pair.join("=")).join("|"));
 
 const extractCode = (source: Element): CodeContainer => {
+  const idGenerator = createIdGenerator();
   const children = Array.from(source.childNodes).filter(isDomContent);
   const extracted: Code[] = [];
   for (const child of children) {
@@ -64,8 +65,9 @@ const extractCode = (source: Element): CodeContainer => {
   const tagName = source.tagName.toLowerCase();
   const attributes = getAttributes(source);
   const hash = hashDOMBox(tagName, attributes);
+  const id = idGenerator(null, hash);
   const meta = { tagName, attributes, isHighlight: tagName === "mark" };
-  return { content: extracted, hash, meta };
+  return { content: extracted, hash, id, meta };
 };
 
 // Only exported for unit tests

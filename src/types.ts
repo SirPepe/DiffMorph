@@ -6,7 +6,8 @@ export type Code = string | CodeContainer;
 // a box, but as a kind of metadata)
 export type CodeContainer = {
   content: Code[];
-  hash: string;
+  hash: string; // built from "meta"
+  id: string; // hash plus count
   meta: {
     isHighlight: boolean;
   } & Record<string, any>; // tag name and attributes for DOM sources
@@ -36,6 +37,7 @@ export type TokenLike = {
 // tokens. The source element can be reconstructed from metadata, which also
 // serve as the input to the box token's hash.
 export type BoxToken<Text extends TextToken> = {
+  id: string; // hash plus count
   hash: string; // built from "meta"
   meta: Record<string, any>; // tag name and attributes for DOM sources
   tokens: (Text | BoxToken<Text>)[];

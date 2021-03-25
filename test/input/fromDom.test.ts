@@ -8,6 +8,7 @@ describe("processing code from a DOM source", () => {
     container.innerHTML = "const a = () => 42";
     const { root, highlights } = processCode(container);
     const tokens = root.tokens;
+    expect(root.id).toBe(root.hash + "0");
     expect(tokens).toEqual([
       /* eslint-disable */
       { x: 0, y: 0, text: "const", size: 5, next: tokens[1], prev: undefined, parent: root },
@@ -54,7 +55,7 @@ describe("processing code from a DOM source", () => {
     const { root, highlights } = processCode(container);
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box = tokens[1] as BoxToken;
+    const box = tokens[1] as BoxToken<TextToken>;
     expect(txt).toEqual({
       x: 0,
       y: 0,
@@ -92,7 +93,7 @@ describe("processing code from a DOM source", () => {
     const { root, highlights } = processCode(container);
     const [txt, box, ...rest] = root.tokens as [
       TextToken,
-      BoxToken,
+      BoxToken<TextToken>,
       ...TextToken[]
     ];
     expect(txt).toEqual({
@@ -111,6 +112,7 @@ describe("processing code from a DOM source", () => {
         isHighlight: false,
       },
       hash: expect.any(String),
+      id: expect.any(String),
       tokens: [
         {
           x: 6,
@@ -142,7 +144,7 @@ describe("processing code from a DOM source", () => {
 }</span>;`;
     const { root, highlights } = processCode(container);
     const textTokens = root.tokens.slice(0, 7);
-    const box = root.tokens[7] as BoxToken;
+    const box = root.tokens[7] as BoxToken<TextToken>;
     expect(textTokens).toEqual([
       /* eslint-disable */
       { x: 0, y: 0, text: "const", size: 5, prev: undefined, next: textTokens[1], parent: root },
@@ -179,8 +181,8 @@ describe("processing code from a DOM source", () => {
     const { root, highlights } = processCode(container);
     const tokens = root.tokens;
     const firstToken = tokens[0] as TextToken;
-    const outerBox = tokens[1] as BoxToken;
-    const innerBox = outerBox.tokens[2] as BoxToken;
+    const outerBox = tokens[1] as BoxToken<TextToken>;
+    const innerBox = outerBox.tokens[2] as BoxToken<TextToken>;
     expect(firstToken).toEqual({
       x: 0,
       y: 0,
@@ -197,6 +199,7 @@ describe("processing code from a DOM source", () => {
         isHighlight: false,
       },
       hash: expect.any(String),
+      id: expect.any(String),
       tokens: [
         /* eslint-disable */
         { x: 6, y: 0, text: "a", size: 1, prev: firstToken, next: outerBox.tokens[1], parent: outerBox },
@@ -215,6 +218,7 @@ describe("processing code from a DOM source", () => {
         isHighlight: false,
       },
       hash: expect.any(String),
+      id: expect.any(String),
       tokens: [
         /* eslint-disable */
         { x: 10, y: 0, text: "(", size: 1, prev: outerBox.tokens[1], next: innerBox.tokens[1], parent: innerBox },
@@ -233,8 +237,8 @@ describe("processing code from a DOM source", () => {
 ]</span>;`;
     const { root, highlights } = processCode(container);
     const firstToken = root.tokens[0] as TextToken;
-    const outerBox = root.tokens[1] as BoxToken;
-    const innerBox = outerBox.tokens[2] as BoxToken;
+    const outerBox = root.tokens[1] as BoxToken<TextToken>;
+    const innerBox = outerBox.tokens[2] as BoxToken<TextToken>;
     const lastToken = root.tokens[2] as TextToken;
     expect(firstToken).toEqual({
       x: 0,
@@ -252,6 +256,7 @@ describe("processing code from a DOM source", () => {
         isHighlight: false,
       },
       hash: expect.any(String),
+      id: expect.any(String),
       tokens: [
         /* eslint-disable */
         { x: 6, y: 0, text: "a", size: 1, prev: firstToken, next: outerBox.tokens[1], parent: outerBox },
@@ -272,6 +277,7 @@ describe("processing code from a DOM source", () => {
         isHighlight: false,
       },
       hash: expect.any(String),
+      id: expect.any(String),
       tokens: [
         /* eslint-disable */
         { x: 10, y: 0, text: "(", size: 1, prev: outerBox.tokens[1], next: innerBox.tokens[1], parent: innerBox },
@@ -404,8 +410,8 @@ describe("processing code from a DOM source", () => {
       "const <span foo='bar'>a = <b><mark>()</mark></b> => 42</span>";
     const { root, highlights } = processCode(container);
     const firstToken = root.tokens[0] as TextToken;
-    const outerBox = root.tokens[1] as BoxToken;
-    const innerBox = outerBox.tokens[2] as BoxToken;
+    const outerBox = root.tokens[1] as BoxToken<TextToken>;
+    const innerBox = outerBox.tokens[2] as BoxToken<TextToken>;
     expect(firstToken).toEqual({
       x: 0,
       y: 0,
@@ -422,6 +428,7 @@ describe("processing code from a DOM source", () => {
         isHighlight: false,
       },
       hash: expect.any(String),
+      id: expect.any(String),
       tokens: [
         /* eslint-disable */
         { x: 6, y: 0, text: "a", size: 1, prev: firstToken, next: outerBox.tokens[1], parent: outerBox },
@@ -440,6 +447,7 @@ describe("processing code from a DOM source", () => {
         isHighlight: false,
       },
       hash: expect.any(String),
+      id: expect.any(String),
       tokens: [
         /* eslint-disable */
         { x: 10, y: 0, text: "(", size: 1, prev: outerBox.tokens[1], next: innerBox.tokens[1], parent: innerBox },

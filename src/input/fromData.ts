@@ -36,7 +36,7 @@ const extractCode = (source: InputContainer): CodeContainer => {
   }
   const hash = source.id;
   const meta = { id: source.id, isHighlight: source.isHighlight };
-  return { content: extracted, hash, meta };
+  return { content: extracted, hash, id: hash, meta };
 };
 
 // Only exported for unit tests

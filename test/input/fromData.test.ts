@@ -9,6 +9,7 @@ describe("processing code from a data source", () => {
       isHighlight: false,
     };
     const { root, highlights } = processCode(rootContainer);
+    expect(root.id).toBe(root.id);
     const tokens = root.tokens;
     expect(root.tokens).toEqual([
       /* eslint-disable */
@@ -97,7 +98,7 @@ describe("processing code from a data source", () => {
     const { root, highlights } = processCode(rootContainer);
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box = tokens[1] as BoxToken;
+    const box = tokens[1] as BoxToken<TextToken>;
     expect(txt).toEqual({
       x: 0,
       y: 0,
@@ -152,8 +153,8 @@ describe("processing code from a data source", () => {
     const { root, highlights } = processCode(rootContainer);
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box1 = tokens[1] as BoxToken;
-    const box2 = box1.tokens[6] as BoxToken;
+    const box1 = tokens[1] as BoxToken<TextToken>;
+    const box2 = box1.tokens[6] as BoxToken<TextToken>;
     expect(txt).toEqual({
       x: 0,
       y: 0,
