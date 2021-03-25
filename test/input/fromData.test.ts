@@ -195,6 +195,52 @@ describe("processing code from a data source", () => {
     expect(highlights).toEqual([]);
   });
 
+  test("it handles cases where all content is in nested boxes", () => {
+    const rootContainer = {
+      content: [
+        {
+          content: [
+            {
+              content: ["let x = 42"],
+              id: "nested",
+              isHighlight: false,
+            },
+          ],
+          id: "box",
+          isHighlight: false,
+        },
+      ],
+      id: "root",
+      isHighlight: false,
+    };
+    const { root, highlights } = processCode(rootContainer);
+    const contentBox = (root as any).tokens[0].tokens[0];
+    console.log(contentBox.tokens);
+    expect(root.tokens).toEqual([
+      {
+        id: "box",
+        hash: "box",
+        meta: { isHighlight: false, id: "box" },
+        tokens: [
+          {
+            id: "nested",
+            hash: "nested",
+            meta: { isHighlight: false, id: "nested" },
+            tokens: [
+              /* eslint-disable */
+              { x: 0, y: 0, text: "let", size: 3, next: contentBox.tokens[1], prev: undefined, parent: contentBox },
+              { x: 4, y: 0, text: "x", size: 1, next: contentBox.tokens[2], prev: contentBox.tokens[0], parent: contentBox },
+              { x: 6, y: 0, text: "=", size: 1, next: contentBox.tokens[3], prev: contentBox.tokens[1], parent: contentBox },
+              { x: 8, y: 0, text: "42", size: 2, next: undefined, prev: contentBox.tokens[2], parent: contentBox },
+              /* eslint-enable */
+            ],
+          },
+        ],
+      },
+    ]);
+    expect(highlights).toEqual([]);
+  });
+
   test("it handles highlights", () => {
     const rootContainer = {
       content: [
