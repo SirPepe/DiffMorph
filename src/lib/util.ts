@@ -1,5 +1,5 @@
 import fnv1a from "@sindresorhus/fnv1a";
-import { LanguageFunction } from "../types";
+import { BoxToken, HighlightToken, TextToken } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
@@ -23,6 +23,26 @@ export const prev = <T extends { prev: T | undefined }>(
 
 export const last = <T extends { next: T | undefined }>(x: T): T =>
   x.next ? last(x.next) : x;
+
+export const isTextToken = (
+  x: TextToken | BoxToken | HighlightToken
+): x is TextToken => "text" in x && typeof x.text === "string";
+
+export const unwrapFirst = (token: TextToken | BoxToken): TextToken => {
+  if (isTextToken(token)) {
+    return token;
+  } else {
+    return unwrapFirst(token.tokens[0]);
+  }
+};
+
+export const unwrapLast = (token: TextToken | BoxToken): TextToken => {
+  if (isTextToken(token)) {
+    return token;
+  } else {
+    return unwrapFirst(token.tokens[token.tokens.length - 1]);
+  }
+};
 
 export const createIdGenerator = (): ((realm: any, hash: any) => string) => {
   const counters = new Map();

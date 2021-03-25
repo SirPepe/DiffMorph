@@ -11,30 +11,14 @@ import {
   BoxToken,
   TextToken,
   HighlightToken,
-  isTextToken,
 } from "../types";
+import { unwrapFirst, unwrapLast } from "./util";
 
 const ONLY_WHITESPACE_RE = /^\s+$/;
 const LINE_BREAK_RE = /[\r\n]/;
 
 const isHighlightBox = (token: CodeContainer): boolean =>
   token.meta.isHighlight;
-
-const unwrapFirst = (token: TextToken | BoxToken): TextToken => {
-  if (isTextToken(token)) {
-    return token;
-  } else {
-    return unwrapFirst(token.tokens[0]);
-  }
-};
-
-const unwrapLast = (token: TextToken | BoxToken): TextToken => {
-  if (isTextToken(token)) {
-    return token;
-  } else {
-    return unwrapFirst(token.tokens[token.tokens.length - 1]);
-  }
-};
 
 const measureSpan = (
   content: (TextToken | BoxToken)[]
@@ -105,7 +89,14 @@ const tokenizeText = (
         x += length;
       }
     } else {
-      const token = { x, y, prev, next: undefined, text: part };
+      const token = {
+        x,
+        y,
+        prev,
+        next: undefined,
+        text: part,
+        size: part.length,
+      };
       if (tokens.length > 0) {
         tokens[tokens.length - 1].next = token;
       }
@@ -201,8 +192,8 @@ const tokenizeCode = (
 };
 
 export const tokenize = (
-  codes: Code[]
-): { tokens: (TextToken | BoxToken)[]; highlights: HighlightToken[] } => {
-  const { tokens, highlights } = tokenizeCode(codes, 0, 0, undefined);
-  return { tokens, highlights };
+  root: CodeContainer
+): { root: BoxToken; highlights: HighlightToken[] } => {
+  const { tokens, highlights } = tokenizeContainer(root, 0, 0, undefined);
+  return { root: tokens[0], highlights };
 };

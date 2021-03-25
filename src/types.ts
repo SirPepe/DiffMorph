@@ -20,40 +20,36 @@ export type HighlightToken = {
   end: [X: number, Y: number];
 };
 
+// Represents an abstract token that the diffing functions can work with.
+export type TokenLike = {
+  x: number;
+  y: number;
+  hash: string;
+  next: TokenLike | undefined;
+  prev: TokenLike | undefined;
+  parent: {
+    hash: string;
+  };
+};
+
+// Represents an element containing a bunch of other text tokens or other box
+// tokens. The source element can be reconstructed from metadata, which also
+// serve as the input to the box token's hash.
+export type BoxToken = {
+  hash: string; // built from "meta"
+  meta: Record<string, any>; // tag name and attributes for DOM sources
+  tokens: (TextToken | BoxToken)[];
+};
+
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
 // information.
 export type TextToken = {
   x: number;
   y: number;
   text: string;
+  size: number;
   next: TextToken | undefined;
   prev: TextToken | undefined;
-};
-
-// Represents an element containing a bunch of other text or box tokens. The
-// source element can be reconstructed from metadata, which also serve as the
-// input to the box token's hash.
-export type BoxToken = {
-  hash: string;
-  meta: Record<string, any>; // tag name and attributes for DOM sources
-  tokens: (TextToken | BoxToken)[];
-};
-
-export const isTextToken = (
-  x: TextToken | BoxToken | HighlightToken
-): x is TextToken => "text" in x && typeof x.text === "string";
-
-// Represents an abstract token that the diffing functions can work with.
-export type TokenLike = {
-  x: number;
-  y: number;
-  size: number;
-  hash: string;
-  parent: {
-    hash: any;
-  };
-  next: TokenLike | undefined;
-  prev: TokenLike | undefined;
 };
 
 // Represents a text token that has been linked up to its siblings and parent
@@ -67,8 +63,6 @@ export type RawToken = {
   size: number;
   prev: TypedToken | undefined;
   next: RawToken | undefined;
-  source: TextToken;
-  parent: BoxToken;
 };
 
 // Represents a text token that has been passed through a language function and
@@ -82,8 +76,7 @@ export type TypedToken = {
   hash: string;
   prev: TypedToken | undefined;
   next: TypedToken | undefined;
-  source: TextToken;
-  parent: BoxToken;
+  parentHash: string;
 };
 
 // Represents a concrete token in the output

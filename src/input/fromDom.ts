@@ -1,7 +1,13 @@
 // This module is a DOM frontend for the tokenizer. Its fromDom() function takes
 // elements as input and turns their text content into optimized keyframes.
 
-import { BoxToken, Code, HighlightToken, LanguageDefinition } from "../types";
+import {
+  BoxToken,
+  Code,
+  CodeContainer,
+  HighlightToken,
+  LanguageDefinition,
+} from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { hash } from "../lib/util";
 import { toKeyframes, Keyframe } from "../lib/keyframes";
@@ -44,31 +50,28 @@ const getAttributes = (element: Element): [string, string][] => {
 const hashDOMBox = (tagName: string, attributes: [string, string][]): string =>
   hash(tagName + "|" + attributes.map((pair) => pair.join("=")).join("|"));
 
-const extractCode = (source: Element): Code[] => {
+const extractCode = (source: Element): CodeContainer => {
   const children = Array.from(source.childNodes).filter(isDomContent);
   const extracted: Code[] = [];
   for (const child of children) {
     if (isText(child) && child.textContent) {
       extracted.push(child.textContent);
     } else if (isHTMLElement(child)) {
-      const content = extractCode(child);
-      const tagName = child.tagName.toLowerCase();
-      const attributes = getAttributes(child);
-      const hash = hashDOMBox(tagName, attributes);
-      const meta = { tagName, attributes, isHighlight: tagName === "mark" };
-      extracted.push({ content, hash, meta });
+      extracted.push(extractCode(child));
     }
   }
-  return extracted;
-};
-
-export const processCode = (source: Element): [BoxToken, HighlightToken[]] => {
   const tagName = source.tagName.toLowerCase();
   const attributes = getAttributes(source);
   const hash = hashDOMBox(tagName, attributes);
-  const meta = { tagName, attributes, isHighlight: false };
-  const { tokens, highlights } = tokenize(extractCode(source));
-  return [{ x: 0, y: 0, hash, meta, tokens }, highlights];
+  const meta = { tagName, attributes, isHighlight: tagName === "mark" };
+  return { content: extracted, hash, meta };
+};
+
+// Only exported for unit tests
+export const processCode = (
+  source: Element
+): { root: BoxToken; highlights: HighlightToken[] } => {
+  return tokenize(extractCode(source));
 };
 
 export function fromDom(
@@ -78,9 +81,9 @@ export function fromDom(
   const tokens = [];
   const highlights = [];
   for (const sourceElement of sourceElements) {
-    const [rootBox, highlightTokens] = processCode(sourceElement);
-    tokens.push(applyLanguage(language, rootBox));
-    highlights.push(highlightTokens);
+    const processed = processCode(sourceElement);
+    tokens.push(applyLanguage(language, processed.root));
+    highlights.push(processed.highlights);
   }
   return toKeyframes(optimize(diffAll(tokens)), highlights);
 }
