@@ -50,6 +50,7 @@ export type TextToken = {
   size: number;
   next: TextToken | undefined;
   prev: TextToken | undefined;
+  parent: BoxToken;
 };
 
 // Represents a text token that has been linked up to its siblings and parent

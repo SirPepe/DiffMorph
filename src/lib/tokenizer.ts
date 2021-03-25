@@ -73,6 +73,7 @@ type TokenizerResult<T extends TextToken | BoxToken> = {
 
 const tokenizeText = (
   text: string,
+  parent: BoxToken,
   x: number,
   y: number,
   prev: TextToken | undefined
@@ -96,6 +97,7 @@ const tokenizeText = (
         next: undefined,
         text: part,
         size: part.length,
+        parent,
       };
       if (tokens.length > 0) {
         tokens[tokens.length - 1].next = token;
@@ -119,28 +121,30 @@ const tokenizeContainer = (
   y: number,
   prev: TextToken | undefined
 ): TokenizerResult<BoxToken> => {
+  const box: BoxToken = {
+    hash: container.hash,
+    meta: container.meta,
+    tokens: [],
+  };
   const { tokens, highlights, lastX, lastY } = tokenizeCode(
     container.content,
+    box,
     x,
     y,
     prev
   );
+  box.tokens = tokens;
   return {
     lastX,
     lastY,
-    tokens: [
-      {
-        hash: container.hash,
-        meta: container.meta,
-        tokens,
-      },
-    ],
+    tokens: [box],
     highlights,
   };
 };
 
 const tokenizeCode = (
   codes: Code[],
+  parent: BoxToken,
   x: number,
   y: number,
   prev: TextToken | undefined
@@ -149,7 +153,7 @@ const tokenizeCode = (
   const highlights: HighlightToken[] = [];
   for (const code of codes) {
     if (typeof code === "string") {
-      const textResult = tokenizeText(code, x, y, prev);
+      const textResult = tokenizeText(code, parent, x, y, prev);
       if (prev) {
         prev.next = textResult.tokens[0];
       }
@@ -160,7 +164,7 @@ const tokenizeCode = (
     } else {
       if (isHighlightBox(code)) {
         const { hash, meta } = code;
-        const highlight = tokenizeCode(code.content, x, y, prev);
+        const highlight = tokenizeCode(code.content, parent, x, y, prev);
         if (prev) {
           prev.next = unwrapFirst(highlight.tokens[0]);
         }
