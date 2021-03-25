@@ -1,5 +1,5 @@
 import fnv1a from "@sindresorhus/fnv1a";
-import { BoxToken, HighlightToken, TextToken } from "../types";
+import { BoxToken, HighlightToken, TextToken, TokenLike } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
@@ -25,10 +25,12 @@ export const last = <T extends { next: T | undefined }>(x: T): T =>
   x.next ? last(x.next) : x;
 
 export const isTextToken = (
-  x: TextToken | BoxToken | HighlightToken
+  x: TextToken | BoxToken<TextToken> | HighlightToken
 ): x is TextToken => "text" in x && typeof x.text === "string";
 
-export const unwrapFirst = (token: TextToken | BoxToken): TextToken => {
+export const unwrapFirst = (
+  token: TextToken | BoxToken<TextToken>
+): TextToken => {
   if (isTextToken(token)) {
     return token;
   } else {
@@ -36,13 +38,24 @@ export const unwrapFirst = (token: TextToken | BoxToken): TextToken => {
   }
 };
 
-export const unwrapLast = (token: TextToken | BoxToken): TextToken => {
+export const unwrapLast = (
+  token: TextToken | BoxToken<TextToken>
+): TextToken => {
   if (isTextToken(token)) {
     return token;
   } else {
     return unwrapFirst(token.tokens[token.tokens.length - 1]);
   }
 };
+
+export function flattenTokens<T extends TokenLike>(token: T | undefined): T[] {
+  const result: T[] = [];
+  while (token) {
+    result.push(token);
+    token = token.next as any;
+  }
+  return result;
+}
 
 export const createIdGenerator = (): ((realm: any, hash: any) => string) => {
   const counters = new Map();

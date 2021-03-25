@@ -9,16 +9,8 @@ import {
   TypedToken,
   LanguageDefinition,
   LanguagePostprocessor,
+  TextToken,
 } from "../types";
-
-function flattenTypedTokens(token: TypedToken | undefined): TypedToken[] {
-  const result: TypedToken[] = [];
-  while (token) {
-    result.push({ ...token, prev: undefined, next: undefined });
-    token = token.next;
-  }
-  return result;
-}
 
 // Joins the token in-place so that the glue function can benefit from working
 // with already-glued previous tokens.
@@ -30,7 +22,7 @@ function applyPostprocessor(
     if (
       token.prev &&
       postprocessor(token) &&
-      token.parentHash === token.prev.parentHash // don't join across boxes
+      token.parent.hash === token.prev.parent.hash // don't join across boxes
     ) {
       token.prev.text += token.text;
       token.prev.size += token.size;
@@ -48,12 +40,10 @@ function applyPostprocessor(
   }
 }
 
-// Returns tokens as an array for easier diffing. The tokens are still linked to
-// each other as that is important for other bits of the program.
 export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
-  root: BoxToken
-): TypedToken[] => {
+  root: BoxToken<TextToken>
+): TypedToken => {
   const language = languageDefinition.definitionFactory({});
   const head: any = unwrapFirst(root);
   let token: any = unwrapFirst(root);
@@ -68,5 +58,5 @@ export const applyLanguage = (
     }
   }
   applyPostprocessor(head, languageDefinition.postprocessor);
-  return flattenTypedTokens(head);
+  return head;
 };

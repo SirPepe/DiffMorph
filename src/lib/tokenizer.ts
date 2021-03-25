@@ -21,7 +21,7 @@ const isHighlightBox = (token: CodeContainer): boolean =>
   token.meta.isHighlight;
 
 const measureSpan = (
-  content: (TextToken | BoxToken)[]
+  content: (TextToken | BoxToken<any>)[]
 ): [start: [number, number], end: [number, number]] => {
   const first = unwrapFirst(content[0]);
   const last = unwrapLast(content[content.length - 1]);
@@ -64,7 +64,7 @@ const measureWhitespace = (
   };
 };
 
-type TokenizerResult<T extends TextToken | BoxToken> = {
+type TokenizerResult<T extends TextToken | BoxToken<TextToken>> = {
   lastX: number;
   lastY: number;
   tokens: T[];
@@ -73,7 +73,7 @@ type TokenizerResult<T extends TextToken | BoxToken> = {
 
 const tokenizeText = (
   text: string,
-  parent: BoxToken,
+  parent: BoxToken<TextToken>,
   x: number,
   y: number,
   prev: TextToken | undefined
@@ -120,8 +120,8 @@ const tokenizeContainer = (
   x: number,
   y: number,
   prev: TextToken | undefined
-): TokenizerResult<BoxToken> => {
-  const box: BoxToken = {
+): TokenizerResult<BoxToken<TextToken>> => {
+  const box: BoxToken<TextToken> = {
     hash: container.hash,
     meta: container.meta,
     tokens: [],
@@ -144,12 +144,12 @@ const tokenizeContainer = (
 
 const tokenizeCode = (
   codes: Code[],
-  parent: BoxToken,
+  parent: BoxToken<TextToken>,
   x: number,
   y: number,
   prev: TextToken | undefined
-): TokenizerResult<TextToken | BoxToken> => {
-  const tokens: (BoxToken | TextToken)[] = [];
+): TokenizerResult<TextToken | BoxToken<TextToken>> => {
+  const tokens: (BoxToken<TextToken> | TextToken)[] = [];
   const highlights: HighlightToken[] = [];
   for (const code of codes) {
     if (typeof code === "string") {
@@ -197,7 +197,7 @@ const tokenizeCode = (
 
 export const tokenize = (
   root: CodeContainer
-): { root: BoxToken; highlights: HighlightToken[] } => {
+): { root: BoxToken<TextToken>; highlights: HighlightToken[] } => {
   const { tokens, highlights } = tokenizeContainer(root, 0, 0, undefined);
   return { root: tokens[0], highlights };
 };

@@ -28,17 +28,17 @@ export type TokenLike = {
   next: TokenLike | undefined;
   prev: TokenLike | undefined;
   parent: {
-    hash: string;
+    hash: any;
   };
 };
 
 // Represents an element containing a bunch of other text tokens or other box
 // tokens. The source element can be reconstructed from metadata, which also
 // serve as the input to the box token's hash.
-export type BoxToken = {
+export type BoxToken<Text extends TextToken> = {
   hash: string; // built from "meta"
   meta: Record<string, any>; // tag name and attributes for DOM sources
-  tokens: (TextToken | BoxToken)[];
+  tokens: (Text | BoxToken<Text>)[];
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
@@ -50,7 +50,7 @@ export type TextToken = {
   size: number;
   next: TextToken | undefined;
   prev: TextToken | undefined;
-  parent: BoxToken;
+  parent: BoxToken<TextToken>;
 };
 
 // Represents a text token that has been linked up to its siblings and parent
@@ -64,6 +64,7 @@ export type RawToken = {
   size: number;
   prev: TypedToken | undefined;
   next: RawToken | undefined;
+  parent: BoxToken<RawToken>;
 };
 
 // Represents a text token that has been passed through a language function and
@@ -77,7 +78,7 @@ export type TypedToken = {
   hash: string;
   prev: TypedToken | undefined;
   next: TypedToken | undefined;
-  parentHash: string;
+  parent: BoxToken<TypedToken>;
 };
 
 // Represents a concrete token in the output
@@ -88,9 +89,11 @@ export type RenderToken = {
   size: number;
   type: string;
   hash: string;
+  prev: RenderToken | undefined;
+  next: RenderToken | undefined;
   id: string;
   visible: boolean;
-  parent: BoxToken;
+  parent: BoxToken<RenderToken>;
 };
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;

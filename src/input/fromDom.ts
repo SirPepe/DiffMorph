@@ -7,9 +7,10 @@ import {
   CodeContainer,
   HighlightToken,
   LanguageDefinition,
+  TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
-import { hash } from "../lib/util";
+import { flattenTokens, hash } from "../lib/util";
 import { toKeyframes, Keyframe } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
 import { diffAll } from "../lib/diff";
@@ -70,7 +71,7 @@ const extractCode = (source: Element): CodeContainer => {
 // Only exported for unit tests
 export const processCode = (
   source: Element
-): { root: BoxToken; highlights: HighlightToken[] } => {
+): { root: BoxToken<TextToken>; highlights: HighlightToken[] } => {
   return tokenize(extractCode(source));
 };
 
@@ -78,12 +79,13 @@ export function fromDom(
   sourceElements: Element[],
   language: LanguageDefinition<Record<string, any>>
 ): Keyframe[] {
-  const tokens = [];
+  const heads = [];
   const highlights = [];
   for (const sourceElement of sourceElements) {
     const processed = processCode(sourceElement);
-    tokens.push(applyLanguage(language, processed.root));
+    heads.push(applyLanguage(language, processed.root));
     highlights.push(processed.highlights);
   }
+  const tokens = heads.map(flattenTokens);
   return toKeyframes(optimize(diffAll(tokens)), highlights);
 }

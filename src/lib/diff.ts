@@ -4,18 +4,27 @@
 
 import { diffArrays } from "diff";
 import { createIdGenerator, groupBy } from "./util";
-import { TokenLike } from "../types";
 
-export type ADD<T extends TokenLike> = { readonly type: "ADD"; item: T };
-export type DEL<T extends TokenLike> = { readonly type: "DEL"; item: T };
-export type MOV<T extends TokenLike> = {
+// Represents the minimum of token info that diffing functions require to work.
+type DiffToken = {
+  x: number;
+  y: number;
+  hash: string;
+  parent: {
+    hash: any;
+  };
+};
+
+export type ADD<T extends DiffToken> = { readonly type: "ADD"; item: T };
+export type DEL<T extends DiffToken> = { readonly type: "DEL"; item: T };
+export type MOV<T extends DiffToken> = {
   readonly type: "MOV";
   item: T;
   ref: T; // keeps track of the position a moved token had before it moved
 };
-export type DiffOp<T extends TokenLike> = MOV<T> | ADD<T> | DEL<T>;
+export type DiffOp<T extends DiffToken> = MOV<T> | ADD<T> | DEL<T>;
 
-type Line<T extends TokenLike> = {
+type Line<T extends DiffToken> = {
   readonly x: number;
   readonly y: number;
   readonly id: string;
@@ -27,7 +36,7 @@ type Line<T extends TokenLike> = {
 // their *relative* distance on the x axis. The allover level of indentation is
 // not reflected in the hash - two lines containing the same characters the same
 // distance apart get the same hash, no matter the indentation
-const hashLine = (items: TokenLike[]): string => {
+const hashLine = (items: DiffToken[]): string => {
   const hashes = items.map((item, idx) => {
     const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
     return item.hash + String(xDelta);
@@ -36,7 +45,7 @@ const hashLine = (items: TokenLike[]): string => {
 };
 
 // Organize tokens into lines
-const asLines = <T extends TokenLike>(tokens: T[]): Line<T>[] => {
+const asLines = <T extends DiffToken>(tokens: T[]): Line<T>[] => {
   const nextId = createIdGenerator();
   const byLine = groupBy(tokens, "y");
   return Array.from(byLine, ([y, items]) => {
@@ -47,7 +56,7 @@ const asLines = <T extends TokenLike>(tokens: T[]): Line<T>[] => {
   });
 };
 
-const diffLines = <T extends TokenLike>(
+const diffLines = <T extends DiffToken>(
   from: Line<T>[],
   to: Line<T>[]
 ): {
@@ -100,7 +109,7 @@ const diffLines = <T extends TokenLike>(
   };
 };
 
-const diffTokens = <T extends TokenLike>(from: T[], to: T[]): DiffOp<T>[] => {
+const diffTokens = <T extends DiffToken>(from: T[], to: T[]): DiffOp<T>[] => {
   const result: DiffOp<T>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
@@ -119,7 +128,7 @@ const diffTokens = <T extends TokenLike>(from: T[], to: T[]): DiffOp<T>[] => {
 };
 
 // Only exported for unit tests
-export const diff = <T extends TokenLike>(from: T[], to: T[]): DiffOp<T>[] => {
+export const diff = <T extends DiffToken>(from: T[], to: T[]): DiffOp<T>[] => {
   const result: DiffOp<T>[] = [];
   const fromByParent = groupBy(from, (token) => token.parent.hash);
   const toByParent = groupBy(to, (token) => token.parent.hash);
@@ -134,13 +143,13 @@ export const diff = <T extends TokenLike>(from: T[], to: T[]): DiffOp<T>[] => {
   return result;
 };
 
-export const diffAll = <T extends TokenLike>(frames: T[][]): DiffOp<T>[][] => {
-  if (frames.length < 2) {
+export const diffAll = <T extends DiffToken>(tokens: T[][]): DiffOp<T>[][] => {
+  if (tokens.length < 2) {
     throw new Error("Need at least two frames to diff");
   }
-  const diffs: DiffOp<T>[][] = [diff([], frames[0])];
-  for (let i = 0; i < frames.length - 1; i++) {
-    diffs.push(diff(frames[i], frames[i + 1]));
+  const diffs: DiffOp<T>[][] = [diff([], tokens[0])];
+  for (let i = 0; i < tokens.length - 1; i++) {
+    diffs.push(diff(tokens[i], tokens[i + 1]));
   }
   return diffs;
 };
