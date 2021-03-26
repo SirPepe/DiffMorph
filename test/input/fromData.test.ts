@@ -1,5 +1,5 @@
 import { processCode } from "../../src/input/fromData";
-import { Box, TextToken } from "../../src/types";
+import { Box, CodeContainer, TextToken } from "../../src/types";
 
 describe("processing code from a data source", () => {
   test("it splits code", () => {
@@ -9,7 +9,13 @@ describe("processing code from a data source", () => {
       isHighlight: false,
     };
     const { root, highlights } = processCode(rootContainer);
-    expect(root.id).toBe(root.id);
+    expect(root).toEqual({
+      meta: {},
+      id: "root0",
+      hash: "root",
+      tokens: expect.any(Array),
+      parent: undefined,
+    });
     const tokens = root.tokens;
     expect(root.tokens).toEqual([
       /* eslint-disable */
@@ -108,13 +114,12 @@ describe("processing code from a data source", () => {
       next: box.tokens[0],
       parent: root,
     });
-    expect(box).toMatchObject({
-      meta: {
-        id: "box",
-        isHighlight: false,
-      },
-      hash: expect.any(String),
+    expect(box).toEqual({
+      meta: {},
+      id: "box0",
+      hash: "box",
       tokens: expect.any(Array),
+      parent: root,
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
@@ -164,13 +169,12 @@ describe("processing code from a data source", () => {
       next: box1.tokens[0],
       parent: root,
     });
-    expect(box1).toMatchObject({
-      meta: {
-        id: "box",
-        isHighlight: false,
-      },
-      hash: expect.any(String),
+    expect(box1).toEqual({
+      meta: {},
+      id: "box0",
+      hash: "box",
       tokens: expect.any(Array),
+      parent: root,
     });
     expect(box1.tokens).toEqual([
       /* eslint-disable */
@@ -183,6 +187,13 @@ describe("processing code from a data source", () => {
       box2,
       /* eslint-enable */
     ]);
+    expect(box2).toEqual({
+      meta: {},
+      id: "nested0",
+      hash: "nested",
+      tokens: expect.any(Array),
+      parent: box1,
+    });
     expect(box2.tokens).toEqual([
       /* eslint-disable */
       { x: 16, y: 0, text: "{", size: 1, next: box2.tokens[1], prev: box1.tokens[5], parent: box2 },
@@ -217,14 +228,14 @@ describe("processing code from a data source", () => {
     const contentBox = (root as any).tokens[0].tokens[0];
     expect(root.tokens).toEqual([
       {
-        id: "box",
+        id: "box0",
         hash: "box",
-        meta: { isHighlight: false, id: "box" },
+        meta: {},
         tokens: [
           {
-            id: "nested",
+            id: "nested0",
             hash: "nested",
-            meta: { isHighlight: false, id: "nested" },
+            meta: {},
             tokens: [
               /* eslint-disable */
               { x: 0, y: 0, text: "let", size: 3, next: contentBox.tokens[1], prev: undefined, parent: contentBox },
@@ -233,20 +244,30 @@ describe("processing code from a data source", () => {
               { x: 8, y: 0, text: "42", size: 2, next: undefined, prev: contentBox.tokens[2], parent: contentBox },
               /* eslint-enable */
             ],
+            parent: root.tokens[0],
           },
         ],
+        parent: root,
       },
     ]);
     expect(highlights).toEqual([]);
   });
 
   test("it handles highlights", () => {
-    const rootContainer = {
+    const rootContainer: CodeContainer = {
       content: [
         "const a = () => ",
-        { content: ["42"], id: "red", isHighlight: true },
+        {
+          content: ["42"],
+          id: "red",
+          hash: "red",
+          meta: {},
+          isHighlight: true,
+        },
       ],
       id: "root",
+      hash: "root",
+      meta: {},
       isHighlight: false,
     };
     const { root, highlights } = processCode(rootContainer);
@@ -265,11 +286,9 @@ describe("processing code from a data source", () => {
     ]);
     expect(highlights).toEqual([
       {
-        meta: {
-          id: "red",
-          isHighlight: true,
-        },
-        hash: expect.any(String),
+        meta: {},
+        id: "red0",
+        hash: "red",
         start: [16, 0],
         end: [18, 0],
       },

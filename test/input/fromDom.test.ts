@@ -7,8 +7,17 @@ describe("processing code from a DOM source", () => {
   test("it splits code", () => {
     container.innerHTML = "const a = () => 42";
     const { root, highlights } = processCode(container);
+    expect(root).toEqual({
+      meta: {
+        attributes: [],
+        tagName: "pre",
+      },
+      hash: expect.any(String),
+      id: root.hash + "0",
+      tokens: expect.any(Array),
+      parent: undefined,
+    });
     const tokens = root.tokens;
-    expect(root.id).toBe(root.hash + "0");
     expect(tokens).toEqual([
       /* eslint-disable */
       { x: 0, y: 0, text: "const", size: 5, next: tokens[1], prev: undefined, parent: root },
@@ -69,10 +78,11 @@ describe("processing code from a DOM source", () => {
       meta: {
         tagName: "span",
         attributes: [["foo", "bar"]],
-        isHighlight: false,
       },
       hash: expect.any(String),
+      id: box.hash + "0",
       tokens: expect.any(Array),
+      parent: root,
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
@@ -109,10 +119,9 @@ describe("processing code from a DOM source", () => {
       meta: {
         tagName: "span",
         attributes: [["foo", "bar"]],
-        isHighlight: false,
       },
       hash: expect.any(String),
-      id: expect.any(String),
+      id: box.hash + "0",
       tokens: [
         {
           x: 6,
@@ -124,6 +133,7 @@ describe("processing code from a DOM source", () => {
           parent: box,
         },
       ],
+      parent: root,
     });
     expect(rest).toEqual([
       /* eslint-disable */
@@ -160,9 +170,9 @@ describe("processing code from a DOM source", () => {
       meta: {
         tagName: "span",
         attributes: [["class", "a"]],
-        isHighlight: false,
       },
       hash: expect.any(String),
+      id: box.hash + "0",
       tokens: [
         /* eslint-disable */
         { x: 16, y: 0, text: "{", size: 1, next: box.tokens[1], prev: textTokens[6], parent: box },
@@ -172,6 +182,7 @@ describe("processing code from a DOM source", () => {
         { x: 0, y: 2, text: "}", size: 1, next: expect.any(Object), prev: box.tokens[3], parent: box },
         /* eslint-enable */
       ],
+      parent: root,
     });
     expect(highlights).toEqual([]);
   });
@@ -196,7 +207,6 @@ describe("processing code from a DOM source", () => {
       meta: {
         tagName: "span",
         attributes: [["foo", "bar"]],
-        isHighlight: false,
       },
       hash: expect.any(String),
       id: expect.any(String),
@@ -210,12 +220,12 @@ describe("processing code from a DOM source", () => {
         { x: 16, y: 0, text: "42", size: 2, prev: outerBox.tokens[4], next: undefined, parent: outerBox },
         /* eslint-enable */
       ],
+      parent: root,
     });
     expect(innerBox).toEqual({
       meta: {
         tagName: "b",
         attributes: [],
-        isHighlight: false,
       },
       hash: expect.any(String),
       id: expect.any(String),
@@ -225,6 +235,7 @@ describe("processing code from a DOM source", () => {
         { x: 11, y: 0, text: ")", size: 1, prev: innerBox.tokens[0], next: outerBox.tokens[3], parent: innerBox },
         /* eslint-enable */
       ],
+      parent: outerBox,
     });
     expect(highlights).toEqual([]);
   });
@@ -253,7 +264,6 @@ describe("processing code from a DOM source", () => {
       meta: {
         tagName: "span",
         attributes: [["foo", "bar"]],
-        isHighlight: false,
       },
       hash: expect.any(String),
       id: expect.any(String),
@@ -269,12 +279,12 @@ describe("processing code from a DOM source", () => {
         { x: 0, y: 4, text: "]", size: 1, prev: outerBox.tokens[6], next: lastToken, parent: outerBox },
         /* eslint-enable */
       ],
+      parent: root,
     });
     expect(innerBox).toEqual({
       meta: {
         tagName: "b",
         attributes: [],
-        isHighlight: false,
       },
       hash: expect.any(String),
       id: expect.any(String),
@@ -285,6 +295,7 @@ describe("processing code from a DOM source", () => {
         { x: 0, y: 2, text: ")", size: 1, prev: innerBox.tokens[1], next: outerBox.tokens[3], parent: innerBox },
         /* eslint-enable */
       ],
+      parent: outerBox,
     });
     expect(lastToken).toEqual({
       x: 1,
@@ -319,8 +330,8 @@ describe("processing code from a DOM source", () => {
         meta: {
           tagName: "mark",
           attributes: [],
-          isHighlight: true,
         },
+        id: expect.any(String),
         hash: expect.any(String),
         start: [16, 0],
         end: [18, 0],
@@ -350,8 +361,8 @@ describe("processing code from a DOM source", () => {
         meta: {
           tagName: "mark",
           attributes: [["class", "a"]],
-          isHighlight: true,
         },
+        id: expect.any(String),
         hash: expect.any(String),
         start: [6, 0],
         end: [7, 0],
@@ -360,8 +371,8 @@ describe("processing code from a DOM source", () => {
         meta: {
           tagName: "mark",
           attributes: [["class", "b"]],
-          isHighlight: true,
         },
+        id: expect.any(String),
         hash: expect.any(String),
         start: [16, 0],
         end: [18, 0],
@@ -396,8 +407,8 @@ describe("processing code from a DOM source", () => {
         meta: {
           tagName: "mark",
           attributes: [],
-          isHighlight: true,
         },
+        id: expect.any(String),
         hash: expect.any(String),
         start: [16, 0],
         end: [1, 2],
@@ -425,7 +436,6 @@ describe("processing code from a DOM source", () => {
       meta: {
         tagName: "span",
         attributes: [["foo", "bar"]],
-        isHighlight: false,
       },
       hash: expect.any(String),
       id: expect.any(String),
@@ -439,12 +449,12 @@ describe("processing code from a DOM source", () => {
         { x: 16, y: 0, text: "42", size: 2, prev: outerBox.tokens[4], next: undefined, parent: outerBox },
         /* eslint-enable */
       ],
+      parent: root,
     });
     expect(innerBox).toEqual({
       meta: {
         tagName: "b",
         attributes: [],
-        isHighlight: false,
       },
       hash: expect.any(String),
       id: expect.any(String),
@@ -454,14 +464,15 @@ describe("processing code from a DOM source", () => {
         { x: 11, y: 0, text: ")", size: 1, prev: innerBox.tokens[0], next: outerBox.tokens[3], parent: innerBox },
         /* eslint-enable */
       ],
+      parent: outerBox,
     });
     expect(highlights).toEqual([
       {
         meta: {
           tagName: "mark",
           attributes: [],
-          isHighlight: true,
         },
+        id: expect.any(String),
         hash: expect.any(String),
         start: [10, 0],
         end: [12, 0],

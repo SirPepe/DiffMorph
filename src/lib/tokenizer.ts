@@ -5,20 +5,14 @@
 // all have absolute positions and can be nested inside boxes of arbitrary
 // depth.
 
-import {
-  Code,
-  CodeContainer,
-  Box,
-  TextToken,
-  HighlightToken,
-} from "../types";
+import { Code, CodeContainer, Box, TextToken, HighlightToken } from "../types";
 import { unwrapFirst, unwrapLast } from "./util";
 
 const ONLY_WHITESPACE_RE = /^\s+$/;
 const LINE_BREAK_RE = /[\r\n]/;
 
 const isHighlightBox = (token: CodeContainer): boolean =>
-  token.meta.isHighlight;
+  token.isHighlight;
 
 const measureSpan = (
   content: (TextToken | Box<any>)[]
@@ -73,10 +67,10 @@ type TokenizerResult<T extends TextToken | Box<TextToken>> = {
 
 const tokenizeText = (
   text: string,
-  parent: Box<TextToken>,
   x: number,
   y: number,
-  prev: TextToken | undefined
+  prev: TextToken | undefined,
+  parent: Box<TextToken>
 ): TokenizerResult<TextToken> => {
   const parts = splitText(text);
   const tokens: TextToken[] = [];
@@ -119,13 +113,15 @@ const tokenizeContainer = (
   container: CodeContainer,
   x: number,
   y: number,
-  prev: TextToken | undefined
+  prev: TextToken | undefined,
+  parent: Box<TextToken> | undefined
 ): TokenizerResult<Box<TextToken>> => {
   const box: Box<TextToken> = {
     id: container.id,
     hash: container.hash,
     meta: container.meta,
     tokens: [],
+    parent,
   };
   const { tokens, highlights, lastX, lastY } = tokenizeCode(
     container.content,
@@ -154,7 +150,7 @@ const tokenizeCode = (
   const highlights: HighlightToken[] = [];
   for (const code of codes) {
     if (typeof code === "string") {
-      const textResult = tokenizeText(code, parent, x, y, prev);
+      const textResult = tokenizeText(code, x, y, prev, parent);
       if (prev) {
         prev.next = textResult.tokens[0];
       }
@@ -164,7 +160,7 @@ const tokenizeCode = (
       y = textResult.lastY;
     } else {
       if (isHighlightBox(code)) {
-        const { hash, meta } = code;
+        const { hash, id, meta } = code;
         const highlight = tokenizeCode(code.content, parent, x, y, prev);
         if (prev) {
           prev.next = unwrapFirst(highlight.tokens[0]);
@@ -174,6 +170,7 @@ const tokenizeCode = (
         const span = measureSpan(highlight.tokens);
         highlights.push({
           hash,
+          id,
           meta,
           start: [span[0][0], span[0][1]],
           end: [span[1][0], span[1][1]],
@@ -181,7 +178,7 @@ const tokenizeCode = (
         x = highlight.lastX;
         y = highlight.lastY;
       } else {
-        const boxResult = tokenizeContainer(code, x, y, prev);
+        const boxResult = tokenizeContainer(code, x, y, prev, parent);
         if (prev) {
           prev.next = unwrapFirst(boxResult.tokens[0]);
         }
@@ -199,6 +196,12 @@ const tokenizeCode = (
 export const tokenize = (
   root: CodeContainer
 ): { root: Box<TextToken>; highlights: HighlightToken[] } => {
-  const { tokens, highlights } = tokenizeContainer(root, 0, 0, undefined);
+  const { tokens, highlights } = tokenizeContainer(
+    root,
+    0,
+    0,
+    undefined,
+    undefined
+  );
   return { root: tokens[0], highlights };
 };

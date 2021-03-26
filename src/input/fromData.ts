@@ -15,7 +15,7 @@ import { applyLanguage } from "../lib/language";
 import { Keyframe, toKeyframes } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
 import { diffAll } from "../lib/diff";
-import { flattenTokens } from "../lib/util";
+import { createIdGenerator, flattenTokens } from "../lib/util";
 
 export type InputContainer = {
   content: Input[];
@@ -25,26 +25,28 @@ export type InputContainer = {
 
 export type Input = string | InputContainer;
 
-const extractCode = (source: InputContainer): CodeContainer => {
-  const extracted: Code[] = [];
+function extractCode(source: InputContainer): CodeContainer {
+  const idGenerator = createIdGenerator();
+  const content: Code[] = [];
   for (const input of source.content) {
     if (typeof input === "string") {
-      extracted.push(input);
+      content.push(input);
     } else {
-      extracted.push(extractCode(input));
+      content.push(extractCode(input));
     }
   }
   const hash = source.id;
-  const meta = { id: source.id, isHighlight: source.isHighlight };
-  return { content: extracted, hash, id: hash, meta };
-};
+  const isHighlight = source.isHighlight;
+  const id = idGenerator(null, hash);
+  return { content, isHighlight, hash, id, meta: {} };
+}
 
 // Only exported for unit tests
-export const processCode = (
+export function processCode(
   source: InputContainer
-): { root: Box<TextToken>; highlights: HighlightToken[] } => {
+): { root: Box<TextToken>; highlights: HighlightToken[] } {
   return tokenize(extractCode(source));
-};
+}
 
 export function fromData(
   inputContainers: InputContainer[],

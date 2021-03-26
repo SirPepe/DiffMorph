@@ -41,9 +41,7 @@ export function isBox<T>(x: any): x is Box<T> {
   return false;
 }
 
-export const unwrapFirst = (
-  token: TextToken | Box<TextToken>
-): TextToken => {
+export const unwrapFirst = (token: TextToken | Box<TextToken>): TextToken => {
   if (isTextToken(token)) {
     return token;
   } else {
@@ -51,9 +49,7 @@ export const unwrapFirst = (
   }
 };
 
-export const unwrapLast = (
-  token: TextToken | Box<TextToken>
-): TextToken => {
+export const unwrapLast = (token: TextToken | Box<TextToken>): TextToken => {
   if (isTextToken(token)) {
     return token;
   } else {

@@ -8,14 +8,14 @@ export type CodeContainer = {
   content: Code[];
   hash: string; // built from "meta"
   id: string; // hash plus count
-  meta: {
-    isHighlight: boolean;
-  } & Record<string, any>; // tag name and attributes for DOM sources
+  isHighlight: boolean;
+  meta: Record<string, any>; // tag name and attributes for DOM sources
 };
 
 // Represents a highlight token that takes up no space but has set dimensions
 export type HighlightToken = {
-  hash: string;
+  hash: string; // built from "meta"
+  id: string; // hash plus count for unique identification
   meta: Record<string, any>; // tag name and attributes for DOM sources
   start: [X: number, Y: number];
   end: [X: number, Y: number];
@@ -35,12 +35,13 @@ export type TokenLike = {
 
 // Represents an element containing a bunch of other text tokens or other box
 // tokens. The source element can be reconstructed from metadata, which also
-// serve as the input to the box token's hash.
+// serve as the input to the box hash.
 export type Box<Content> = {
-  id: string; // hash plus count
+  id: string; // hash plus count for unique identification
   hash: string; // built from "meta"
   meta: Record<string, any>; // tag name and attributes for DOM sources
   tokens: (Content | Box<Content>)[];
+  parent: Box<Content> | undefined; // distinguishes the root box from the rest
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic

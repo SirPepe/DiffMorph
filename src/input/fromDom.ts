@@ -16,7 +16,7 @@ import { optimize } from "../lib/optimize";
 import { diffAll } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
 
-const isHTMLElement = (arg: any): arg is HTMLElement => {
+function isHTMLElement(arg: any): arg is HTMLElement {
   if (!arg) {
     return false;
   }
@@ -25,55 +25,59 @@ const isHTMLElement = (arg: any): arg is HTMLElement => {
     arg.nodeType === Node.ELEMENT_NODE &&
     arg instanceof HTMLElement
   );
-};
+}
 
-const isText = (arg: any): arg is Text => {
+function isText (arg: any): arg is Text {
   if (!arg) {
     return false;
   }
   return arg instanceof Node && arg.nodeType === Node.TEXT_NODE;
-};
+}
 
-const isDomContent = (arg: any): arg is HTMLElement | Text => {
+function isDomContent(arg: any): arg is HTMLElement | Text {
   if (!arg) {
     return false;
   }
   return isHTMLElement(arg) || isText(arg);
-};
+}
 
-const getAttributes = (element: Element): [string, string][] => {
+function getAttributes(element: Element): [string, string][] {
   return Array.from(element.attributes, (attr): [string, string] => [
     attr.name,
     attr.value,
   ]);
 };
 
-const hashDOMBox = (tagName: string, attributes: [string, string][]): string =>
-  hash(tagName + "|" + attributes.map((pair) => pair.join("=")).join("|"));
+function hashDOMBox(tagName: string, attributes: [string, string][]): string {
+  return hash(
+    tagName + "|" + attributes.map((pair) => pair.join("=")).join("|")
+  );
+}
 
-const extractCode = (source: Element): CodeContainer => {
+function extractCode(source: Element): CodeContainer {
   const idGenerator = createIdGenerator();
   const children = Array.from(source.childNodes).filter(isDomContent);
-  const extracted: Code[] = [];
+  const content: Code[] = [];
   for (const child of children) {
     if (isText(child) && child.textContent) {
-      extracted.push(child.textContent);
+      content.push(child.textContent);
     } else if (isHTMLElement(child)) {
-      extracted.push(extractCode(child));
+      content.push(extractCode(child));
     }
   }
   const tagName = source.tagName.toLowerCase();
   const attributes = getAttributes(source);
   const hash = hashDOMBox(tagName, attributes);
   const id = idGenerator(null, hash);
-  const meta = { tagName, attributes, isHighlight: tagName === "mark" };
-  return { content: extracted, hash, id, meta };
-};
+  const isHighlight = tagName === "mark";
+  const meta = { tagName, attributes };
+  return { content, hash, id, meta, isHighlight };
+}
 
 // Only exported for unit tests
-export const processCode = (
+export function processCode(
   source: Element
-): { root: Box<TextToken>; highlights: HighlightToken[] } => {
+): { root: Box<TextToken>; highlights: HighlightToken[] } {
   return tokenize(extractCode(source));
 };
 
