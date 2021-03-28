@@ -94,6 +94,7 @@ function postprocessECMAScript(): boolean {
 }
 
 export const languageDefinition: LanguageDefinition<Flags> = {
+  name: "ecmascript",
   definitionFactory: defineECMAScript,
   postprocessor: postprocessECMAScript,
 };

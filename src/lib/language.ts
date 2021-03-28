@@ -48,10 +48,11 @@ function applyPostprocessor(
   }
 }
 
+// Performs all of its actions in-place
 export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
   root: Box<TextToken>
-): TypedToken => {
+): Box<TypedToken> => {
   const language = languageDefinition.definitionFactory({});
   const first: any = unwrapFirst(root);
   let current: any = unwrapFirst(root);
@@ -66,5 +67,5 @@ export const applyLanguage = (
     }
   }
   applyPostprocessor(first, languageDefinition.postprocessor);
-  return first;
+  return root as Box<TypedToken>; // ¯\_(ツ)_/¯
 };

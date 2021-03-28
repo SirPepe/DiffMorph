@@ -31,7 +31,9 @@ describe("toDom", () => {
             content: ["null"],
             hash: "asdf",
             id: "asdf1",
-            meta: { isHighlight: false, id: "hello" },
+            isHighlight: false,
+            language: undefined,
+            meta: { id: "hello" },
           },
           "]"
         ),

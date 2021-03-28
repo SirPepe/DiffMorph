@@ -333,6 +333,7 @@ function postprocessCss(token: TypedToken): boolean {
 }
 
 export const languageDefinition: LanguageDefinition<Flags> = {
+  name: "css",
   definitionFactory: defineCss,
   postprocessor: postprocessCss,
 };

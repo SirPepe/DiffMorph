@@ -24,11 +24,7 @@ export const prev = <T extends { prev: T | undefined }>(
 export const last = <T extends { next: T | undefined }>(x: T): T =>
   x.next ? last(x.next) : x;
 
-export const isTextToken = (
-  x: TextToken | Box<TextToken> | HighlightToken
-): x is TextToken => "text" in x && typeof x.text === "string";
-
-export function isBox<T>(x: any): x is Box<T> {
+function isBox<T>(x: any): x is Box<T> {
   if (
     typeof x === "object" &&
     typeof x.id === "string" &&
@@ -41,19 +37,19 @@ export function isBox<T>(x: any): x is Box<T> {
   return false;
 }
 
-export const unwrapFirst = (token: TextToken | Box<TextToken>): TextToken => {
-  if (isTextToken(token)) {
-    return token;
-  } else {
+export const unwrapFirst = <T>(token: T | Box<T>): T => {
+  if (isBox(token)) {
     return unwrapFirst(token.tokens[0]);
+  } else {
+    return token;
   }
 };
 
-export const unwrapLast = (token: TextToken | Box<TextToken>): TextToken => {
-  if (isTextToken(token)) {
-    return token;
-  } else {
+export const unwrapLast = <T>(token: T | Box<T>): T => {
+  if (isBox(token)) {
     return unwrapFirst(token.tokens[token.tokens.length - 1]);
+  } else {
+    return token;
   }
 };
 

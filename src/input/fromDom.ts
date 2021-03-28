@@ -10,7 +10,12 @@ import {
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
-import { createIdGenerator, flattenTokens, hash } from "../lib/util";
+import {
+  createIdGenerator,
+  flattenTokens,
+  hash,
+  unwrapFirst,
+} from "../lib/util";
 import { toKeyframes, Keyframe } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
 import { diffAll } from "../lib/diff";
@@ -48,6 +53,11 @@ function getAttributes(element: Element): [string, string][] {
   ]);
 };
 
+function getLanguage(element: Element): string | undefined {
+  const { 0: match } = /language-(\S*)/.exec(element.className) ?? [];
+  return match;
+}
+
 function hashDOMBox(tagName: string, attributes: [string, string][]): string {
   return hash(
     tagName + "|" + attributes.map((pair) => pair.join("=")).join("|")
@@ -69,18 +79,24 @@ function extractCode(source: Element): CodeContainer {
   const attributes = getAttributes(source);
   const hash = hashDOMBox(tagName, attributes);
   const id = idGenerator(null, hash);
-  const isHighlight = tagName === "mark";
-  const meta = { tagName, attributes };
-  return { content, hash, id, meta, isHighlight };
+  return {
+    content,
+    hash,
+    id,
+    meta: { tagName, attributes },
+    isHighlight: tagName === "mark",
+    language: getLanguage(source),
+  };
 }
 
-// Only exported for unit tests
+// Only exported for unit testing code extraction
 export function processCode(
   source: Element
 ): { root: Box<TextToken>; highlights: HighlightToken[] } {
   return tokenize(extractCode(source));
 };
 
+// Actual facade for dom content extraction
 export function fromDom(
   sourceElements: Element[],
   language: LanguageDefinition<Record<string, any>>
@@ -89,7 +105,7 @@ export function fromDom(
   const highlights = [];
   for (const sourceElement of sourceElements) {
     const processed = processCode(sourceElement);
-    heads.push(applyLanguage(language, processed.root));
+    heads.push(unwrapFirst(applyLanguage(language, processed.root)));
     highlights.push(processed.highlights);
   }
   const tokens = heads.map(flattenTokens);

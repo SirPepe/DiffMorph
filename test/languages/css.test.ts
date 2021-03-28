@@ -2,6 +2,7 @@ import { languageDefinition } from "../../src/languages/css";
 import { type } from "../helpers";
 const css = type(languageDefinition);
 const inlineCss = type({
+  name: "css",
   definitionFactory: () =>
     languageDefinition.definitionFactory({ inline: true }),
   postprocessor: languageDefinition.postprocessor,

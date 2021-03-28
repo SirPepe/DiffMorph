@@ -167,6 +167,7 @@ function postprocessJSON(token: TypedToken): boolean {
 }
 
 export const languageDefinition: LanguageDefinition<Flags> = {
+  name: "json",
   definitionFactory: defineJSON,
   postprocessor: postprocessJSON,
 };

@@ -9,21 +9,23 @@ import {
   HighlightToken,
   LanguageDefinition,
   TextToken,
+  TypedToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
 import { Keyframe, toKeyframes } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
 import { diffAll } from "../lib/diff";
-import { createIdGenerator, flattenTokens } from "../lib/util";
+import { createIdGenerator, flattenTokens, unwrapFirst } from "../lib/util";
 
-export type InputContainer = {
+type Input = string | InputContainer;
+
+type InputContainer = {
   content: Input[];
   id: string;
   isHighlight: boolean;
+  language: string | undefined;
 };
-
-export type Input = string | InputContainer;
 
 function extractCode(source: InputContainer): CodeContainer {
   const idGenerator = createIdGenerator();
@@ -35,28 +37,33 @@ function extractCode(source: InputContainer): CodeContainer {
       content.push(extractCode(input));
     }
   }
-  const hash = source.id;
-  const isHighlight = source.isHighlight;
-  const id = idGenerator(null, hash);
-  return { content, isHighlight, hash, id, meta: {} };
+  return {
+    content,
+    isHighlight: source.isHighlight,
+    language: source.language,
+    hash: source.id,
+    id: idGenerator(null, source.id),
+    meta: {},
+  };
 }
 
-// Only exported for unit tests
+// Only exported for unit testing code extraction
 export function processCode(
-  source: InputContainer
+  source: InputContainer,
 ): { root: Box<TextToken>; highlights: HighlightToken[] } {
   return tokenize(extractCode(source));
 }
 
+// Actual facade for processing data
 export function fromData(
   inputContainers: InputContainer[],
   language: LanguageDefinition<Record<string, any>>
 ): Keyframe[] {
-  const heads = [];
+  const heads: TypedToken[] = [];
   const highlights = [];
   for (const inputContainer of inputContainers) {
     const processed = processCode(inputContainer);
-    heads.push(applyLanguage(language, processed.root));
+    heads.push(unwrapFirst(applyLanguage(language, processed.root)));
     highlights.push(processed.highlights);
   }
   const tokens = heads.map(flattenTokens);

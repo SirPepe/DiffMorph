@@ -184,10 +184,12 @@ describe("Boxes", () => {
         meta: {
           tagName: "span",
           attributes: [],
-          isHighlight: false,
         },
+        id: "asdf",
         hash: "asdf",
         content: ['"x": 42'],
+        isHighlight: false,
+        language: undefined,
       },
       "}"
     );
@@ -212,10 +214,12 @@ describe("Boxes", () => {
         meta: {
           tagName: "span",
           attributes: [],
-          isHighlight: false,
         },
+        id: "asdf",
         hash: "asdf",
         content: ['bar"'],
+        isHighlight: false,
+        language: undefined,
       },
       ": 42}"
     );

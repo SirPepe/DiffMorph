@@ -291,6 +291,7 @@ function glueHTML(token: TypedToken): boolean {
 }
 
 export const languageDefinition: LanguageDefinition<Flags> = {
+  name: "html",
   definitionFactory: defineHTML,
   postprocessor: glueHTML,
 };

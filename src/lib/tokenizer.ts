@@ -120,6 +120,7 @@ const tokenizeContainer = (
     id: container.id,
     hash: container.hash,
     meta: container.meta,
+    language: container.language || parent?.language,
     tokens: [],
     parent,
   };

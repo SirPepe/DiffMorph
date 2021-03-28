@@ -5,11 +5,12 @@ export type Code = string | CodeContainer;
 // highlight container, in which case it gets a very special treatment (not as
 // a box, but as a kind of metadata)
 export type CodeContainer = {
-  content: Code[];
-  hash: string; // built from "meta"
   id: string; // hash plus count
-  isHighlight: boolean;
+  hash: string; // built from "meta"
+  language: string | undefined; // should be defined on the top-level container
   meta: Record<string, any>; // tag name and attributes for DOM sources
+  isHighlight: boolean;
+  content: Code[];
 };
 
 // Represents a highlight token that takes up no space but has set dimensions
@@ -33,12 +34,13 @@ export type TokenLike = {
   };
 };
 
-// Represents an element containing a bunch of other text tokens or other box
-// tokens. The source element can be reconstructed from metadata, which also
-// serve as the input to the box hash.
+// Represents an element containing a bunch of other text tokens or other boxes.
+// The source element can be reconstructed from metadata, which together with
+// the language attribute serves as the input to the box hash.
 export type Box<Content> = {
   id: string; // hash plus count for unique identification
   hash: string; // built from "meta"
+  language: string | undefined;
   meta: Record<string, any>; // tag name and attributes for DOM sources
   tokens: (Content | Box<Content>)[];
   parent: Box<Content> | undefined; // distinguishes the root box from the rest
@@ -106,6 +108,7 @@ type LanguageFunctionFactory<Flags extends Record<string, any>> = (
 ) => LanguageFunction;
 
 export type LanguageDefinition<Flags extends Record<string, any>> = {
+  name: string;
   definitionFactory: LanguageFunctionFactory<Flags>;
   postprocessor: LanguagePostprocessor;
 };

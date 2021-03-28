@@ -4,6 +4,7 @@
 import { LanguageDefinition, LanguageFunctionResult } from "../types";
 
 export const languageDefinition: LanguageDefinition<Record<string, any>> = {
+  name: "none",
   definitionFactory: () => (): LanguageFunctionResult => "token",
   postprocessor: (): boolean => false,
 };

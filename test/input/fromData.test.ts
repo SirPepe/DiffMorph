@@ -7,6 +7,7 @@ describe("processing code from a data source", () => {
       content: ["const a = () => 42"],
       id: "root",
       isHighlight: false,
+      language: undefined,
     };
     const { root, highlights } = processCode(rootContainer);
     expect(root).toEqual({
@@ -40,6 +41,7 @@ describe("processing code from a data source", () => {
 };`],
       id: "root",
       isHighlight: false,
+      language: undefined,
     };
     /* eslint-enable */
     const { root, highlights } = processCode(rootContainer);
@@ -69,6 +71,7 @@ describe("processing code from a data source", () => {
       content: ["const a", " = () => {\n", "  return 42;", "\n};"],
       id: "root",
       isHighlight: false,
+      language: undefined,
     };
     const { root, highlights } = processCode(rootContainer);
     const tokens = root.tokens;
@@ -96,10 +99,16 @@ describe("processing code from a data source", () => {
     const rootContainer = {
       content: [
         "const ",
-        { content: ["a = (", ") => 42"], id: "box", isHighlight: false },
+        {
+          content: ["a = (", ") => 42"],
+          id: "box",
+          isHighlight: false,
+          language: undefined,
+        },
       ],
       id: "root",
       isHighlight: false,
+      language: undefined,
     };
     const { root, highlights } = processCode(rootContainer);
     const tokens = root.tokens;
@@ -146,14 +155,17 @@ describe("processing code from a data source", () => {
               content: ["{ return 42; }"],
               id: "nested",
               isHighlight: false,
+              language: undefined,
             },
           ],
           id: "box",
           isHighlight: false,
+          language: undefined,
         },
       ],
       id: "root",
       isHighlight: false,
+      language: undefined,
     };
     const { root, highlights } = processCode(rootContainer);
     const tokens = root.tokens;
@@ -215,14 +227,17 @@ describe("processing code from a data source", () => {
               content: ["let x = 42"],
               id: "nested",
               isHighlight: false,
+              language: undefined,
             },
           ],
           id: "box",
           isHighlight: false,
+          language: undefined,
         },
       ],
       id: "root",
       isHighlight: false,
+      language: undefined,
     };
     const { root, highlights } = processCode(rootContainer);
     const contentBox = (root as any).tokens[0].tokens[0];
@@ -263,12 +278,14 @@ describe("processing code from a data source", () => {
           hash: "red",
           meta: {},
           isHighlight: true,
+          language: undefined,
         },
       ],
       id: "root",
       hash: "root",
       meta: {},
       isHighlight: false,
+      language: undefined,
     };
     const { root, highlights } = processCode(rootContainer);
     const tokens = root.tokens;

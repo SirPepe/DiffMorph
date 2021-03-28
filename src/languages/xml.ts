@@ -8,6 +8,7 @@ function defineJavaScript(): ReturnType<
 }
 
 export const languageDefinition: LanguageDefinition<Record<string, any>> = {
+  name: "xml",
   definitionFactory: defineJavaScript,
   postprocessor: HTML.postprocessor,
 };
