@@ -126,6 +126,12 @@ export function partition<T>(
   return [a, b];
 }
 
+export function mapToObject<Value>(
+  input: Map<string, Value>
+): Record<string, Value> {
+  return Object.fromEntries(input.entries());
+}
+
 export function isSameLine<T extends { y: number }>(a: T, b: T): boolean {
   if (a.y === b.y) {
     return true;
