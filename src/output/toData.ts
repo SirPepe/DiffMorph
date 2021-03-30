@@ -1,5 +1,4 @@
 import { Keyframe } from "../lib/keyframes";
-import { mapToObject } from "../lib/util";
 
 type TokenData = { text: string; type: string };
 type PositionData = { id: string; x: number; y: number; visible: boolean };
@@ -25,7 +24,7 @@ export function toData(
     }
   }
   return {
-    tokens: mapToObject(tokenData),
+    tokens: Object.fromEntries(tokenData.entries()),
     frames: [],
     highlights: [],
   };

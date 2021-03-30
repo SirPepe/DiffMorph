@@ -1,5 +1,5 @@
 import fnv1a from "@sindresorhus/fnv1a";
-import { Box, HighlightToken, TextToken, TokenLike } from "../types";
+import { Box, TokenLike } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
@@ -80,74 +80,6 @@ export const createIdGenerator = (): ((realm: any, hash: any) => string) => {
     return id;
   };
 };
-
-type GroupFunction = {
-  <T, Key extends keyof T>(values: Iterable<T>, select: Key): Map<T[Key], T[]>;
-  <T, Key>(values: Iterable<T>, select: (arg: T) => Key): Map<Key, T[]>;
-};
-
-export const groupBy: GroupFunction = (values: Iterable<any>, select: any) => {
-  const result = new Map();
-  if (typeof select === "function") {
-    for (const value of values) {
-      const key = select(value);
-      result.set(key, [...(result.get(key) || []), value]);
-    }
-  } else {
-    for (const value of values) {
-      const key = value[select];
-      result.set(key, [...(result.get(key) || []), value]);
-    }
-  }
-  return result;
-};
-
-export function mapBy<T, Key extends keyof T>(values: Iterable<T>, selector: Key): Map<T[Key], T>;
-export function mapBy<T, Key>(values: Iterable<T>, selector: (arg: T) => Key): Map<Key, T>;
-export function mapBy(values: Iterable<any>, selector: any): Map<any, any> {
-  const result = new Map();
-  const keySelector = typeof selector === "function"
-    ? selector
-    : (x: any) => x[selector];
-  for (const value of values) {
-    const key = keySelector(value);
-    if (result.has(key)) {
-      throw new Error(`Key "${key}" already exists for value "${value}"`);
-    }
-    result.set(key, value);
-  }
-  return result;
-}
-
-export function partition<T>(
-  input: Iterable<T>,
-  selector: (x: T) => boolean
-): [T[], T[]];
-export function partition<T, U>(
-  input: Iterable<T | U>,
-  selector: (x: T | U) => x is T
-): [T[], U[]];
-export function partition<T>(
-  input: Iterable<T>,
-  selector: (item: T) => boolean
-): [T[], T[]] {
-  const a = [];
-  const b = [];
-  for (const item of input) {
-    if (selector(item)) {
-      a.push(item);
-    } else {
-      b.push(item);
-    }
-  }
-  return [a, b];
-}
-
-export function mapToObject<Value>(
-  input: Map<string, Value>
-): Record<string, Value> {
-  return Object.fromEntries(input.entries());
-}
 
 export function isSameLine<T extends { y: number }>(a: T, b: T): boolean {
   if (a.y === b.y) {

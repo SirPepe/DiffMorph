@@ -15,7 +15,7 @@ import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
 import { Keyframe, toKeyframes } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
-import { diffAll } from "../lib/diff";
+import { diff } from "../lib/diff";
 import { createIdGenerator, flattenTokens, unwrapFirst } from "../lib/util";
 
 type Input = string | InputContainer;
@@ -67,5 +67,5 @@ export function fromData(
     highlights.push(processed.highlights);
   }
   const tokens = heads.map(flattenTokens);
-  return toKeyframes(optimize(diffAll(tokens)), highlights);
+  return toKeyframes(optimize(diff(tokens)), highlights);
 }

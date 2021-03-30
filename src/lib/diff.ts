@@ -3,8 +3,9 @@
 // and only looks at individual tokens in a second pass.
 
 import { diffArrays } from "diff";
+import { groupBy, mapBy, partition } from "@sirpepe/shed";
 import { Box } from "../types";
-import { createIdGenerator, groupBy, isBox, mapBy, partition } from "./util";
+import { createIdGenerator, isBox } from "./util";
 
 // Represents the minimal token info that diffing functions require to work.
 type DiffableToken = {
