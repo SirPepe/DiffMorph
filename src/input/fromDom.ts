@@ -18,7 +18,7 @@ import {
 } from "../lib/util";
 import { toKeyframes, Keyframe } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
-import { diffAll } from "../lib/diff";
+import { diff } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
 
 function isHTMLElement(arg: any): arg is HTMLElement {
@@ -54,7 +54,7 @@ function getAttributes(element: Element): [string, string][] {
 };
 
 function getLanguage(element: Element): string | undefined {
-  const { 0: match } = /language-(\S*)/.exec(element.className) ?? [];
+  const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
   return match;
 }
 
@@ -109,5 +109,5 @@ export function fromDom(
     highlights.push(processed.highlights);
   }
   const tokens = heads.map(flattenTokens);
-  return toKeyframes(optimize(diffAll(tokens)), highlights);
+  return toKeyframes(optimize(diff(tokens)), highlights);
 }

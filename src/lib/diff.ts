@@ -1,30 +1,28 @@
-// This module's diffAll() function turns frames of typed tokens into diffing
+// This module's main diff() function turns frames of typed tokens into diffing
 // operations. It first attempts to diff the source code on a line-by-line level
 // and only looks at individual tokens in a second pass.
 
 import { diffArrays } from "diff";
-import { createIdGenerator, groupBy } from "./util";
+import { Box } from "../types";
+import { createIdGenerator, groupBy, isBox, mapBy, partition } from "./util";
 
-// Represents the minimum of token info that diffing functions require to work.
-type DiffToken = {
+// Represents the minimal token info that diffing functions require to work.
+type DiffableToken = {
   x: number;
   y: number;
   hash: string;
-  parent: {
-    hash: any;
-  };
 };
 
-export type ADD<T extends DiffToken> = { readonly type: "ADD"; item: T };
-export type DEL<T extends DiffToken> = { readonly type: "DEL"; item: T };
-export type MOV<T extends DiffToken> = {
+export type ADD<T extends DiffableToken> = { readonly type: "ADD"; item: T };
+export type DEL<T extends DiffableToken> = { readonly type: "DEL"; item: T };
+export type MOV<T extends DiffableToken> = {
   readonly type: "MOV";
   item: T;
   ref: T; // keeps track of the position a moved token had before it moved
 };
-export type DiffOp<T extends DiffToken> = MOV<T> | ADD<T> | DEL<T>;
+export type DiffOp<T extends DiffableToken> = MOV<T> | ADD<T> | DEL<T>;
 
-type Line<T extends DiffToken> = {
+type Line<T extends DiffableToken> = {
   readonly x: number;
   readonly y: number;
   readonly id: string;
@@ -32,11 +30,17 @@ type Line<T extends DiffToken> = {
   readonly items: T[];
 };
 
+type DiffResult<T extends DiffableToken> = {
+  source: Omit<Box<T>, "parent" | "tokens">;
+  nested: DiffResult<T>[];
+  ops: DiffOp<T>[];
+};
+
 // Create a hash of a list of tokens by concatenating the token's hashes and
 // their *relative* distance on the x axis. The allover level of indentation is
 // not reflected in the hash - two lines containing the same characters the same
 // distance apart get the same hash, no matter the indentation
-const hashLine = (items: DiffToken[]): string => {
+const hashLine = (items: DiffableToken[]): string => {
   const hashes = items.map((item, idx) => {
     const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
     return item.hash + String(xDelta);
@@ -45,7 +49,7 @@ const hashLine = (items: DiffToken[]): string => {
 };
 
 // Organize tokens into lines
-const asLines = <T extends DiffToken>(tokens: T[]): Line<T>[] => {
+const asLines = <T extends DiffableToken>(tokens: T[]): Line<T>[] => {
   const nextId = createIdGenerator();
   const byLine = groupBy(tokens, "y");
   return Array.from(byLine, ([y, items]) => {
@@ -56,7 +60,7 @@ const asLines = <T extends DiffToken>(tokens: T[]): Line<T>[] => {
   });
 };
 
-const diffLines = <T extends DiffToken>(
+const diffLines = <T extends DiffableToken>(
   from: Line<T>[],
   to: Line<T>[]
 ): {
@@ -109,7 +113,7 @@ const diffLines = <T extends DiffToken>(
   };
 };
 
-const diffTokens = <T extends DiffToken>(from: T[], to: T[]): DiffOp<T>[] => {
+const diffTokens = <T extends DiffableToken>(from: T[], to: T[]): DiffOp<T>[] => {
   const result: DiffOp<T>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
@@ -127,29 +131,56 @@ const diffTokens = <T extends DiffToken>(from: T[], to: T[]): DiffOp<T>[] => {
   return result;
 };
 
+function getBoxSource<T extends DiffableToken>(
+  from: Box<T> | undefined,
+  to: Box<T> | undefined
+): Omit<Box<T>, "parent" | "tokens"> {
+  return {
+    id: from?.id || to?.id || fail(),
+    hash: from?.hash || to?.hash || fail(),
+    meta: from?.meta || to?.meta || fail(),
+    language: from?.language || to?.language || fail(),
+  };
+}
+
 // Only exported for unit tests
-export const diff = <T extends DiffToken>(from: T[], to: T[]): DiffOp<T>[] => {
-  const result: DiffOp<T>[] = [];
-  const fromByParent = groupBy(from, (token) => token.parent.hash);
-  const toByParent = groupBy(to, (token) => token.parent.hash);
-  const parentHashes = new Set([...fromByParent.keys(), ...toByParent.keys()]);
-  for (const parentHash of parentHashes) {
-    const fromTokens = fromByParent.get(parentHash) || [];
-    const toTokens = toByParent.get(parentHash) || [];
-    const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
-    result.push(...lineDiff.result);
-    result.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
+export function diffBoxes<T extends DiffableToken>(
+  from: Box<T> | undefined,
+  to: Box<T> | undefined
+): DiffResult<T> {
+  if (!from && !to) {
+    throw new Error("Refusing to diff two undefined frames!");
   }
-  return result;
+  const tokens = [];
+  const nested = [];
+  const [fromBoxes, fromTokens] = partition<Box<T>, T>(from?.tokens ?? [], isBox);
+  const [toBoxes, toTokens] = partition<Box<T>, T>(to?.tokens ?? [], isBox);
+  const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
+  tokens.push(...lineDiff.result);
+  tokens.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
+  const fromBoxesById = mapBy(fromBoxes, "id");
+  const toBoxesById = mapBy(toBoxes, "id");
+  for (const id of new Set([...fromBoxesById.keys(), ...toBoxesById.keys()])) {
+    const fromBox = fromBoxesById.get(id);
+    const toBox = toBoxesById.get(id);
+    nested.push(diffBoxes(fromBox, toBox));
+  }
+  return {
+    source: getBoxSource(from, to),
+    ops: tokens,
+    nested,
+  };
 };
 
-export const diffAll = <T extends DiffToken>(tokens: T[][]): DiffOp<T>[][] => {
-  if (tokens.length < 2) {
+export const diff = <T extends DiffableToken>(
+  roots: Box<T>[]
+): DiffResult<T>[] => {
+  if (roots.length < 2) {
     throw new Error("Need at least two frames to diff");
   }
-  const diffs: DiffOp<T>[][] = [diff([], tokens[0])];
-  for (let i = 0; i < tokens.length - 1; i++) {
-    diffs.push(diff(tokens[i], tokens[i + 1]));
+  const diffs: DiffResult<T>[] = [diffBoxes(undefined, roots[0])];
+  for (let i = 0; i < roots.length - 1; i++) {
+    diffs.push(diffBoxes(roots[i], roots[i + 1]));
   }
   return diffs;
 };

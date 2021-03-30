@@ -24,7 +24,11 @@ export const prev = <T extends { prev: T | undefined }>(
 export const last = <T extends { next: T | undefined }>(x: T): T =>
   x.next ? last(x.next) : x;
 
-function isBox<T>(x: any): x is Box<T> {
+export function fail(reason?: string): never {
+  throw new Error(reason);
+}
+
+export function isBox<T>(x: any): x is Box<T> {
   if (
     typeof x === "object" &&
     typeof x.id === "string" &&
@@ -97,6 +101,23 @@ export const groupBy: GroupFunction = (values: Iterable<any>, select: any) => {
   }
   return result;
 };
+
+export function mapBy<T, Key extends keyof T>(values: Iterable<T>, selector: Key): Map<T[Key], T>;
+export function mapBy<T, Key>(values: Iterable<T>, selector: (arg: T) => Key): Map<Key, T>;
+export function mapBy(values: Iterable<any>, selector: any): Map<any, any> {
+  const result = new Map();
+  const keySelector = typeof selector === "function"
+    ? selector
+    : (x: any) => x[selector];
+  for (const value of values) {
+    const key = keySelector(value);
+    if (result.has(key)) {
+      throw new Error(`Key "${key}" already exists for value "${value}"`);
+    }
+    result.set(key, value);
+  }
+  return result;
+}
 
 export function partition<T>(
   input: Iterable<T>,

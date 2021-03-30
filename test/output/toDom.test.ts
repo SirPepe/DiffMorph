@@ -1,14 +1,14 @@
-import { diffAll } from "../../src/lib/diff";
+import { diff } from "../../src/lib/diff";
 import { languageDefinition } from "../../src/languages/json";
 import { toKeyframes } from "../../src/lib/keyframes";
 import { toDom } from "../../src/output/toDom";
-import { type } from "../helpers";
-const json = type(languageDefinition);
+import { lang } from "../helpers";
+const json = lang(languageDefinition);
 
 describe("toDom", () => {
   test("renders tokens to DOM", () => {
     const keyframes = toKeyframes(
-      diffAll([json("{}"), json("  {}"), json("    {\n}")]),
+      diff([json("{}"), json("  {}"), json("    {\n}")]),
       []
     );
     const [element, maxWidth, maxHeight] = toDom(keyframes);
@@ -23,7 +23,7 @@ describe("toDom", () => {
 
   test.skip("renders tokens in boxes to DOM", () => {
     const keyframes = toKeyframes(
-      diffAll([
+      diff([
         json("[]"),
         json(
           "[",
