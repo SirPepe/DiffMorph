@@ -1,5 +1,5 @@
 import fnv1a from "@sindresorhus/fnv1a";
-import { Box } from "../types";
+import { Box, Highlight, TextToken } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
@@ -35,21 +35,51 @@ export function isBox<T>(x: any): x is Box<T> {
   return false;
 }
 
-export const unwrapFirst = <T>(token: T | Box<T>): T => {
-  if (isBox(token)) {
-    return unwrapFirst(token.tokens[0]);
-  } else {
+export function isHighlight(x: any): x is Highlight {
+  if (typeof x === "object" && x.type === "HIGHLIGHT") {
+    return true;
+  }
+  return false;
+}
+
+export function getFirstTextToken<T>(
+  tokens: (T | Highlight | Box<T | Highlight>)[]
+): T | undefined {
+  for (const token of tokens) {
+    if (isHighlight(token)) {
+      continue;
+    }
+    if (isBox(token)) {
+      const first = getFirstTextToken(token.tokens);
+      if (first) {
+        return first;
+      } else {
+        continue;
+      }
+    }
     return token;
   }
 };
 
-export const unwrapLast = <T>(token: T | Box<T>): T => {
-  if (isBox(token)) {
-    return unwrapFirst(token.tokens[token.tokens.length - 1]);
-  } else {
+export function getLastTextToken<T>(
+  tokens: (T | Highlight | Box<T | Highlight>)[]
+): T | undefined {
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    const token = tokens[i];
+    if (isHighlight(token)) {
+      continue;
+    }
+    if (isBox(token)) {
+      const first = getLastTextToken(token.tokens);
+      if (first) {
+        return first;
+      } else {
+        continue;
+      }
+    }
     return token;
   }
-};
+}
 
 export function flattenTokens<T extends { next: T | undefined }>(
   token: T | undefined

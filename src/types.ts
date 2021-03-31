@@ -1,9 +1,17 @@
+// The general input to DiffMorph is code. Code can be either stings or
+// container objects, which in turn can contain strings and container objects.
+// Container objects can be constructed from DOM nodes, JSON data or frankly
+// anything else. They carry a bit of metadata, most important of all a flag
+// on whether the container is a regular container or a highlight. Regular
+// containers constrain the diffing algorithm to their content, which highlights
+// do not; highlights are intended to be rendered in the final output to create
+// squiggly lines or other text decorations.
+
 // Represents a bit of code
 export type Code = string | CodeContainer;
 
-// Represents some kind of container object with bits of code inside. May be a
-// highlight container, in which case it gets turned into a Highlight instance,
-// otherwise it becomes a box.
+// Represents some kind of container object, either a regular container or a
+// highlight container.
 export type CodeContainer = {
   id: string; // hash plus count
   hash: string; // built from "meta"
@@ -13,19 +21,9 @@ export type CodeContainer = {
   content: Code[];
 };
 
-// Represents a highlight token that takes up no space but has set dimensions
-// over a number of lines
-export type Highlight = {
-  hash: string; // built from "meta"
-  id: string; // hash plus count for unique identification
-  meta: Record<string, any>; // tag name and attributes for DOM sources
-  start: [X: number, Y: number];
-  end: [X: number, Y: number];
-};
-
-// Represents an element containing a bunch of other text tokens or other boxes.
-// The source element can be reconstructed from metadata, which together with
-// the language attribute serves as the input to the box hash.
+// Represents a regular container. The source element or object can be
+// reconstructed from metadata, which together with the language attribute
+// serves as the input to the box hash.
 export type Box<Content> = {
   readonly type: "BOX";
   id: string; // hash plus count for unique identification
@@ -33,6 +31,17 @@ export type Box<Content> = {
   language: string | undefined;
   meta: Record<string, any>; // tag name and attributes for DOM sources
   tokens: (Content | Box<Content>)[];
+};
+
+// Represents a highlight token that takes up no space and container no other
+// elements but has set dimensions over a number of lines.
+export type Highlight = {
+  readonly type: "HIGHLIGHT";
+  id: string; // hash plus count for unique identification
+  hash: string; // built from "meta"
+  meta: Record<string, any>; // tag name and attributes for DOM sources
+  start: [X: number, Y: number];
+  end: [X: number, Y: number];
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
@@ -44,7 +53,7 @@ export type TextToken = {
   size: number;
   next: TextToken | undefined;
   prev: TextToken | undefined;
-  parent: Box<TextToken>;
+  parent: Box<TextToken | Highlight>;
 };
 
 // Represents a text token that has been linked up to its siblings and parent
@@ -58,7 +67,7 @@ export type RawToken = {
   size: number;
   prev: TypedToken | undefined;
   next: RawToken | undefined;
-  parent: Box<RawToken>;
+  parent: Box<RawToken | Highlight>;
 };
 
 // Represents a text token that has been passed through a language function and
@@ -72,7 +81,7 @@ export type TypedToken = {
   hash: string;
   prev: TypedToken | undefined;
   next: TypedToken | undefined;
-  parent: Box<TypedToken>;
+  parent: Box<TypedToken | Highlight>;
 };
 
 // Represents a concrete token in the output
@@ -85,7 +94,7 @@ export type RenderToken = {
   hash: string;
   id: string;
   visible: boolean;
-  parent: Box<TypedToken>;
+  parent: Box<TypedToken | Highlight>;
 };
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;

@@ -7,18 +7,19 @@ describe("processing code from a data source", () => {
       content: ["const a = () => 42"],
       id: "root",
       isHighlight: false,
-      language: undefined,
+      language: "base",
     };
-    const { root, highlights } = processCode(rootContainer);
+    const root = processCode(rootContainer);
     expect(root).toEqual({
+      type: "BOX",
       meta: {},
       id: "root0",
       hash: "root",
+      language: "base",
       tokens: expect.any(Array),
-      parent: undefined,
     });
     const tokens = root.tokens;
-    expect(root.tokens).toEqual([
+    expect(tokens).toEqual([
       /* eslint-disable */
       { x: 0, y: 0, text: "const", size: 5, prev: undefined, next: tokens[1], parent: root },
       { x: 6, y: 0, text: "a", size: 1, prev: tokens[0], next: tokens[2], parent: root },
@@ -30,7 +31,6 @@ describe("processing code from a data source", () => {
       { x: 16, y: 0, text: "42", size: 2, prev: tokens[6], next: undefined, parent: root },
       /* eslint-enable */
     ]);
-    expect(highlights).toEqual([]);
   });
 
   test("it splits multi-line code", () => {
@@ -44,7 +44,7 @@ describe("processing code from a data source", () => {
       language: undefined,
     };
     /* eslint-enable */
-    const { root, highlights } = processCode(rootContainer);
+    const root = processCode(rootContainer);
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
@@ -63,7 +63,6 @@ describe("processing code from a data source", () => {
       { x: 1, y: 2, text: ";", size: 1, next: tokens[13], prev: tokens[11], parent: root },
       /* eslint-enable */
     ]);
-    expect(highlights).toEqual([]);
   });
 
   test("it splits multiple chunks of code", () => {
@@ -73,7 +72,7 @@ describe("processing code from a data source", () => {
       isHighlight: false,
       language: undefined,
     };
-    const { root, highlights } = processCode(rootContainer);
+    const root = processCode(rootContainer);
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
@@ -92,7 +91,6 @@ describe("processing code from a data source", () => {
       { x: 1, y: 2, text: ";", size: 1, next: undefined, prev: tokens[11], parent: root, },
       /* eslint-enable */
     ]);
-    expect(highlights).toEqual([]);
   });
 
   test("it handles boxes", () => {
@@ -108,9 +106,9 @@ describe("processing code from a data source", () => {
       ],
       id: "root",
       isHighlight: false,
-      language: undefined,
+      language: "javascript",
     };
-    const { root, highlights } = processCode(rootContainer);
+    const root = processCode(rootContainer);
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
     const box = tokens[1] as Box<TextToken>;
@@ -124,11 +122,12 @@ describe("processing code from a data source", () => {
       parent: root,
     });
     expect(box).toEqual({
+      type: "BOX",
       meta: {},
       id: "box0",
       hash: "box",
+      language: "javascript",
       tokens: expect.any(Array),
-      parent: root,
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
@@ -141,7 +140,6 @@ describe("processing code from a data source", () => {
       { x: 16, y: 0, text: "42", size: 2, next: undefined, prev: box.tokens[5], parent: box },
       /* eslint-enable */
     ]);
-    expect(highlights).toEqual([]);
   });
 
   test("it handles nested boxes", () => {
@@ -165,9 +163,9 @@ describe("processing code from a data source", () => {
       ],
       id: "root",
       isHighlight: false,
-      language: undefined,
+      language: "javascript",
     };
-    const { root, highlights } = processCode(rootContainer);
+    const root = processCode(rootContainer);
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
     const box1 = tokens[1] as Box<TextToken>;
@@ -182,11 +180,12 @@ describe("processing code from a data source", () => {
       parent: root,
     });
     expect(box1).toEqual({
+      type: "BOX",
+      language: "javascript",
       meta: {},
       id: "box0",
       hash: "box",
       tokens: expect.any(Array),
-      parent: root,
     });
     expect(box1.tokens).toEqual([
       /* eslint-disable */
@@ -200,11 +199,12 @@ describe("processing code from a data source", () => {
       /* eslint-enable */
     ]);
     expect(box2).toEqual({
+      type: "BOX",
+      language: "javascript",
       meta: {},
       id: "nested0",
       hash: "nested",
       tokens: expect.any(Array),
-      parent: box1,
     });
     expect(box2.tokens).toEqual([
       /* eslint-disable */
@@ -215,7 +215,6 @@ describe("processing code from a data source", () => {
       { x: 29, y: 0, text: "}", size: 1, next: undefined, prev: box2.tokens[3], parent: box2 },
       /* eslint-enable */
     ]);
-    expect(highlights).toEqual([]);
   });
 
   test("it handles cases where all content is in nested boxes", () => {
@@ -237,17 +236,21 @@ describe("processing code from a data source", () => {
       ],
       id: "root",
       isHighlight: false,
-      language: undefined,
+      language: "javascript",
     };
-    const { root, highlights } = processCode(rootContainer);
+    const root = processCode(rootContainer);
     const contentBox = (root as any).tokens[0].tokens[0];
     expect(root.tokens).toEqual([
       {
+        type: "BOX",
+        language: "javascript",
         id: "box0",
         hash: "box",
         meta: {},
         tokens: [
           {
+            type: "BOX",
+            language: "javascript",
             id: "nested0",
             hash: "nested",
             meta: {},
@@ -259,13 +262,10 @@ describe("processing code from a data source", () => {
               { x: 8, y: 0, text: "42", size: 2, next: undefined, prev: contentBox.tokens[2], parent: contentBox },
               /* eslint-enable */
             ],
-            parent: root.tokens[0],
           },
         ],
-        parent: root,
       },
     ]);
-    expect(highlights).toEqual([]);
   });
 
   test("it handles highlights", () => {
@@ -287,7 +287,7 @@ describe("processing code from a data source", () => {
       isHighlight: false,
       language: undefined,
     };
-    const { root, highlights } = processCode(rootContainer);
+    const root = processCode(rootContainer);
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
@@ -299,16 +299,15 @@ describe("processing code from a data source", () => {
       { x: 13, y: 0, text: "=", size: 1, next: tokens[6], prev: tokens[4], parent: root },
       { x: 14, y: 0, text: ">", size: 1, next: tokens[7], prev: tokens[5], parent: root },
       { x: 16, y: 0, text: "42", size: 2, next: undefined, prev: tokens[6], parent: root },
-      /* eslint-enable */
-    ]);
-    expect(highlights).toEqual([
       {
-        meta: {},
+        type: "HIGHLIGHT",
         id: "red0",
         hash: "red",
+        meta: {},
         start: [16, 0],
         end: [18, 0],
       },
+      /* eslint-enable */
     ]);
   });
 });

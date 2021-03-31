@@ -1,7 +1,7 @@
 import { applyLanguage } from "../src/lib/language";
 import { tokenize } from "../src/lib/tokenizer";
-import { flattenTokens, unwrapFirst } from "../src/lib/util";
-import { Box, Code, LanguageDefinition, TypedToken } from "../src/types";
+import { flattenTokens, getFirstTextToken } from "../src/lib/util";
+import { Box, Code, Highlight, LanguageDefinition, TypedToken } from "../src/types";
 
 type BoxArgs <T> = {
   tokens: (T | BoxArgs<T>)[];
@@ -48,7 +48,7 @@ export function stubBox<T>(
 
 export const lang = (language: LanguageDefinition<any>) => (
   ...input: Code[]
-): Box<TypedToken> => {
+): Box<TypedToken | Highlight> => {
   return applyLanguage(
     language,
     tokenize({
@@ -58,12 +58,12 @@ export const lang = (language: LanguageDefinition<any>) => (
       language: lang.name,
       isHighlight: false,
       meta: { isHighlight: false },
-    }).root
+    })
   );
 };
 
 export const type = (language: LanguageDefinition<any>) => (
   ...input: Code[]
 ): TypedToken[] => {
-  return flattenTokens(unwrapFirst(lang(language)(...input)));
+  return flattenTokens(getFirstTextToken([lang(language)(...input)]));
 };

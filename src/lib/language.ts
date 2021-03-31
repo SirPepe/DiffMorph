@@ -5,13 +5,14 @@
 // applyLanguage() in particular as it WILL modify its input with extreme
 // prejudice.
 
-import { hash, unwrapFirst } from "./util";
+import { getFirstTextToken, hash } from "./util";
 import {
   Box,
-  TypedToken,
+  Highlight,
   LanguageDefinition,
   LanguagePostprocessor,
   TextToken,
+  TypedToken,
 } from "../types";
 
 // Joins the token in-place so that the glue function can benefit from working
@@ -20,7 +21,6 @@ function applyPostprocessor(
   token: TypedToken,
   postprocessor: LanguagePostprocessor
 ): void {
-  let index = 0;
   while (true) {
     if (
       token.prev &&
@@ -33,12 +33,15 @@ function applyPostprocessor(
       token.prev.size += padding + token.size;
       token.prev.hash = hash(hash(token.prev.type) + hash(token.prev.text));
       token.prev.next = token.next;
-      token.parent.tokens.splice(index, 1);
+      // This indexOf() is expensive, but keeping track of the index while the
+      // loop runs is cumbersome because tokens are mixed with highlights. So
+      // indexOf() is the least worst choice for removing the token from not
+      // only the linked list of tokens, but from the flat array of box members
+      // also.
+      token.parent.tokens.splice(token.parent.tokens.indexOf(token), 1);
       if (token.next) {
         token.next.prev = token.prev;
       }
-    } else {
-      index++; // no increment if we've just removed a token
     }
     if (token.next) {
       token = token.next;
@@ -48,14 +51,15 @@ function applyPostprocessor(
   }
 }
 
-// Performs all of its actions in-place
+// Performs all of its actions in-place; essentially upgrading the TextTokens to
+// TypedTokens without ever touching the Highlights.
 export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
-  root: Box<TextToken>
-): Box<TypedToken> => {
+  root: Box<TextToken | Highlight>
+): Box<TypedToken | Highlight> => {
   const language = languageDefinition.definitionFactory({});
-  const first: any = unwrapFirst(root);
-  let current: any = unwrapFirst(root);
+  const first: any = getFirstTextToken([ root ]);
+  let current: any = first;
   while (current) {
     const results = language(current);
     const types = Array.isArray(results) ? results : [results];

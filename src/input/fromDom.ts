@@ -92,7 +92,7 @@ function extractCode(source: Element): CodeContainer {
 // Only exported for unit testing code extraction
 export function processCode(
   source: Element
-): { root: Box<TextToken>; highlights: Highlight[] } {
+): Box<TextToken | Highlight> {
   return tokenize(extractCode(source));
 };
 
@@ -102,12 +102,10 @@ export function fromDom(
   language: LanguageDefinition<Record<string, any>>
 ): Keyframe[] {
   const heads = [];
-  const highlights = [];
   for (const sourceElement of sourceElements) {
-    const processed = processCode(sourceElement);
-    heads.push(unwrapFirst(applyLanguage(language, processed.root)));
-    highlights.push(processed.highlights);
+    const root = processCode(sourceElement);
+    heads.push(unwrapFirst(applyLanguage(language, root)));
   }
   const tokens = heads.map(flattenTokens);
-  return toKeyframes(optimize(diff(tokens)), highlights);
+  return toKeyframes(optimize(diff(tokens)));
 }
