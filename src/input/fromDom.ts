@@ -10,12 +10,7 @@ import {
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
-import {
-  createIdGenerator,
-  flattenTokens,
-  hash,
-  unwrapFirst,
-} from "../lib/util";
+import { createIdGenerator, hash } from "../lib/util";
 import { toKeyframes, Keyframe } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
 import { diff } from "../lib/diff";
@@ -98,14 +93,10 @@ export function processCode(
 
 // Actual facade for dom content extraction
 export function fromDom(
-  sourceElements: Element[],
-  language: LanguageDefinition<Record<string, any>>
+  inputs: Element[],
+  lang: LanguageDefinition<Record<string, any>>
 ): Keyframe[] {
-  const heads = [];
-  for (const sourceElement of sourceElements) {
-    const root = processCode(sourceElement);
-    heads.push(unwrapFirst(applyLanguage(language, root)));
-  }
-  const tokens = heads.map(flattenTokens);
-  return toKeyframes(optimize(diff(tokens)));
+  const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
+  const ops = optimize(diff(typed));
+  return toKeyframes(ops);
 }

@@ -56,14 +56,10 @@ export function processCode(
 
 // Actual facade for processing data
 export function fromData(
-  inputContainers: InputContainer[],
-  language: LanguageDefinition<Record<string, any>>
+  inputs: InputContainer[],
+  lang: LanguageDefinition<Record<string, any>>
 ): Keyframe[] {
-  const heads: TypedToken[] = [];
-  for (const inputContainer of inputContainers) {
-    const root = processCode(inputContainer);
-    heads.push(unwrapFirst(applyLanguage(language, root)));
-  }
-  const tokens = heads.map(flattenTokens);
-  return toKeyframes(optimize(diff(tokens)));
+  const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
+  const ops = optimize(diff(typed));
+  return toKeyframes(ops);
 }
