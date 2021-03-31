@@ -16,6 +16,7 @@ type DiffTextToken = {
 
 type DiffHighlightToken = {
   readonly type: "HIGHLIGHT";
+  id: string;
   start: [number, number];
   end: [number, number];
   hash: string;
@@ -31,7 +32,7 @@ export type MOV<T extends DiffToken> = {
   ref: T; // keeps track of the position a moved token had before it moved
 };
 export type MUT<T extends DiffToken> = {
-  readonly type: "MOV";
+  readonly type: "MUT";
   item: T;
   ref: T; // keeps track of the coordinates the token had before it mutated
 };
@@ -147,6 +148,32 @@ const diffTokens = <T extends DiffTextToken>(from: T[], to: T[]): DiffOp<T>[] =>
   return result;
 };
 
+function diffHighlights <U extends DiffHighlightToken>(
+  from: U | undefined,
+  to: U | undefined
+): DiffOp<U> {
+  if (from && to) {
+    return {
+      type: "MUT",
+      item: to,
+      ref: from,
+    }
+  }
+  if (from && !to) {
+    return {
+      type: "DEL",
+      item: from,
+    };
+  }
+  if (to && !from) {
+    return {
+      type: "ADD",
+      item: to,
+    };
+  }
+  throw new Error("Can't diff two non-existing highlights!");
+};
+
 function organizeTokens<T extends DiffTextToken, U extends DiffHighlightToken>(
   source: Box<T | U> | undefined
 ): [Box<T | U>[], T[], U[]] {
@@ -178,6 +205,7 @@ export function diffBoxes<T extends DiffTextToken, U extends DiffHighlightToken>
   }
   const tokens: DiffOp<T>[] = [];
   const boxes: Box<DiffOp<T | U>>[] = [];
+  const highlights: DiffOp<U>[] = [];
   const [fromBoxes, fromTokens, fromHighlights] = organizeTokens<T, U>(from);
   const [toBoxes, toTokens, toHighlights] = organizeTokens<T, U>(to);
   const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
@@ -185,10 +213,22 @@ export function diffBoxes<T extends DiffTextToken, U extends DiffHighlightToken>
   tokens.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
   const fromBoxesById = mapBy(fromBoxes, "id");
   const toBoxesById = mapBy(toBoxes, "id");
-  for (const id of new Set([...fromBoxesById.keys(), ...toBoxesById.keys()])) {
+  const boxIds = new Set([...fromBoxesById.keys(), ...toBoxesById.keys()]);
+  for (const id of boxIds) {
     const fromBox = fromBoxesById.get(id);
     const toBox = toBoxesById.get(id);
     boxes.push(diffBoxes(fromBox, toBox));
+  }
+  const fromHighlightsById = mapBy(fromHighlights, "id");
+  const toHighlightsById = mapBy(toHighlights, "id");
+  const highlightIds = new Set([
+    ...fromHighlightsById.keys(),
+    ...toHighlightsById.keys(),
+  ]);
+  for (const id of highlightIds) {
+    const fromHighlight = fromHighlightsById.get(id);
+    const toHighlight = toHighlightsById.get(id);
+    highlights.push(diffHighlights(fromHighlight, toHighlight));
   }
   return {
     type: "BOX",
@@ -196,7 +236,7 @@ export function diffBoxes<T extends DiffTextToken, U extends DiffHighlightToken>
     hash: from?.hash || to?.hash || fail(),
     meta: from?.meta || to?.meta || fail(),
     language: from?.language || to?.language || fail(),
-    tokens: [...tokens, ...boxes],
+    tokens: [...tokens, ...highlights, ...boxes],
   };
 };
 
