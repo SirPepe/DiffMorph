@@ -15,8 +15,7 @@ describe("diffing lines", () => {
       { x: 0, y: 2, hash: "c0" }, // new line!
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([{ type: "ADD", item: b[3] }]);
-    expect(actual.nested).toEqual([]);
+    expect(actual.tokens).toEqual([{ type: "ADD", item: b[3] }]);
   });
 
   test("diffing lines (removal at end)", () => {
@@ -33,8 +32,7 @@ describe("diffing lines", () => {
       // missing c0
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([{ type: "DEL", item: a[3] }]);
-    expect(actual.nested).toEqual([]);
+    expect(actual.tokens).toEqual([{ type: "DEL", item: a[3] }]);
   });
 
   test("diffing lines (changed indent)", () => {
@@ -51,11 +49,10 @@ describe("diffing lines", () => {
       { x: 2, y: 2, hash: "c0" }, // increased indent
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([
+    expect(actual.tokens).toEqual([
       { type: "MOV", item: b[2], ref: a[2] },
       { type: "MOV", item: b[3], ref: a[3] },
     ]);
-    expect(actual.nested).toEqual([]);
   });
 
   test("diffing lines (swap on y axis)", () => {
@@ -72,11 +69,10 @@ describe("diffing lines", () => {
       { x: 0, y: 1, hash: "c0" }, // was: y2
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([
+    expect(actual.tokens).toEqual([
       { type: "MOV", item: b[2], ref: a[2] },
       { type: "MOV", item: b[3], ref: a[3] },
     ]);
-    expect(actual.nested).toEqual([]);
   });
 });
 
@@ -98,8 +94,7 @@ describe("diff tokens", () => {
       { x: 0, y: 2, hash: "c0" },
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([{ type: "ADD", item: b[1] }]);
-    expect(actual.nested).toEqual([]);
+    expect(actual.tokens).toEqual([{ type: "ADD", item: b[1] }]);
   });
 
   test("diffing tokens (removal from end of line)", () => {
@@ -119,8 +114,7 @@ describe("diff tokens", () => {
       { x: 0, y: 2, hash: "c0" },
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([{ type: "DEL", item: a[1] }]);
-    expect(actual.nested).toEqual([]);
+    expect(actual.tokens).toEqual([{ type: "DEL", item: a[1] }]);
   });
 
   test("diffing tokens (replacement at end of line)", () => {
@@ -141,11 +135,10 @@ describe("diff tokens", () => {
       { x: 0, y: 2, hash: "c0" },
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([
+    expect(actual.tokens).toEqual([
       { type: "DEL", item: a[1] },
       { type: "ADD", item: b[1] },
     ]);
-    expect(actual.nested).toEqual([]);
   });
 
   test("diffing tokens (replacement in middle of line)", () => {
@@ -164,11 +157,10 @@ describe("diff tokens", () => {
       { x: 0, y: 2, hash: "c0" },
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([
+    expect(actual.tokens).toEqual([
       { type: "DEL", item: a[1] },
       { type: "ADD", item: b[1] },
     ]);
-    expect(actual.nested).toEqual([]);
   });
 
   test("diffing tokens (movement at end of line)", () => {
@@ -187,7 +179,7 @@ describe("diff tokens", () => {
       { x: 0, y: 2, hash: "c0" },
     ];
     const actual = diffBoxes(stubBox({ tokens: a }), stubBox({ tokens: b}));
-    expect(actual.ops).toEqual([
+    expect(actual.tokens).toEqual([
       { type: "DEL", item: a[2] },
       { type: "ADD", item: b[2] },
     ]);
@@ -217,13 +209,15 @@ describe("diff with boxes", () => {
     const actual = diffBoxes(
       stubBox({ tokens: aParent }), stubBox({ tokens: bParent })
     );
-    expect(actual.ops).toEqual([
+    expect(actual.tokens).toEqual([
       { type: "DEL", item: aParent[1] },
       { type: "ADD", item: bParent[1] },
-    ]);
-    expect(actual.nested[0].ops).toEqual([
-      { type: "DEL", item: aNested[1] },
-      { type: "ADD", item: bNested[1] },
+      expect.objectContaining({
+        tokens: [
+          { type: "DEL", item: aNested[1] },
+          { type: "ADD", item: bNested[1] },
+        ]
+      }),
     ]);
   });
 });
@@ -261,14 +255,14 @@ describe("diff across multiple frames", () => {
       stubBox({ tokens: c}),
       stubBox({ tokens: d}),
     ]);
-    expect(first.ops).toEqual([
+    expect(first.tokens).toEqual([
       { type: "ADD", item: a[0] },
       { type: "ADD", item: a[1] },
       { type: "ADD", item: a[2] },
     ]);
-    expect(second.ops).toEqual([{ type: "ADD", item: b[3] }]);
-    expect(third.ops).toEqual([{ type: "ADD", item: c[3] }]);
-    expect(fourth.ops).toEqual([
+    expect(second.tokens).toEqual([{ type: "ADD", item: b[3] }]);
+    expect(third.tokens).toEqual([{ type: "ADD", item: c[3] }]);
+    expect(fourth.tokens).toEqual([
       { type: "MOV", item: d[0], ref: c[0] },
       { type: "MOV", item: d[1], ref: c[1] },
       { type: "DEL", item: c[3] },

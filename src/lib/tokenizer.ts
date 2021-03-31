@@ -5,7 +5,7 @@
 // all have absolute positions and can be nested inside boxes of arbitrary
 // depth.
 
-import { Code, CodeContainer, Box, TextToken, HighlightToken } from "../types";
+import { Code, CodeContainer, Box, TextToken, Highlight } from "../types";
 import { unwrapFirst, unwrapLast } from "./util";
 
 const ONLY_WHITESPACE_RE = /^\s+$/;
@@ -62,7 +62,7 @@ type TokenizerResult<T extends TextToken | Box<TextToken>> = {
   lastX: number;
   lastY: number;
   tokens: T[];
-  highlights: HighlightToken[];
+  highlights: Highlight[];
 };
 
 const tokenizeText = (
@@ -117,12 +117,12 @@ const tokenizeContainer = (
   parent: Box<TextToken> | undefined
 ): TokenizerResult<Box<TextToken>> => {
   const box: Box<TextToken> = {
+    type: "BOX",
     id: container.id,
     hash: container.hash,
     meta: container.meta,
     language: container.language || parent?.language,
     tokens: [],
-    parent,
   };
   const { tokens, highlights, lastX, lastY } = tokenizeCode(
     container.content,
@@ -148,7 +148,7 @@ const tokenizeCode = (
   prev: TextToken | undefined
 ): TokenizerResult<TextToken | Box<TextToken>> => {
   const tokens: (Box<TextToken> | TextToken)[] = [];
-  const highlights: HighlightToken[] = [];
+  const highlights: Highlight[] = [];
   for (const code of codes) {
     if (typeof code === "string") {
       const textResult = tokenizeText(code, x, y, prev, parent);
@@ -196,7 +196,7 @@ const tokenizeCode = (
 
 export const tokenize = (
   root: CodeContainer
-): { root: Box<TextToken>; highlights: HighlightToken[] } => {
+): { root: Box<TextToken>; highlights: Highlight[] } => {
   const { tokens, highlights } = tokenizeContainer(
     root,
     0,

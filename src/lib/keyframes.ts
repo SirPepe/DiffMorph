@@ -2,7 +2,7 @@
 
 import { DiffOp } from "./diff";
 import { createIdGenerator } from "./util";
-import { HighlightToken, RenderToken, TypedToken } from "../types";
+import { Highlight, RenderToken, TypedToken } from "../types";
 
 // Manages the available render tokens. The goal is to use as few render tokens
 // as possible, so this class keeps track of which render token is in use by
@@ -95,7 +95,7 @@ export type Keyframe = {
 
 export function toKeyframes(
   diffs: DiffOp<TypedToken>[][],
-  highlights: HighlightToken[][]
+  highlights: Highlight[][]
 ): Keyframe[] {
   const tokenPool = new TokenPool();
   const keyframes: Keyframe[] = [];

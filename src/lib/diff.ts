@@ -31,11 +31,7 @@ type Line<T extends DiffableToken> = {
   readonly items: T[];
 };
 
-type DiffResult<T extends DiffableToken> = {
-  source: Omit<Box<T>, "parent" | "tokens">;
-  nested: DiffResult<T>[];
-  ops: DiffOp<T>[];
-};
+type DiffResult<T extends DiffableToken> = Box<DiffOp<T>>;
 
 // Create a hash of a list of tokens by concatenating the token's hashes and
 // their *relative* distance on the x axis. The allover level of indentation is
@@ -132,18 +128,6 @@ const diffTokens = <T extends DiffableToken>(from: T[], to: T[]): DiffOp<T>[] =>
   return result;
 };
 
-function getBoxSource<T extends DiffableToken>(
-  from: Box<T> | undefined,
-  to: Box<T> | undefined
-): Omit<Box<T>, "parent" | "tokens"> {
-  return {
-    id: from?.id || to?.id || fail(),
-    hash: from?.hash || to?.hash || fail(),
-    meta: from?.meta || to?.meta || fail(),
-    language: from?.language || to?.language || fail(),
-  };
-}
-
 // Only exported for unit tests
 export function diffBoxes<T extends DiffableToken>(
   from: Box<T> | undefined,
@@ -152,8 +136,8 @@ export function diffBoxes<T extends DiffableToken>(
   if (!from && !to) {
     throw new Error("Refusing to diff two undefined frames!");
   }
-  const tokens = [];
-  const nested = [];
+  const tokens: DiffOp<T>[] = [];
+  const boxes: Box<DiffOp<T>>[] = [];
   const [fromBoxes, fromTokens] = partition<Box<T>, T>(from?.tokens ?? [], isBox);
   const [toBoxes, toTokens] = partition<Box<T>, T>(to?.tokens ?? [], isBox);
   const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
@@ -164,12 +148,15 @@ export function diffBoxes<T extends DiffableToken>(
   for (const id of new Set([...fromBoxesById.keys(), ...toBoxesById.keys()])) {
     const fromBox = fromBoxesById.get(id);
     const toBox = toBoxesById.get(id);
-    nested.push(diffBoxes(fromBox, toBox));
+    boxes.push(diffBoxes(fromBox, toBox));
   }
   return {
-    source: getBoxSource(from, to),
-    ops: tokens,
-    nested,
+    type: "BOX",
+    id: from?.id || to?.id || fail(),
+    hash: from?.hash || to?.hash || fail(),
+    meta: from?.meta || to?.meta || fail(),
+    language: from?.language || to?.language || fail(),
+    tokens: [...tokens, ...boxes],
   };
 };
 

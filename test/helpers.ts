@@ -29,14 +29,20 @@ export function stubBox<T>(
     tokens = [],
   } = args;
   const result: Box<T> = {
+    type: "BOX",
     id,
     hash,
     language,
     meta,
     tokens: [],
-    parent,
   };
-  result.tokens = tokens.map((t) => isBoxArgs(t) ? stubBox(t, nested + 1, result) : t)
+  result.tokens = tokens.map((token) => {
+    if (isBoxArgs(token)) {
+      return stubBox(token, nested + 1, result);
+    } else {
+      return token;
+    }
+  });
   return result;
 }
 

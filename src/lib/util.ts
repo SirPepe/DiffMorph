@@ -1,5 +1,5 @@
 import fnv1a from "@sindresorhus/fnv1a";
-import { Box, TokenLike } from "../types";
+import { Box } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
@@ -29,13 +29,7 @@ export function fail(reason?: string): never {
 }
 
 export function isBox<T>(x: any): x is Box<T> {
-  if (
-    typeof x === "object" &&
-    typeof x.id === "string" &&
-    typeof x.hash === "string" &&
-    typeof x.meta === "object" &&
-    Array.isArray(x.tokens)
-  ) {
+  if (typeof x === "object" && x.type === "BOX") {
     return true;
   }
   return false;
@@ -57,11 +51,13 @@ export const unwrapLast = <T>(token: T | Box<T>): T => {
   }
 };
 
-export function flattenTokens<T extends TokenLike>(token: T | undefined): T[] {
+export function flattenTokens<T extends { next: T | undefined }>(
+  token: T | undefined
+): T[] {
   const result: T[] = [];
   while (token) {
     result.push(token);
-    token = token.next as any;
+    token = token.next;
   }
   return result;
 }

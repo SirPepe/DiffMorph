@@ -6,7 +6,7 @@ import {
   Box,
   Code,
   CodeContainer,
-  HighlightToken,
+  Highlight,
   LanguageDefinition,
   TextToken,
   TypedToken,
@@ -50,7 +50,7 @@ function extractCode(source: InputContainer): CodeContainer {
 // Only exported for unit testing code extraction
 export function processCode(
   source: InputContainer,
-): { root: Box<TextToken>; highlights: HighlightToken[] } {
+): { root: Box<TextToken>; highlights: Highlight[] } {
   return tokenize(extractCode(source));
 }
 

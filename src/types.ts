@@ -1,20 +1,21 @@
 // Represents a bit of code
 export type Code = string | CodeContainer;
 
-// Represents some kind of container with bits of code inside. May be a
-// highlight container, in which case it gets a very special treatment (not as
-// a box, but as a kind of metadata)
+// Represents some kind of container object with bits of code inside. May be a
+// highlight container, in which case it gets turned into a Highlight instance,
+// otherwise it becomes a box.
 export type CodeContainer = {
   id: string; // hash plus count
   hash: string; // built from "meta"
-  language: string | undefined; // should be defined on the top-level container
+  language: string | undefined; // must be defined on the top-level container
   meta: Record<string, any>; // tag name and attributes for DOM sources
   isHighlight: boolean;
   content: Code[];
 };
 
 // Represents a highlight token that takes up no space but has set dimensions
-export type HighlightToken = {
+// over a number of lines
+export type Highlight = {
   hash: string; // built from "meta"
   id: string; // hash plus count for unique identification
   meta: Record<string, any>; // tag name and attributes for DOM sources
@@ -22,28 +23,16 @@ export type HighlightToken = {
   end: [X: number, Y: number];
 };
 
-// Represents an abstract token that the diffing functions can work with.
-export type TokenLike = {
-  x: number;
-  y: number;
-  hash: string;
-  next: TokenLike | undefined;
-  prev: TokenLike | undefined;
-  parent: {
-    hash: any;
-  };
-};
-
 // Represents an element containing a bunch of other text tokens or other boxes.
 // The source element can be reconstructed from metadata, which together with
 // the language attribute serves as the input to the box hash.
 export type Box<Content> = {
+  readonly type: "BOX";
   id: string; // hash plus count for unique identification
   hash: string; // built from "meta"
   language: string | undefined;
   meta: Record<string, any>; // tag name and attributes for DOM sources
   tokens: (Content | Box<Content>)[];
-  parent: Box<Content> | undefined; // distinguishes the root box from the rest
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
