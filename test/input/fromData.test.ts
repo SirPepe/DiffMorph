@@ -1,5 +1,5 @@
 import { processCode } from "../../src/input/fromData";
-import { Box, CodeContainer, TextToken } from "../../src/types";
+import { Box, CodeContainer, Decoration, TextToken } from "../../src/types";
 
 describe("processing code from a data source", () => {
   test("splitting code", () => {
@@ -310,7 +310,7 @@ describe("processing code from a data source", () => {
     ]);
   });
 
-  test.only("negative token offsets in boxes with line breaks", () => {
+  test("negative token offsets in boxes with line breaks", () => {
     const rootContainer = {
       content: [
         "const ",
@@ -329,12 +329,12 @@ describe("processing code from a data source", () => {
       language: "javascript",
     };
     const root = processCode(rootContainer);
-    // expect(root).toMatchObject({
-    //   x: 0,
-    //   y: 0,
-    //   width: 11,
-    //   height: 3,
-    // });
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 11,
+      height: 3,
+    });
     const tokens = root.tokens;
     const first = tokens[0] as TextToken;
     const box = tokens[1] as Box<TextToken>;
@@ -355,15 +355,15 @@ describe("processing code from a data source", () => {
       width: 5,
       height: 3,
     });
-    // expect(box.tokens).toEqual([
-    //   /* eslint-disable */
-    //   { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: first, next: box.tokens[1], parent: box },
-    //   { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
-    //   { kind: "TEXT", x: 4, y: 0, text: "[", size: 1, prev: box.tokens[1], next: box.tokens[3], parent: box },
-    //   { kind: "TEXT", x: -4, y: 1, text: "42", size: 2, prev: box.tokens[2], next: box.tokens[4], parent: box },
-    //   { kind: "TEXT", x: -6, y: 2, text: "]", size: 1, prev: box.tokens[3], next: last, parent: box },
-    //   /* eslint-enable */
-    // ]);
+    expect(box.tokens).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: first, next: box.tokens[1], parent: box },
+      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
+      { kind: "TEXT", x: 4, y: 0, text: "[", size: 1, prev: box.tokens[1], next: box.tokens[3], parent: box },
+      { kind: "TEXT", x: -4, y: 1, text: "42", size: 2, prev: box.tokens[2], next: box.tokens[4], parent: box },
+      { kind: "TEXT", x: -6, y: 2, text: "]", size: 1, prev: box.tokens[3], next: last, parent: box },
+      /* eslint-enable */
+    ]);
     expect(last).toEqual({
       kind: "TEXT",
       x: 1,
@@ -376,7 +376,7 @@ describe("processing code from a data source", () => {
     });
   });
 
-  test.skip("it handles nested boxes", () => {
+  test("it handles nested boxes", () => {
     const rootContainer = {
       content: [
         "const ",
@@ -457,7 +457,7 @@ describe("processing code from a data source", () => {
     ]);
   });
 
-  test.skip("content in nested boxes", () => {
+  test("content in nested boxes", () => {
     const rootContainer = {
       content: [
         {
@@ -524,7 +524,7 @@ describe("processing code from a data source", () => {
     ]);
   });
 
-  test.skip("decorations", () => {
+  test("decorations", () => {
     const rootContainer: CodeContainer = {
       content: [
         "const a = () => ",
@@ -545,6 +545,7 @@ describe("processing code from a data source", () => {
     };
     const root = processCode(rootContainer);
     const tokens = root.tokens;
+    const decoration = root.tokens.pop() as Decoration;
     expect(tokens).toEqual([
       /* eslint-disable */
       { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, next: tokens[1], prev: undefined, parent: root },
@@ -555,17 +556,17 @@ describe("processing code from a data source", () => {
       { kind: "TEXT", x: 13, y: 0, text: "=", size: 1, next: tokens[6], prev: tokens[4], parent: root },
       { kind: "TEXT", x: 14, y: 0, text: ">", size: 1, next: tokens[7], prev: tokens[5], parent: root },
       { kind: "TEXT", x: 16, y: 0, text: "42", size: 2, next: undefined, prev: tokens[6], parent: root },
-      {
-        kind: "DECO",
-        x: 16,
-        y: 0,
-        endX: 18,
-        endY: 0,
-        id: "red0",
-        hash: "red",
-        data: {},
-      },
       /* eslint-enable */
     ]);
+    expect(decoration).toEqual({
+      kind: "DECO",
+      x: 16,
+      y: 0,
+      endX: 18,
+      endY: 0,
+      id: "red0",
+      hash: "red",
+      data: {},
+    },)
   });
 });

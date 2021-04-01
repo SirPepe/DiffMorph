@@ -62,7 +62,6 @@ function tokenizeText (
 ): TokenizerResult<TextToken> {
   let maxX = x;
   let maxY = y;
-  let minY = y;
   const parts = splitText(text);
   const tokens: TextToken[] = [];
   for (const part of parts) {
@@ -70,14 +69,14 @@ function tokenizeText (
       const { breaks, length } = measureWhitespace(part);
       if (breaks > 0) {
         y += breaks;
-        x = length;
+        x = length - firstLineIndent;
       } else {
         x += length;
       }
     } else {
       const token: TextToken = {
         kind: "TEXT",
-        x: (y === minY) ? x : x - firstLineIndent,
+        x,
         y,
         prev,
         next: undefined,
@@ -171,7 +170,7 @@ function tokenizeDecoration(
     hash: container.hash,
     data: container.data,
     endX: lastX,
-    endY: maxY,
+    endY: lastY,
   };
   return {
     maxX,
@@ -218,8 +217,8 @@ function tokenizeCodes(
       }
       prev = getLastTextToken(result.tokens);
       tokens.push(...result.tokens);
-      if (result.maxX > maxX) {
-        maxX = result.maxX;
+      if (x + result.maxX > maxX) {
+        maxX = x + result.maxX;
       }
       if (result.maxY > maxY) {
         maxY = result.maxY;
