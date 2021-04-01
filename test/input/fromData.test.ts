@@ -451,7 +451,7 @@ describe("processing code from a data source", () => {
     ]);
   });
 
-  test.skip("decorations", () => {
+  test("decorations", () => {
     const rootContainer: CodeContainer = {
       content: [
         "const a = () => ",
@@ -474,21 +474,23 @@ describe("processing code from a data source", () => {
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
-      { x: 0, y: 0, text: "const", size: 5, next: tokens[1], prev: undefined, parent: root },
-      { x: 6, y: 0, text: "a", size: 1, next: tokens[2], prev: tokens[0], parent: root },
-      { x: 8, y: 0, text: "=", size: 1, next: tokens[3], prev: tokens[1], parent: root },
-      { x: 10, y: 0, text: "(", size: 1, next: tokens[4], prev: tokens[2], parent: root },
-      { x: 11, y: 0, text: ")", size: 1, next: tokens[5], prev: tokens[3], parent: root },
-      { x: 13, y: 0, text: "=", size: 1, next: tokens[6], prev: tokens[4], parent: root },
-      { x: 14, y: 0, text: ">", size: 1, next: tokens[7], prev: tokens[5], parent: root },
-      { x: 16, y: 0, text: "42", size: 2, next: undefined, prev: tokens[6], parent: root },
+      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, next: tokens[1], prev: undefined, parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", size: 1, next: tokens[2], prev: tokens[0], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", size: 1, next: tokens[3], prev: tokens[1], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "(", size: 1, next: tokens[4], prev: tokens[2], parent: root },
+      { kind: "TEXT", x: 11, y: 0, text: ")", size: 1, next: tokens[5], prev: tokens[3], parent: root },
+      { kind: "TEXT", x: 13, y: 0, text: "=", size: 1, next: tokens[6], prev: tokens[4], parent: root },
+      { kind: "TEXT", x: 14, y: 0, text: ">", size: 1, next: tokens[7], prev: tokens[5], parent: root },
+      { kind: "TEXT", x: 16, y: 0, text: "42", size: 2, next: undefined, prev: tokens[6], parent: root },
       {
-        type: "HIGHLIGHT",
+        kind: "DECO",
+        x: 16,
+        y: 0,
+        endX: 18,
+        endY: 0,
         id: "red0",
         hash: "red",
-        meta: {},
-        start: [16, 0],
-        end: [18, 0],
+        data: {},
       },
       /* eslint-enable */
     ]);

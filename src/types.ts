@@ -66,9 +66,10 @@ export type Box<Content> = Token & {
 // elements, but has set dimensions over a number of lines.
 export type Decoration = Token & {
   id: string; // hash plus count for unique identification
-  readonly kind: "META";
+  readonly kind: "DECO";
   data: Record<string, any>; // tag name and attributes for DOM sources
-  lines: [Y: number, XStart: number, XEnd: number][];
+  endX: number;
+  endY: number;
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic

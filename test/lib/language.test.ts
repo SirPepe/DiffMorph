@@ -19,7 +19,7 @@ describe("In-place modifications", () => {
       content: ['"Hello World"'],
       hash: "root",
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "json",
       data: {},
     });
@@ -30,7 +30,7 @@ describe("In-place modifications", () => {
       id: "root",
       hash: "root",
       language: "json",
-      meta: {},
+      data: {},
       tokens: [
         {
           x: 0,
@@ -55,7 +55,7 @@ describe("In-place modifications", () => {
           content: [" 42 "],
           hash: "nested",
           id: "nested",
-          isHighlight: false,
+          isDecoration: false,
           language: undefined,
           data: {},
         },
@@ -63,7 +63,7 @@ describe("In-place modifications", () => {
       ],
       hash: "root",
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "json",
       data: {},
     });
@@ -75,7 +75,7 @@ describe("In-place modifications", () => {
       id: "root",
       hash: "root",
       language: "json",
-      meta: {},
+      data: {},
       tokens: [
         {
           x: 0,
@@ -92,7 +92,7 @@ describe("In-place modifications", () => {
           type: "BOX",
           id: "nested",
           hash: "nested",
-          meta: {},
+          data: {},
           language: "json",
           tokens: [{
             x: 7,
@@ -129,7 +129,7 @@ describe("In-place modifications", () => {
           content: [" 42 "],
           hash: "highlight",
           id: "highlight",
-          isHighlight: true,
+          isDecoration: true,
           language: undefined,
           data: {},
         },
@@ -137,7 +137,7 @@ describe("In-place modifications", () => {
       ],
       hash: "root",
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "json",
       data: {},
     });
@@ -148,7 +148,7 @@ describe("In-place modifications", () => {
       id: "root",
       hash: "root",
       language: "json",
-      meta: {},
+      data: {},
       tokens: [
         {
           x: 0,
@@ -165,7 +165,7 @@ describe("In-place modifications", () => {
           type: "HIGHLIGHT",
           id: "highlight",
           hash: "highlight",
-          meta: {},
+          data: {},
           start: [6, 0],
           end: [10, 0],
         }
@@ -180,8 +180,8 @@ describe("In-place modifications", () => {
           id: "level1",
           hash: "level1",
           language: undefined, // should turn into "json"
-          isHighlight: false,
-          meta: {},
+          isDecoration: false,
+          data: {},
           content: [
             "null"
           ],
@@ -189,9 +189,9 @@ describe("In-place modifications", () => {
       ],
       hash: "root",
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "json",
-      meta: {},
+      data: {},
     };
     const subject = tokenize(input);
     const output = applyJSON(subject);
@@ -206,8 +206,8 @@ describe("In-place modifications", () => {
           id: "level1",
           hash: "level1",
           language: "html", // should remain as it is
-          isHighlight: false,
-          meta: {},
+          isDecoration: false,
+          data: {},
           content: [
             "null"
           ],
@@ -215,9 +215,9 @@ describe("In-place modifications", () => {
       ],
       hash: "root",
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "json",
-      meta: {},
+      data: {},
     };
     const subject = tokenize(input);
     const output = applyJSON(subject);
