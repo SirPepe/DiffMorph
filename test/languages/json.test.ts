@@ -181,7 +181,7 @@ describe("Boxes", () => {
     const tokens = json(
       "{",
       {
-        meta: {
+        data: {
           tagName: "span",
           attributes: [],
         },
@@ -211,7 +211,7 @@ describe("Boxes", () => {
     const tokens = json(
       '{"foo',
       {
-        meta: {
+        data: {
           tagName: "span",
           attributes: [],
         },

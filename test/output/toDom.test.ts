@@ -33,7 +33,7 @@ describe("toDom", () => {
             id: "asdf1",
             isHighlight: false,
             language: undefined,
-            meta: { id: "hello" },
+            data: { id: "hello" },
           },
           "]"
         ),

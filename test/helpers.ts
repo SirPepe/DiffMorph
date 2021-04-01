@@ -1,14 +1,16 @@
 import { applyLanguage } from "../src/lib/language";
 import { tokenize } from "../src/lib/tokenizer";
 import { flattenTokens, getFirstTextToken } from "../src/lib/util";
-import { Box, Code, Highlight, LanguageDefinition, TypedToken } from "../src/types";
+import { Box, Code, Decoration, LanguageDefinition, TypedToken } from "../src/types";
 
 type BoxArgs <T> = {
-  tokens: (T | BoxArgs<T>)[];
+  x: number;
+  y: number;
+  tokens?: (T | BoxArgs<T>)[];
   id?: string;
   hash?: string;
   language?: string;
-  meta?: Record<string, any>;
+  data?: Record<string, any>;
   parent?: any;
 };
 
@@ -22,19 +24,26 @@ export function stubBox<T>(
   parent?: Box<T>
 ): Box<T> {
   const {
+    x = 0,
+    y = 0,
     id = nested ? `nested-${nested}` : "root",
     hash = nested ? `nested-${nested}` : "root",
     language = "none",
-    meta = {},
+    data = {},
     tokens = [],
   } = args;
   const result: Box<T> = {
-    type: "BOX",
+    kind: "BOX",
+    x,
+    y,
     id,
     hash,
+    width: 0,
+    height: 0,
     language,
-    meta,
+    data,
     tokens: [],
+    parent,
   };
   result.tokens = tokens.map((token) => {
     if (isBoxArgs(token)) {
@@ -48,7 +57,7 @@ export function stubBox<T>(
 
 export const lang = (language: LanguageDefinition<any>) => (
   ...input: Code[]
-): Box<TypedToken | Highlight> => {
+): Box<TypedToken | Decoration> => {
   return applyLanguage(
     language,
     tokenize({
@@ -56,8 +65,8 @@ export const lang = (language: LanguageDefinition<any>) => (
       hash: "root",
       id: "root",
       language: lang.name,
-      isHighlight: false,
-      meta: { isHighlight: false },
+      isDecoration: false,
+      data: {},
     })
   );
 };

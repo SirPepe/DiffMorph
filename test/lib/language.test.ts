@@ -21,7 +21,7 @@ describe("In-place modifications", () => {
       id: "root",
       isHighlight: false,
       language: "json",
-      meta: {},
+      data: {},
     });
     const output = applyJSON(subject);
     expect(output).toBe(subject);
@@ -57,7 +57,7 @@ describe("In-place modifications", () => {
           id: "nested",
           isHighlight: false,
           language: undefined,
-          meta: {},
+          data: {},
         },
         'World"',
       ],
@@ -65,7 +65,7 @@ describe("In-place modifications", () => {
       id: "root",
       isHighlight: false,
       language: "json",
-      meta: {},
+      data: {},
     });
     const output = applyJSON(subject);
     expect(output).toBe(subject);
@@ -131,7 +131,7 @@ describe("In-place modifications", () => {
           id: "highlight",
           isHighlight: true,
           language: undefined,
-          meta: {},
+          data: {},
         },
         'World"',
       ],
@@ -139,7 +139,7 @@ describe("In-place modifications", () => {
       id: "root",
       isHighlight: false,
       language: "json",
-      meta: {},
+      data: {},
     });
     const output = applyJSON(subject);
     expect(output).toBe(subject);

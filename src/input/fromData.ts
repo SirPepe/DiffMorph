@@ -6,24 +6,23 @@ import {
   Box,
   Code,
   CodeContainer,
-  Highlight,
+  Decoration,
   LanguageDefinition,
   TextToken,
-  TypedToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
 import { Keyframe, toKeyframes } from "../lib/keyframes";
 import { optimize } from "../lib/optimize";
 import { diff } from "../lib/diff";
-import { createIdGenerator, flattenTokens, unwrapFirst } from "../lib/util";
+import { createIdGenerator } from "../lib/util";
 
 type Input = string | InputContainer;
 
 type InputContainer = {
   content: Input[];
   id: string;
-  isHighlight: boolean;
+  isDecoration: boolean;
   language: string | undefined;
 };
 
@@ -39,18 +38,18 @@ function extractCode(source: InputContainer): CodeContainer {
   }
   return {
     content,
-    isHighlight: source.isHighlight,
+    isDecoration: source.isDecoration,
     language: source.language,
     hash: source.id,
     id: idGenerator(null, source.id),
-    meta: {},
+    data: {},
   };
 }
 
 // Only exported for unit testing code extraction
 export function processCode(
   source: InputContainer,
-): Box<TextToken | Highlight> {
+): Box<TextToken | Decoration> {
   return tokenize(extractCode(source));
 }
 

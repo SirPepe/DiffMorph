@@ -234,7 +234,7 @@ export function diffBoxes<T extends DiffTextToken, U extends DiffHighlightToken>
     type: "BOX",
     id: from?.id || to?.id || fail(),
     hash: from?.hash || to?.hash || fail(),
-    meta: from?.meta || to?.meta || fail(),
+    data: from?.data || to?.data || fail(),
     language: from?.language || to?.language || fail(),
     tokens: [...tokens, ...highlights, ...boxes],
   };

@@ -5,7 +5,7 @@ import {
   Box,
   Code,
   CodeContainer,
-  Highlight,
+  Decoration,
   LanguageDefinition,
   TextToken,
 } from "../types";
@@ -78,8 +78,8 @@ function extractCode(source: Element): CodeContainer {
     content,
     hash,
     id,
-    meta: { tagName, attributes },
-    isHighlight: tagName === "mark",
+    data: { tagName, attributes },
+    isDecoration: tagName === "mark",
     language: getLanguage(source),
   };
 }
@@ -87,7 +87,7 @@ function extractCode(source: Element): CodeContainer {
 // Only exported for unit testing code extraction
 export function processCode(
   source: Element
-): Box<TextToken | Highlight> {
+): Box<TextToken | Decoration> {
   return tokenize(extractCode(source));
 };
 

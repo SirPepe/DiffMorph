@@ -1,5 +1,5 @@
 import fnv1a from "@sindresorhus/fnv1a";
-import { Box, Highlight, TextToken } from "../types";
+import { Box, Decoration } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
@@ -29,24 +29,24 @@ export function fail(reason?: string): never {
 }
 
 export function isBox<T>(x: any): x is Box<T> {
-  if (typeof x === "object" && x.type === "BOX") {
+  if (typeof x === "object" && x.kind === "BOX") {
     return true;
   }
   return false;
 }
 
-export function isHighlight(x: any): x is Highlight {
-  if (typeof x === "object" && x.type === "HIGHLIGHT") {
+export function isMetaToken(x: any): x is Decoration {
+  if (typeof x === "object" && x.kind === "META") {
     return true;
   }
   return false;
 }
 
 export function getFirstTextToken<T>(
-  tokens: (T | Highlight | Box<T | Highlight>)[]
+  tokens: (T | Decoration | Box<T | Decoration>)[]
 ): T | undefined {
   for (const token of tokens) {
-    if (isHighlight(token)) {
+    if (isMetaToken(token)) {
       continue;
     }
     if (isBox(token)) {
@@ -62,11 +62,11 @@ export function getFirstTextToken<T>(
 };
 
 export function getLastTextToken<T>(
-  tokens: (T | Highlight | Box<T | Highlight>)[]
+  tokens: (T | Decoration | Box<T | Decoration>)[]
 ): T | undefined {
   for (let i = tokens.length - 1; i >= 0; i--) {
     const token = tokens[i];
-    if (isHighlight(token)) {
+    if (isMetaToken(token)) {
       continue;
     }
     if (isBox(token)) {
@@ -107,27 +107,45 @@ export const createIdGenerator = (): ((realm: any, hash: any) => string) => {
   };
 };
 
-export function isSameLine<T extends { y: number }>(a: T, b: T): boolean {
-  if (a.y === b.y) {
-    return true;
+type PositionedToken = {
+  x: number;
+  y: number;
+  parent: Box<any> | undefined;
+};
+
+function absoluteCoordinates(
+  token: PositionedToken
+): { x: number, y: number; } {
+  if (!token.parent) {
+    return {
+      x: token.x,
+      y: token.y
+    };
   }
-  return false;
+  const { x, y } = absoluteCoordinates(token.parent);
+  return {
+    x: token.x + x,
+    y: token.y + y
+  };
 }
 
-export function isAdjacent<T extends { x: number; y: number; text: string }>(
-  a: T | undefined,
-  b: T | undefined
+export function isAdjacent(
+  a: (PositionedToken & { text: string }) | undefined,
+  b: (PositionedToken & { text: string }) | undefined
 ): boolean {
   if (!a || !b) {
     return false;
   }
-  if (!isSameLine(a, b)) {
+  const [aCoords, bCoords] = (a.parent === b.parent)
+    ? [{ x: a.x, y: a.y }, { x: b.x, y: b.y }]
+    : [absoluteCoordinates(a), absoluteCoordinates(b)];
+  if (aCoords.y !== bCoords.y) {
     return false;
   }
-  if (a.x + a.text.length === b.x) {
+  if (aCoords.x + a.text.length === bCoords.x) {
     return true;
   }
-  if (b.x + b.text.length === a.x) {
+  if (bCoords.x + b.text.length === aCoords.x) {
     return true;
   }
   return false;

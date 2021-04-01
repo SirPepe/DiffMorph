@@ -2,45 +2,80 @@ import { processCode } from "../../src/input/fromData";
 import { Box, CodeContainer, TextToken } from "../../src/types";
 
 describe("processing code from a data source", () => {
-  test("it splits code", () => {
+  test("splitting code", () => {
     const rootContainer = {
-      content: ["const a = () => 42"],
+      content: ["const a = 42;"],
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "base",
     };
     const root = processCode(rootContainer);
     expect(root).toEqual({
-      type: "BOX",
-      meta: {},
+      kind: "BOX",
+      data: {},
       id: "root0",
       hash: "root",
       language: "base",
+      x: 0,
+      y: 0,
+      width: 13,
+      height: 1,
       tokens: expect.any(Array),
+      parent: undefined,
     });
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
-      { x: 0, y: 0, text: "const", size: 5, prev: undefined, next: tokens[1], parent: root },
-      { x: 6, y: 0, text: "a", size: 1, prev: tokens[0], next: tokens[2], parent: root },
-      { x: 8, y: 0, text: "=", size: 1, prev: tokens[1], next: tokens[3], parent: root },
-      { x: 10, y: 0, text: "(", size: 1, prev: tokens[2], next: tokens[4], parent: root },
-      { x: 11, y: 0, text: ")", size: 1, prev: tokens[3], next: tokens[5], parent: root },
-      { x: 13, y: 0, text: "=", size: 1, prev: tokens[4], next: tokens[6], parent: root },
-      { x: 14, y: 0, text: ">", size: 1, prev: tokens[5], next: tokens[7], parent: root },
-      { x: 16, y: 0, text: "42", size: 2, prev: tokens[6], next: undefined, parent: root },
+      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, prev: undefined, next: tokens[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", size: 1, prev: tokens[0], next: tokens[2], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", size: 1, prev: tokens[1], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "42", size: 2, prev: tokens[2], next: tokens[4], parent: root },
+      { kind: "TEXT", x: 12, y: 0, text: ";", size: 1, prev: tokens[3], next: undefined, parent: root },
       /* eslint-enable */
     ]);
   });
 
-  test("it splits multi-line code", () => {
+  test("multiple chunks of code", () => {
+    const rootContainer = {
+      content: ["const a", " =", " 42;"],
+      id: "root",
+      isDecoration: false,
+      language: "base",
+    };
+    const root = processCode(rootContainer);
+    expect(root).toEqual({
+      kind: "BOX",
+      data: {},
+      id: "root0",
+      hash: "root",
+      language: "base",
+      x: 0,
+      y: 0,
+      width: 13,
+      height: 1,
+      tokens: expect.any(Array),
+      parent: undefined
+    });
+    const tokens = root.tokens;
+    expect(tokens).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, prev: undefined, next: tokens[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", size: 1, prev: tokens[0], next: tokens[2], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", size: 1, prev: tokens[1], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "42", size: 2, prev: tokens[2], next: tokens[4], parent: root },
+      { kind: "TEXT", x: 12, y: 0, text: ";", size: 1, prev: tokens[3], next: undefined, parent: root },
+      /* eslint-enable */
+    ]);
+  });
+
+  test("multi-line code", () => {
     /* eslint-disable */
     const rootContainer = {
-      content: [`const a = () => {
-  return 42;
-};`],
+      content: [`const a
+  =
+    42;`],
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: undefined,
     };
     /* eslint-enable */
@@ -48,98 +83,224 @@ describe("processing code from a data source", () => {
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
-      { x: 0, y: 0, text: "const", size: 5, next: tokens[1], prev: undefined, parent: root },
-      { x: 6, y: 0, text: "a", size: 1, next: tokens[2], prev: tokens[0], parent: root },
-      { x: 8, y: 0, text: "=", size: 1, next: tokens[3], prev: tokens[1], parent: root },
-      { x: 10, y: 0, text: "(", size: 1, next: tokens[4], prev: tokens[2], parent: root },
-      { x: 11, y: 0, text: ")", size: 1, next: tokens[5], prev: tokens[3], parent: root },
-      { x: 13, y: 0, text: "=", size: 1, next: tokens[6], prev: tokens[4], parent: root },
-      { x: 14, y: 0, text: ">", size: 1, next: tokens[7], prev: tokens[5], parent: root },
-      { x: 16, y: 0, text: "{", size: 1, next: tokens[8], prev: tokens[6], parent: root },
-      { x: 2, y: 1, text: "return", size: 6, next: tokens[9], prev: tokens[7], parent: root },
-      { x: 9, y: 1, text: "42", size: 2, next: tokens[10], prev: tokens[8], parent: root },
-      { x: 11, y: 1, text: ";", size: 1, next: tokens[11], prev: tokens[9], parent: root },
-      { x: 0, y: 2, text: "}", size: 1, next: tokens[12], prev: tokens[10], parent: root },
-      { x: 1, y: 2, text: ";", size: 1, next: tokens[13], prev: tokens[11], parent: root },
+      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, prev: undefined, next: tokens[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", size: 1, prev: tokens[0], next: tokens[2], parent: root },
+      { kind: "TEXT", x: 2, y: 1, text: "=", size: 1, prev: tokens[1], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 4, y: 2, text: "42", size: 2, prev: tokens[2], next: tokens[4], parent: root },
+      { kind: "TEXT", x: 6, y: 2, text: ";", size: 1, prev: tokens[3], next: undefined, parent: root },
       /* eslint-enable */
     ]);
   });
 
-  test("it splits multiple chunks of code", () => {
-    const rootContainer = {
-      content: ["const a", " = () => {\n", "  return 42;", "\n};"],
-      id: "root",
-      isHighlight: false,
-      language: undefined,
-    };
-    const root = processCode(rootContainer);
-    const tokens = root.tokens;
-    expect(tokens).toEqual([
-      /* eslint-disable */
-      { x: 0, y: 0, text: "const", size: 5, next: tokens[1], prev: undefined, parent: root, },
-      { x: 6, y: 0, text: "a", size: 1, next: tokens[2], prev: tokens[0], parent: root, },
-      { x: 8, y: 0, text: "=", size: 1, next: tokens[3], prev: tokens[1], parent: root, },
-      { x: 10, y: 0, text: "(", size: 1, next: tokens[4], prev: tokens[2], parent: root, },
-      { x: 11, y: 0, text: ")", size: 1, next: tokens[5], prev: tokens[3], parent: root, },
-      { x: 13, y: 0, text: "=", size: 1, next: tokens[6], prev: tokens[4], parent: root, },
-      { x: 14, y: 0, text: ">", size: 1, next: tokens[7], prev: tokens[5], parent: root, },
-      { x: 16, y: 0, text: "{", size: 1, next: tokens[8], prev: tokens[6], parent: root, },
-      { x: 2, y: 1, text: "return", size: 6, next: tokens[9], prev: tokens[7], parent: root, },
-      { x: 9, y: 1, text: "42", size: 2, next: tokens[10], prev: tokens[8], parent: root, },
-      { x: 11, y: 1, text: ";", size: 1, next: tokens[11], prev: tokens[9], parent: root, },
-      { x: 0, y: 2, text: "}", size: 1, next: tokens[12], prev: tokens[10], parent: root, },
-      { x: 1, y: 2, text: ";", size: 1, next: undefined, prev: tokens[11], parent: root, },
-      /* eslint-enable */
-    ]);
-  });
-
-  test("it handles boxes", () => {
+  test("boxes", () => {
     const rootContainer = {
       content: [
         "const ",
         {
-          content: ["a = (", ") => 42"],
+          content: ["a = 42;"],
           id: "box",
-          isHighlight: false,
+          isDecoration: false,
           language: undefined,
         },
       ],
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "javascript",
     };
     const root = processCode(rootContainer);
+    expect(root).toEqual({
+      kind: "BOX",
+      data: {},
+      id: "root0",
+      hash: "root",
+      language: "javascript",
+      x: 0,
+      y: 0,
+      width: 13,
+      height: 1,
+      tokens: expect.any(Array),
+      parent: undefined,
+    });
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
     const box = tokens[1] as Box<TextToken>;
     expect(txt).toEqual({
+      kind: "TEXT",
       x: 0,
       y: 0,
       text: "const",
       size: 5,
       prev: undefined,
       next: box.tokens[0],
-      parent: root,
+      parent: root
     });
     expect(box).toEqual({
-      type: "BOX",
-      meta: {},
+      kind: "BOX",
+      data: {},
       id: "box0",
       hash: "box",
       language: "javascript",
+      x: 6,
+      y: 0,
+      width: 7,
+      height: 1,
       tokens: expect.any(Array),
+      parent: root,
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
-      { x: 6, y: 0, text: "a", size: 1, next: box.tokens[1], prev: txt, parent: box },
-      { x: 8, y: 0, text: "=", size: 1, next: box.tokens[2], prev: box.tokens[0], parent: box },
-      { x: 10, y: 0, text: "(", size: 1, next: box.tokens[3], prev: box.tokens[1], parent: box },
-      { x: 11, y: 0, text: ")", size: 1, next: box.tokens[4], prev: box.tokens[2], parent: box },
-      { x: 13, y: 0, text: "=", size: 1, next: box.tokens[5], prev: box.tokens[3], parent: box },
-      { x: 14, y: 0, text: ">", size: 1, next: box.tokens[6], prev: box.tokens[4], parent: box },
-      { x: 16, y: 0, text: "42", size: 2, next: undefined, prev: box.tokens[5], parent: box },
+      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: txt, next: box.tokens[1], parent: box },
+      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
+      { kind: "TEXT", x: 4, y: 0, text: "42", size: 2, prev: box.tokens[1], next: box.tokens[3], parent: box },
+      { kind: "TEXT", x: 6, y: 0, text: ";", size: 1, prev: box.tokens[2], next: undefined, parent: box },
       /* eslint-enable */
     ]);
+  });
+
+  test("boxes with content in one string equal boxes made up of chunks", () => {
+    const aBox = {
+      content: ["a = 42;"],
+      id: "box",
+      isDecoration: false,
+      language: undefined,
+    };
+    const bBox = {
+      content: ["a", " = ", "42;"],
+      id: "box",
+      isDecoration: false,
+      language: undefined,
+    };
+    const aRoot = processCode({
+      content: ["const ", aBox],
+      id: "root",
+      isDecoration: false,
+      language: "javascript",
+    });
+    const bRoot = processCode({
+      content: ["const ", bBox],
+      id: "root",
+      isDecoration: false,
+      language: "javascript",
+    });
+    expect(aRoot).toEqual(bRoot);
+  });
+
+  test("multi-line boxes", () => {
+    const rootContainer = {
+      content: [
+        "const \n",
+        {
+          content: ["a", " = ", `
+  42;`],
+          id: "box",
+          isDecoration: false,
+          language: undefined,
+        },
+      ],
+      id: "root",
+      isDecoration: false,
+      language: "javascript",
+    };
+    const root = processCode(rootContainer);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 6,
+      height: 3,
+    });
+    const tokens = root.tokens;
+    const txt = tokens[0] as TextToken;
+    const box = tokens[1] as Box<TextToken>;
+    expect(txt).toEqual({
+      kind: "TEXT",
+      x: 0,
+      y: 0,
+      text: "const",
+      size: 5,
+      prev: undefined,
+      next: box.tokens[0],
+      parent: root
+    });
+    expect(box).toMatchObject({
+      x: 0,
+      y: 1,
+      width: 5,
+      height: 2,
+    });
+    expect(box.tokens).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: txt, next: box.tokens[1], parent: box },
+      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
+      { kind: "TEXT", x: 2, y: 1, text: "42", size: 2, prev: box.tokens[1], next: box.tokens[3], parent: box },
+      { kind: "TEXT", x: 4, y: 1, text: ";", size: 1, prev: box.tokens[2], next: undefined, parent: box },
+      /* eslint-enable */
+    ]);
+  });
+
+  test("negative token offsets in boxes with line breaks", () => {
+    const rootContainer = {
+      content: [
+        "const ",
+        {
+          content: [`a = [
+  42
+]`],
+          id: "box",
+          isDecoration: false,
+          language: undefined,
+        },
+        ";",
+      ],
+      id: "root",
+      isDecoration: false,
+      language: "javascript",
+    };
+    const root = processCode(rootContainer);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 11,
+      height: 3,
+    });
+    const tokens = root.tokens;
+    const first = tokens[0] as TextToken;
+    const box = tokens[1] as Box<TextToken>;
+    const last = tokens[tokens.length - 1] as TextToken;
+    expect(first).toEqual({
+      kind: "TEXT",
+      x: 0,
+      y: 0,
+      text: "const",
+      size: 5,
+      prev: undefined,
+      next: box.tokens[0],
+      parent: root
+    });
+    expect(box).toMatchObject({
+      x: 6,
+      y: 0,
+      width: 5,
+      height: 3,
+    });
+    expect(box.tokens).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: first, next: box.tokens[1], parent: box },
+      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
+      { kind: "TEXT", x: 4, y: 0, text: "[", size: 1, prev: box.tokens[1], next: box.tokens[3], parent: box },
+      { kind: "TEXT", x: -4, y: 1, text: "42", size: 2, prev: box.tokens[2], next: box.tokens[4], parent: box },
+      { kind: "TEXT", x: -6, y: 2, text: "]", size: 1, prev: box.tokens[3], next: last, parent: box },
+      /* eslint-enable */
+    ]);
+    expect(last).toEqual({
+      kind: "TEXT",
+      x: 1,
+      y: 2,
+      text: ";",
+      size: 1,
+      prev: box.tokens[4],
+      next: undefined,
+      parent: root
+    });
   });
 
   test("it handles nested boxes", () => {
@@ -150,27 +311,35 @@ describe("processing code from a data source", () => {
           content: [
             "a = () => ",
             {
-              content: ["{ return 42; }"],
+              content: [`{ return 42; }`],
               id: "nested",
-              isHighlight: false,
+              isDecoration: false,
               language: undefined,
             },
           ],
           id: "box",
-          isHighlight: false,
+          isDecoration: false,
           language: undefined,
         },
       ],
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "javascript",
     };
     const root = processCode(rootContainer);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 30,
+      height: 1,
+      parent: undefined,
+    });
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
     const box1 = tokens[1] as Box<TextToken>;
     const box2 = box1.tokens[6] as Box<TextToken>;
     expect(txt).toEqual({
+      kind: "TEXT",
       x: 0,
       y: 0,
       text: "const",
@@ -179,45 +348,43 @@ describe("processing code from a data source", () => {
       next: box1.tokens[0],
       parent: root,
     });
-    expect(box1).toEqual({
-      type: "BOX",
-      language: "javascript",
-      meta: {},
-      id: "box0",
-      hash: "box",
-      tokens: expect.any(Array),
+    expect(box1).toMatchObject({
+      x: 6,
+      y: 0,
+      width: 24,
+      height: 1,
+      parent: root,
     });
     expect(box1.tokens).toEqual([
       /* eslint-disable */
-      { x: 6, y: 0, text: "a", size: 1, next: box1.tokens[1], prev: txt, parent: box1, },
-      { x: 8, y: 0, text: "=", size: 1, next: box1.tokens[2], prev: box1.tokens[0], parent: box1, },
-      { x: 10, y: 0, text: "(", size: 1, next: box1.tokens[3], prev: box1.tokens[1], parent: box1, },
-      { x: 11, y: 0, text: ")", size: 1, next: box1.tokens[4], prev: box1.tokens[2], parent: box1, },
-      { x: 13, y: 0, text: "=", size: 1, next: box1.tokens[5], prev: box1.tokens[3], parent: box1, },
-      { x: 14, y: 0, text: ">", size: 1, next: box2.tokens[0], prev: box1.tokens[4], parent: box1, },
+      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, next: box1.tokens[1], prev: txt, parent: box1, },
+      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, next: box1.tokens[2], prev: box1.tokens[0], parent: box1, },
+      { kind: "TEXT", x: 4, y: 0, text: "(", size: 1, next: box1.tokens[3], prev: box1.tokens[1], parent: box1, },
+      { kind: "TEXT", x: 5, y: 0, text: ")", size: 1, next: box1.tokens[4], prev: box1.tokens[2], parent: box1, },
+      { kind: "TEXT", x: 7, y: 0, text: "=", size: 1, next: box1.tokens[5], prev: box1.tokens[3], parent: box1, },
+      { kind: "TEXT", x: 8, y: 0, text: ">", size: 1, next: box2.tokens[0], prev: box1.tokens[4], parent: box1, },
       box2,
       /* eslint-enable */
     ]);
-    expect(box2).toEqual({
-      type: "BOX",
-      language: "javascript",
-      meta: {},
-      id: "nested0",
-      hash: "nested",
-      tokens: expect.any(Array),
+    expect(box2).toMatchObject({
+      x: 10,
+      y: 0,
+      width: 14,
+      height: 1,
+      parent: box1,
     });
     expect(box2.tokens).toEqual([
       /* eslint-disable */
-      { x: 16, y: 0, text: "{", size: 1, next: box2.tokens[1], prev: box1.tokens[5], parent: box2 },
-      { x: 18, y: 0, text: "return", size: 6, next: box2.tokens[2], prev: box2.tokens[0], parent: box2 },
-      { x: 25, y: 0, text: "42", size: 2, next: box2.tokens[3], prev: box2.tokens[1], parent: box2 },
-      { x: 27, y: 0, text: ";", size: 1, next: box2.tokens[4], prev: box2.tokens[2], parent: box2 },
-      { x: 29, y: 0, text: "}", size: 1, next: undefined, prev: box2.tokens[3], parent: box2 },
+      { kind: "TEXT", x: 0, y: 0, text: "{", size: 1, next: box2.tokens[1], prev: box1.tokens[5], parent: box2 },
+      { kind: "TEXT", x: 2, y: 0, text: "return", size: 6, next: box2.tokens[2], prev: box2.tokens[0], parent: box2 },
+      { kind: "TEXT", x: 9, y: 0, text: "42", size: 2, next: box2.tokens[3], prev: box2.tokens[1], parent: box2 },
+      { kind: "TEXT", x: 11, y: 0, text: ";", size: 1, next: box2.tokens[4], prev: box2.tokens[2], parent: box2 },
+      { kind: "TEXT", x: 13, y: 0, text: "}", size: 1, next: undefined, prev: box2.tokens[3], parent: box2 },
       /* eslint-enable */
     ]);
   });
 
-  test("it handles cases where all content is in nested boxes", () => {
+  test("content in nested boxes", () => {
     const rootContainer = {
       content: [
         {
@@ -225,41 +392,57 @@ describe("processing code from a data source", () => {
             {
               content: ["let x = 42"],
               id: "nested",
-              isHighlight: false,
+              isDecoration: false,
               language: undefined,
             },
           ],
           id: "box",
-          isHighlight: false,
+          isDecoration: false,
           language: undefined,
         },
       ],
       id: "root",
-      isHighlight: false,
+      isDecoration: false,
       language: "javascript",
     };
     const root = processCode(rootContainer);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 1,
+    });
     const contentBox = (root as any).tokens[0].tokens[0];
     expect(root.tokens).toEqual([
       {
-        type: "BOX",
+        kind: "BOX",
+        x: 0,
+        y: 0,
+        width: 10,
+        height: 1,
         language: "javascript",
         id: "box0",
         hash: "box",
-        meta: {},
+        data: {},
+        parent: root,
         tokens: [
           {
-            type: "BOX",
+            kind: "BOX",
+            x: 0,
+            y: 0,
+            width: 10,
+            height: 1,
             language: "javascript",
             id: "nested0",
             hash: "nested",
-            meta: {},
+            data: {},
+            parent: root.tokens[0],
             tokens: [
               /* eslint-disable */
-              { x: 0, y: 0, text: "let", size: 3, next: contentBox.tokens[1], prev: undefined, parent: contentBox },
-              { x: 4, y: 0, text: "x", size: 1, next: contentBox.tokens[2], prev: contentBox.tokens[0], parent: contentBox },
-              { x: 6, y: 0, text: "=", size: 1, next: contentBox.tokens[3], prev: contentBox.tokens[1], parent: contentBox },
-              { x: 8, y: 0, text: "42", size: 2, next: undefined, prev: contentBox.tokens[2], parent: contentBox },
+              { kind: "TEXT", x: 0, y: 0, text: "let", size: 3, next: contentBox.tokens[1], prev: undefined, parent: contentBox },
+              { kind: "TEXT", x: 4, y: 0, text: "x", size: 1, next: contentBox.tokens[2], prev: contentBox.tokens[0], parent: contentBox },
+              { kind: "TEXT", x: 6, y: 0, text: "=", size: 1, next: contentBox.tokens[3], prev: contentBox.tokens[1], parent: contentBox },
+              { kind: "TEXT", x: 8, y: 0, text: "42", size: 2, next: undefined, prev: contentBox.tokens[2], parent: contentBox },
               /* eslint-enable */
             ],
           },
@@ -268,7 +451,7 @@ describe("processing code from a data source", () => {
     ]);
   });
 
-  test("it handles highlights", () => {
+  test.skip("decorations", () => {
     const rootContainer: CodeContainer = {
       content: [
         "const a = () => ",
@@ -276,15 +459,15 @@ describe("processing code from a data source", () => {
           content: ["42"],
           id: "red",
           hash: "red",
-          meta: {},
-          isHighlight: true,
+          data: {},
+          isDecoration: true,
           language: undefined,
         },
       ],
       id: "root",
       hash: "root",
-      meta: {},
-      isHighlight: false,
+      data: {},
+      isDecoration: false,
       language: undefined,
     };
     const root = processCode(rootContainer);

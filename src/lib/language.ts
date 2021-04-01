@@ -51,8 +51,8 @@ function applyPostprocessor(
   }
 }
 
-// Performs all of its actions in-place; essentially upgrading the TextTokens to
-// TypedTokens without ever touching the Highlights.
+// Performs all of its actions in-place, essentially upgrading the TextTokens to
+// TypedTokens without ever touching the MetaTokens.
 export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
   root: Box<TextToken | Highlight>

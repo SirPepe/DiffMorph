@@ -33,7 +33,7 @@ function generateContent(
       const rules = [
         `transform:translate(${renderToken.x}ch,${renderToken.y * 100}%)`,
       ];
-      if (renderToken.visible) {
+      if (renderToken.isVisible) {
         rules.push(`opacity:1`);
       }
       styles.push(`${selector}{${rules.join(";")}}`);
