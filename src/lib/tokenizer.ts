@@ -46,9 +46,10 @@ function measureWhitespace (
 
 type TokenizerResult<T> = {
   tokens: T[];
-  maxX: number;
-  maxY: number;
-  lastX: number;
+  maxX: number; // maximum x span of the tokenized content
+  maxY: number; // maximum y span of the tokenized content
+  lastX: number; // final x offset when done tokenizing
+  lastY: number; // final y offsets when done tokenizing
 };
 
 function tokenizeText (
@@ -60,6 +61,7 @@ function tokenizeText (
   parent: Box<TextToken | Decoration>
 ): TokenizerResult<TextToken> {
   let maxX = x;
+  let maxY = y;
   let minY = y;
   const parts = splitText(text);
   const tokens: TextToken[] = [];
@@ -93,12 +95,16 @@ function tokenizeText (
     if (x > maxX) {
       maxX = x;
     }
+    if (y > maxY) {
+      maxY = y;
+    }
   }
   return {
     tokens,
     maxX,
-    maxY: y,
+    maxY,
     lastX: x,
+    lastY: y,
   };
 };
 
@@ -122,7 +128,7 @@ function tokenizeContainer(
     tokens: [], // will be updated in a few lines
     parent,
   };
-  const { tokens, maxX, maxY, lastX } = tokenizeCodes(
+  const result = tokenizeCodes(
     container.content,
     0,
     0,
@@ -130,10 +136,16 @@ function tokenizeContainer(
     prev,
     box,
   );
-  box.width = maxX;
-  box.height = maxY + 1;
-  box.tokens = tokens;
-  return { tokens: [box], maxX, maxY, lastX };
+  box.width = result.maxX;
+  box.height = result.maxY + 1;
+  box.tokens = result.tokens;
+  return {
+    tokens: [box],
+    maxX: result.maxX,
+    maxY: result.maxY,
+    lastX: result.lastX + x,
+    lastY: result.lastY + y,
+  };
 };
 
 function tokenizeDecoration(
@@ -143,7 +155,7 @@ function tokenizeDecoration(
   prev: TextToken | undefined,
   parent: Box<TextToken | Decoration>
 ): TokenizerResult<(TextToken | Decoration | Box<TextToken | Decoration>)> {
-  const { tokens, maxX, maxY, lastX } = tokenizeCodes(
+  const { tokens, maxX, maxY, lastX, lastY } = tokenizeCodes(
     container.content,
     x,
     y,
@@ -165,6 +177,7 @@ function tokenizeDecoration(
     maxX,
     maxY,
     lastX,
+    lastY,
     tokens: [...tokens, decoration],
   }
 };
@@ -178,6 +191,7 @@ function tokenizeCodes(
   parent: Box<TextToken | Decoration>,
 ): TokenizerResult<TextToken | Decoration | Box<TextToken | Decoration>> {
   let maxX = x;
+  let maxY = x;
   const tokens: (TextToken | Decoration | Box<TextToken | Decoration>)[] = [];
   for (const code of codes) {
     if (typeof code === "string") {
@@ -190,29 +204,42 @@ function tokenizeCodes(
       if (result.maxX > maxX) {
         maxX = result.maxX;
       }
+      if (result.maxY > maxY) {
+        maxY = result.maxY;
+      }
       x = result.lastX;
-      y = result.maxY;
+      y = result.lastY;
     } else {
       const result = (code.isDecoration)
         ? tokenizeDecoration(code, x, y, prev, parent)
-        : tokenizeContainer(code, x, y, prev, parent)
+        : tokenizeContainer(code, x, y, prev, parent);
       if (prev) {
         prev.next = getFirstTextToken(result.tokens);
       }
       prev = getLastTextToken(result.tokens);
       tokens.push(...result.tokens);
-      if (x + result.maxX > maxX) {
-        maxX = x + result.maxX;
+      if (result.maxX > maxX) {
+        maxX = result.maxX;
+      }
+      if (result.maxY > maxY) {
+        maxY = result.maxY;
       }
       x = result.lastX;
-      y += result.maxY;
+      y = result.lastY;
+    }
+    if (x > maxX) {
+      maxX = x;
+    }
+    if (y > maxY) {
+      maxY = y;
     }
   }
   return {
     tokens,
     maxX,
-    maxY: y,
+    maxY,
     lastX: x,
+    lastY: y,
   };
 };
 
