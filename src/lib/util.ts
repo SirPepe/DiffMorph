@@ -35,8 +35,8 @@ export function isBox<T>(x: any): x is Box<T> {
   return false;
 }
 
-export function isMetaToken(x: any): x is Decoration {
-  if (typeof x === "object" && x.kind === "META") {
+export function isDecoration(x: any): x is Decoration {
+  if (typeof x === "object" && x.kind === "DECO") {
     return true;
   }
   return false;
@@ -46,7 +46,7 @@ export function getFirstTextToken<T>(
   tokens: (T | Decoration | Box<T | Decoration>)[]
 ): T | undefined {
   for (const token of tokens) {
-    if (isMetaToken(token)) {
+    if (isDecoration(token)) {
       continue;
     }
     if (isBox(token)) {
@@ -66,7 +66,7 @@ export function getLastTextToken<T>(
 ): T | undefined {
   for (let i = tokens.length - 1; i >= 0; i--) {
     const token = tokens[i];
-    if (isMetaToken(token)) {
+    if (isDecoration(token)) {
       continue;
     }
     if (isBox(token)) {
