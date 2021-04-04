@@ -447,7 +447,7 @@ describe("processing code from a DOM source", () => {
     ]);
   });
 
-  test.skip("it handles decorations in boxes inside boxes", () => {
+  test("it handles decorations in boxes inside boxes", () => {
     container.innerHTML =
       "const <span foo='bar'>a = <b><mark>()</mark></b> => 42</span>";
     const root = processCode(container);
@@ -455,6 +455,7 @@ describe("processing code from a DOM source", () => {
     const outerBox = root.tokens[1] as Box<TextToken>;
     const innerBox = outerBox.tokens[2] as Box<TextToken>;
     expect(firstToken).toEqual({
+      kind: "TEXT",
       x: 0,
       y: 0,
       text: "const",
@@ -464,7 +465,11 @@ describe("processing code from a DOM source", () => {
       parent: root,
     });
     expect(outerBox).toEqual({
-      type: "BOX",
+      kind: "BOX",
+      x: 6,
+      y: 0,
+      width: 12,
+      height: 1,
       language: root.language,
       data: {
         tagName: "span",
@@ -474,17 +479,22 @@ describe("processing code from a DOM source", () => {
       id: expect.any(String),
       tokens: [
         /* eslint-disable */
-        { x: 6, y: 0, text: "a", size: 1, prev: firstToken, next: outerBox.tokens[1], parent: outerBox },
-        { x: 8, y: 0, text: "=", size: 1, prev: outerBox.tokens[0], next: innerBox.tokens[0], parent: outerBox },
+        { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: firstToken, next: outerBox.tokens[1], parent: outerBox },
+        { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: outerBox.tokens[0], next: innerBox.tokens[0], parent: outerBox },
         innerBox,
-        { x: 13, y: 0, text: "=", size: 1, prev: innerBox.tokens[1], next: outerBox.tokens[4], parent: outerBox },
-        { x: 14, y: 0, text: ">", size: 1, prev: outerBox.tokens[3], next: outerBox.tokens[5], parent: outerBox },
-        { x: 16, y: 0, text: "42", size: 2, prev: outerBox.tokens[4], next: undefined, parent: outerBox },
+        { kind: "TEXT", x: 7, y: 0, text: "=", size: 1, prev: innerBox.tokens[1], next: outerBox.tokens[4], parent: outerBox },
+        { kind: "TEXT", x: 8, y: 0, text: ">", size: 1, prev: outerBox.tokens[3], next: outerBox.tokens[5], parent: outerBox },
+        { kind: "TEXT", x: 10, y: 0, text: "42", size: 2, prev: outerBox.tokens[4], next: undefined, parent: outerBox },
         /* eslint-enable */
       ],
+      parent: root,
     });
     expect(innerBox).toEqual({
-      type: "BOX",
+      kind: "BOX",
+      x: 4,
+      y: 0,
+      width: 2,
+      height: 1,
       language: root.language,
       data: {
         tagName: "b",
@@ -494,21 +504,24 @@ describe("processing code from a DOM source", () => {
       id: expect.any(String),
       tokens: [
         /* eslint-disable */
-        { x: 10, y: 0, text: "(", size: 1, prev: outerBox.tokens[1], next: innerBox.tokens[1], parent: innerBox },
-        { x: 11, y: 0, text: ")", size: 1, prev: innerBox.tokens[0], next: outerBox.tokens[3], parent: innerBox },
+        { kind: "TEXT", x: 0, y: 0, text: "(", size: 1, prev: outerBox.tokens[1], next: innerBox.tokens[1], parent: innerBox },
+        { kind: "TEXT", x: 1, y: 0, text: ")", size: 1, prev: innerBox.tokens[0], next: outerBox.tokens[3], parent: innerBox },
         {
-          type: "HIGHLIGHT",
+          kind: "DECO",
+          x: 0,
+          y: 0,
           data: {
             tagName: "mark",
             attributes: [],
           },
           id: expect.any(String),
           hash: expect.any(String),
-          start: [10, 0],
-          end: [12, 0],
+          endX: 2,
+          endY: 0,
         },
         /* eslint-enable */
       ],
+      parent: outerBox,
     });
   });
 });
