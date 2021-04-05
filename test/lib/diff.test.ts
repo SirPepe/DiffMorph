@@ -1,7 +1,14 @@
 import { diff, diffBoxes } from "../../src/lib/diff";
 import { stubBox } from "../helpers";
 
-describe("diffing lines", () => {
+describe("diffing boxes", () => {
+  test("diffing empty boxes that don't change", () => {
+    const actual = diffBoxes(stubBox({ x: 0, y: 0 }), stubBox({ x: 0, y: 0 }));
+    expect(actual).toEqual({ root: undefined, items: [] });
+  });
+});
+
+/*describe("diffing lines", () => {
   test("diffing lines (addition at end)", () => {
     const a = [
       { x: 0, y: 0, hash: "a0" },
@@ -268,4 +275,4 @@ describe("diff across multiple frames", () => {
       { type: "DEL", item: c[3] },
     ]);
   });
-});
+});*/
