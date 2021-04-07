@@ -1,12 +1,12 @@
-import { diffAll } from "../../src/lib/diff";
+import { diff } from "../../src/lib/diff";
 import { languageDefinition } from "../../src/languages/none";
 import { optimize } from "../../src/lib/optimize";
-import { type } from "../helpers";
-const tokenize = type(languageDefinition);
+import { lang } from "../helpers";
+const tokenize = lang(languageDefinition);
 
 describe("Optimizer", () => {
   test("It turns a single addition/deletion into a movement", () => {
-    const res = optimize(diffAll([tokenize(".."), tokenize(". .")]));
+    const res = optimize(diff([tokenize(".."), tokenize(". .")]));
     expect(res.length).toBe(2);
     expect(res[0].map((op) => op.type)).toEqual(["ADD", "ADD"]);
     expect(res[1].length).toBe(1);
@@ -17,7 +17,7 @@ describe("Optimizer", () => {
   });
 
   test("It turns two additions/deletions into movements", () => {
-    const res = optimize(diffAll([tokenize(".."), tokenize("  .  .")]));
+    const res = optimize(diff([tokenize(".."), tokenize("  .  .")]));
     expect(res.length).toBe(2);
     expect(res[0].map((op) => op.type)).toEqual(["ADD", "ADD"]);
     expect(res[1].map((op) => op.type)).toEqual(["MOV", "MOV"]);
@@ -32,7 +32,7 @@ describe("Optimizer", () => {
   });
 
   test("Handles extra additions on the same line", () => {
-    const res = optimize(diffAll([tokenize(".."), tokenize("  ..  .")]));
+    const res = optimize(diff([tokenize(".."), tokenize("  ..  .")]));
     expect(res.length).toBe(2);
     expect(res[0].map((op) => op.type)).toEqual(["ADD", "ADD"]);
     expect(res[1].map((op) => op.type)).toEqual(["ADD", "MOV", "MOV"]);
@@ -48,7 +48,7 @@ describe("Optimizer", () => {
   });
 
   test("Handles extra additions on a new line", () => {
-    const res = optimize(diffAll([tokenize(".."), tokenize("  .. \n.")]));
+    const res = optimize(diff([tokenize(".."), tokenize("  .. \n.")]));
     expect(res.length).toBe(2);
     expect(res[0].map((op) => op.type)).toEqual(["ADD", "ADD"]);
     expect(res[1].map((op) => op.type)).toEqual(["MOV", "MOV", "ADD"]);

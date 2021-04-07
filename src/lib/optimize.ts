@@ -2,42 +2,52 @@
 // into movements. There is no real high-level concept to this - it's just a
 // bunch of heuristics applied in a brute-force manner.
 
-import { ADD, DEL, MOV, DiffOp } from "./diff";
+import { Box } from "../types";
+import { DiffTree, Diffable, MOV, ADD, DEL, DiffOp } from "./diff";
 import { findMin } from "./util";
-import { TokenLike } from "../types";
 
-export function optimize<T extends TokenLike>(
-  diffs: DiffOp<T>[][]
-): DiffOp<T>[][] {
+export type Optimizable = Diffable & {
+  parent: Box<any>;
+  size: number;
+};
+
+export function optimize<T extends Optimizable>(
+  diffs: DiffTree<T>[]
+): DiffTree<T>[] {
   return diffs.map(optimizeFrame);
 }
 
-function optimizeFrame<T extends TokenLike>(diff: DiffOp<T>[]): DiffOp<T>[] {
+function optimizeFrame<T extends Optimizable>(diff: DiffTree<T>): DiffTree<T> {
+  const trees: DiffTree<T>[] = [];
   const byHash: Record<string, [Set<MOV<T>>, Set<ADD<T>>, Set<DEL<T>>]> = {};
-  for (const op of diff) {
-    if (!byHash[op.item.hash]) {
-      byHash[op.item.hash] = [new Set(), new Set(), new Set()];
-    }
-    if (op.type == "MOV") {
-      byHash[op.item.hash][0].add(op);
-    } else if (op.type == "ADD") {
-      byHash[op.item.hash][1].add(op);
-    } else if (op.type === "DEL") {
-      byHash[op.item.hash][2].add(op);
+  for (const operation of diff.items) {
+    if (operation.type === "TREE") {
+      trees.push(optimizeFrame(operation));
+    } else {
+      if (!byHash[operation.item.hash]) {
+        byHash[operation.item.hash] = [new Set(), new Set(), new Set()];
+      }
+      if (operation.type == "MOV") {
+        byHash[operation.item.hash][0].add(operation);
+      } else if (operation.type == "ADD") {
+        byHash[operation.item.hash][1].add(operation);
+      } else if (operation.type === "DEL") {
+        byHash[operation.item.hash][2].add(operation);
+      }
     }
   }
-  const result: DiffOp<T>[] = [];
+  const result: DiffTree<T> = { ...diff, items: [] };
   for (const [MOV, ADD, DEL] of Object.values(byHash)) {
     if (ADD.size === 0 || DEL.size === 0) {
-      result.push(...MOV, ...ADD, ...DEL);
+      result.items.push(...MOV, ...ADD, ...DEL);
     } else {
-      result.push(...MOV, ...resolveOptimizations(ADD, DEL));
+      result.items.push(...MOV, ...resolveOptimizations(ADD, DEL));
     }
   }
   return result;
 }
 
-function resolveOptimizations<T extends TokenLike>(
+function resolveOptimizations<T extends Optimizable>(
   additions: Set<ADD<T>>,
   deletions: Set<DEL<T>>
 ): DiffOp<T>[] {
@@ -48,7 +58,7 @@ function resolveOptimizations<T extends TokenLike>(
       movements.push({
         type: "MOV",
         item: alternative.item,
-        ref: deletion.item,
+        from: deletion.item,
       });
       additions.delete(alternative);
       deletions.delete(deletion);
@@ -68,26 +78,14 @@ type Offset = {
   right: number;
 };
 
-function getOffset(item: TokenLike): Offset {
+function getOffset(item: Optimizable): Offset {
   const { x: left, y: top, size } = item;
-  let bottom: number | undefined = undefined;
-  let right: number | undefined = undefined;
-  while (true) {
-    if (!item.next) {
-      bottom = item.y - top;
-      break;
-    }
-    if (typeof bottom === "undefined" && item.next.y === top + 1) {
-      right = item.x + item.size - left + size;
-    }
-    item = item.next;
-  }
-  bottom = bottom || 0;
-  right = right || 0;
+  const bottom = item.parent.height - 1 - top;
+  const right = item.parent.width - size - left;
   return { top, left, bottom, right };
 }
 
-function pickAlternative<T extends TokenLike>(
+function pickAlternative<T extends Optimizable>(
   deletion: DEL<T>,
   additions: Set<ADD<T>>
 ): ADD<T> | null {
@@ -95,7 +93,7 @@ function pickAlternative<T extends TokenLike>(
   if (additions.size === 1) {
     return Array.from(additions)[0];
   }
-  // Setup and pre-calulate data for picking the best alternative
+  // Setup and pre-calculate data for picking the best alternative
   const offset = getOffset(deletion.item);
   const sameLineCandidates = new Map<ADD<T>, Offset>();
   const allCandidates = new Map<ADD<T>, Offset>();

@@ -7,48 +7,46 @@ import { groupBy, mapBy } from "@sirpepe/shed";
 import { Box, Decoration } from "../types";
 import { createIdGenerator, isBox, isDecoration } from "./util";
 
-// The minimal text token info that diffing functions require to work.
-type DiffTextToken = {
+// The minimal token info that diffing functions require to work.
+export type Diffable = {
   x: number;
   y: number;
   hash: string;
 };
 
 // The minimal decoration info that diffing functions require to work.
-type DiffDecoToken = {
+type DiffableDecoration = Diffable & {
   readonly kind: "DECO";
-  x: number;
-  y: number;
   endX: number;
   endY: number;
-  hash: string;
 };
 
 // Self-explanatory operations for all kinds of tokens
-type ADD<T> = {
+export type ADD<T> = {
   readonly type: "ADD";
   item: T;
 };
 
-type DEL<T> = {
+export type DEL<T> = {
   readonly type: "DEL";
   item: T;
 };
 
-type MOV<T> = {
+export type MOV<T> = {
   readonly type: "MOV";
   item: T;
   from: T; // reference to the item on it's previous position
 };
 
-type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
+export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
 
-type DiffTree<T> = {
+export type DiffTree<T> = {
+  type: "TREE";
   root: DiffOp<Box<T>> | undefined;
   items: (DiffOp<T> | DiffTree<T>)[];
 };
 
-type Line<T extends DiffTextToken> = {
+type Line<T extends Diffable> = {
   readonly x: number;
   readonly y: number;
   readonly id: string;
@@ -60,7 +58,7 @@ type Line<T extends DiffTextToken> = {
 // their *relative* distance on the x axis. The allover level of indentation is
 // not reflected in the hash - two lines containing the same characters the same
 // distance apart get the same hash, no matter the indentation
-const hashLine = (items: DiffTextToken[]): string => {
+const hashLine = (items: Diffable[]): string => {
   const hashes = items.map((item, idx) => {
     const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
     return item.hash + String(xDelta);
@@ -69,7 +67,7 @@ const hashLine = (items: DiffTextToken[]): string => {
 };
 
 // Organize tokens into lines
-const asLines = <T extends DiffTextToken>(tokens: T[]): Line<T>[] => {
+const asLines = <T extends Diffable>(tokens: T[]): Line<T>[] => {
   const nextId = createIdGenerator();
   const byLine = groupBy(tokens, "y");
   return Array.from(byLine, ([y, items]) => {
@@ -80,7 +78,7 @@ const asLines = <T extends DiffTextToken>(tokens: T[]): Line<T>[] => {
   });
 };
 
-const diffLines = <T extends DiffTextToken>(
+const diffLines = <T extends Diffable>(
   from: Line<T>[],
   to: Line<T>[]
 ): {
@@ -133,10 +131,7 @@ const diffLines = <T extends DiffTextToken>(
   };
 };
 
-const diffTokens = <T extends DiffTextToken>(
-  from: T[],
-  to: T[]
-): DiffOp<T>[] => {
+const diffTokens = <T extends Diffable>(from: T[], to: T[]): DiffOp<T>[] => {
   const result: DiffOp<T>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
@@ -192,14 +187,14 @@ function diffBox<T>(
   return undefined;
 }
 
-function diffDecorations<T extends DiffDecoToken>(
+function diffDecorations<T extends DiffableDecoration>(
   from: T | undefined,
   to: T | undefined
 ): DiffOp<T> {
   throw new Error("Can't diff two non-existing decorations!");
 }
 
-function partitionTokens<T extends DiffTextToken, U extends DiffDecoToken>(
+function partitionTokens<T extends Diffable, U extends DiffableDecoration>(
   source: Box<T | U> | undefined
 ): [Box<T | U>[], T[], U[]] {
   const boxes: Box<T | U>[] = [];
@@ -221,7 +216,7 @@ function partitionTokens<T extends DiffTextToken, U extends DiffDecoToken>(
 }
 
 // Only exported for unit tests
-export function diffBoxes<T extends DiffTextToken, U extends DiffDecoToken>(
+export function diffBoxes<T extends Diffable, U extends DiffableDecoration>(
   from: Box<T | U> | undefined,
   to: Box<T | U> | undefined
 ): DiffTree<T | U> {
@@ -257,10 +252,10 @@ export function diffBoxes<T extends DiffTextToken, U extends DiffDecoToken>(
     decoOps.push(diffDecorations<U>(fromHighlight, toHighlight));
   }*/
   const items = [...textOps, ...decoOps, ...boxOps];
-  return { root, items };
+  return { type: "TREE", root, items };
 }
 
-export const diff = <T extends DiffTextToken, U extends DiffDecoToken>(
+export const diff = <T extends Diffable, U extends DiffableDecoration>(
   roots: Box<T | U>[]
 ): DiffTree<T | U>[] => {
   if (roots.length < 2) {
