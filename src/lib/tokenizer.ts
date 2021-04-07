@@ -34,9 +34,7 @@ function splitText(text: string): string[] {
   return tokens;
 }
 
-function measureWhitespace (
-  text: string
-): { breaks: number; length: number } {
+function measureWhitespace(text: string): { breaks: number; length: number } {
   const lines = text.split(LINE_BREAK_RE);
   return {
     breaks: lines.length - 1,
@@ -52,7 +50,7 @@ type TokenizerResult<T> = {
   lastY: number; // final y offsets when done tokenizing
 };
 
-function tokenizeText (
+function tokenizeText(
   text: string,
   x: number,
   y: number,
@@ -105,7 +103,7 @@ function tokenizeText (
     lastX: x,
     lastY: y,
   };
-};
+}
 
 function tokenizeContainer(
   container: CodeContainer,
@@ -127,14 +125,7 @@ function tokenizeContainer(
     tokens: [], // will be updated in a few lines
     parent,
   };
-  const result = tokenizeCodes(
-    container.content,
-    0,
-    0,
-    x,
-    prev,
-    box,
-  );
+  const result = tokenizeCodes(container.content, 0, 0, x, prev, box);
   box.width = result.maxX;
   box.height = result.maxY + 1;
   box.tokens = result.tokens;
@@ -145,7 +136,7 @@ function tokenizeContainer(
     lastX: result.lastX + x,
     lastY: result.lastY + y,
   };
-};
+}
 
 function tokenizeDecoration(
   container: CodeContainer,
@@ -153,20 +144,19 @@ function tokenizeDecoration(
   y: number,
   prev: TextToken | undefined,
   parent: Box<TextToken | Decoration>
-): TokenizerResult<(TextToken | Decoration | Box<TextToken | Decoration>)> {
+): TokenizerResult<TextToken | Decoration | Box<TextToken | Decoration>> {
   const { tokens, maxX, maxY, lastX, lastY } = tokenizeCodes(
     container.content,
     x,
     y,
     0,
     prev,
-    parent,
+    parent
   );
   const decoration: Decoration = {
     x,
     y,
     kind: "DECO",
-    id: container.id,
     hash: container.hash,
     data: container.data,
     endX: lastX,
@@ -178,8 +168,8 @@ function tokenizeDecoration(
     lastX,
     lastY,
     tokens: [...tokens, decoration],
-  }
-};
+  };
+}
 
 function tokenizeCodes(
   codes: Code[],
@@ -187,7 +177,7 @@ function tokenizeCodes(
   y: number,
   firstLineIndent: number,
   prev: TextToken | undefined,
-  parent: Box<TextToken | Decoration>,
+  parent: Box<TextToken | Decoration>
 ): TokenizerResult<TextToken | Decoration | Box<TextToken | Decoration>> {
   let maxX = x;
   let maxY = x;
@@ -209,7 +199,7 @@ function tokenizeCodes(
       x = result.lastX;
       y = result.lastY;
     } else {
-      const result = (code.isDecoration)
+      const result = code.isDecoration
         ? tokenizeDecoration(code, x, y, prev, parent)
         : tokenizeContainer(code, x, y, prev, parent);
       if (prev) {
@@ -240,7 +230,7 @@ function tokenizeCodes(
     lastX: x,
     lastY: y,
   };
-};
+}
 
 export function tokenize(root: CodeContainer): Box<TextToken | Decoration> {
   return tokenizeContainer(root, 0, 0, undefined, undefined).tokens[0];

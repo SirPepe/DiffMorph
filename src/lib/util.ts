@@ -3,31 +3,6 @@ import { Box, Decoration } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
-export const first = <T extends { prev: T | undefined }>(x: T): T =>
-  x.prev ? first(x.prev) : x;
-
-export const prev = <T extends { prev: T | undefined }>(
-  x: T,
-  steps: number
-): T | undefined => {
-  while (steps > 0) {
-    if (x.prev) {
-      x = x.prev;
-      steps--;
-    } else {
-      return undefined;
-    }
-  }
-  return x.prev;
-};
-
-export const last = <T extends { next: T | undefined }>(x: T): T =>
-  x.next ? last(x.next) : x;
-
-export function fail(reason?: string): never {
-  throw new Error(reason);
-}
-
 export function isBox<T>(x: any): x is Box<T> {
   if (typeof x === "object" && x.kind === "BOX") {
     return true;
@@ -59,7 +34,7 @@ export function getFirstTextToken<T>(
     }
     return token;
   }
-};
+}
 
 export function getLastTextToken<T>(
   tokens: (T | Decoration | Box<T | Decoration>)[]
@@ -113,19 +88,17 @@ type PositionedToken = {
   parent: Box<any> | undefined;
 };
 
-function absoluteCoordinates(
-  token: PositionedToken
-): { x: number, y: number; } {
+function absoluteCoordinates(token: PositionedToken): { x: number; y: number } {
   if (!token.parent) {
     return {
       x: token.x,
-      y: token.y
+      y: token.y,
     };
   }
   const { x, y } = absoluteCoordinates(token.parent);
   return {
     x: token.x + x,
-    y: token.y + y
+    y: token.y + y,
   };
 }
 
@@ -136,9 +109,10 @@ export function isAdjacent(
   if (!a || !b) {
     return false;
   }
-  const [aCoords, bCoords] = (a.parent === b.parent)
-    ? [{ x: a.x, y: a.y }, { x: b.x, y: b.y }]
-    : [absoluteCoordinates(a), absoluteCoordinates(b)];
+  const aCoords =
+    a.parent === b.parent ? { x: a.x, y: a.y } : absoluteCoordinates(a);
+  const bCoords =
+    a.parent === b.parent ? { x: b.x, y: b.y } : absoluteCoordinates(b);
   if (aCoords.y !== bCoords.y) {
     return false;
   }

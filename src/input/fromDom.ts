@@ -27,7 +27,7 @@ function isHTMLElement(arg: any): arg is HTMLElement {
   );
 }
 
-function isText (arg: any): arg is Text {
+function isText(arg: any): arg is Text {
   if (!arg) {
     return false;
   }
@@ -46,7 +46,7 @@ function getAttributes(element: Element): [string, string][] {
     attr.name,
     attr.value,
   ]);
-};
+}
 
 function getLanguage(element: Element): string | undefined {
   const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
@@ -85,9 +85,7 @@ function extractCode(source: Element): CodeContainer {
 }
 
 // Only exported for unit testing code extraction
-export function processCode(
-  source: Element
-): Box<TextToken | Decoration> {
+export function processCode(source: Element): Box<TextToken | Decoration> {
   return tokenize(extractCode(source));
 };
 

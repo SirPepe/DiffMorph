@@ -1,11 +1,19 @@
 import { applyLanguage } from "../src/lib/language";
 import { tokenize } from "../src/lib/tokenizer";
 import { flattenTokens, getFirstTextToken } from "../src/lib/util";
-import { Box, Code, Decoration, LanguageDefinition, TypedToken } from "../src/types";
+import {
+  Box,
+  Code,
+  Decoration,
+  LanguageDefinition,
+  TypedToken,
+} from "../src/types";
 
-type BoxArgs <T> = {
-  x: number;
-  y: number;
+type BoxArgs<T> = {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
   tokens?: (T | BoxArgs<T>)[];
   id?: string;
   hash?: string;
@@ -26,6 +34,8 @@ export function stubBox<T>(
   const {
     x = 0,
     y = 0,
+    width = 0,
+    height = 0,
     id = nested ? `nested-${nested}` : "root",
     hash = nested ? `nested-${nested}` : "root",
     language = "none",
@@ -38,8 +48,8 @@ export function stubBox<T>(
     y,
     id,
     hash,
-    width: 0,
-    height: 0,
+    width,
+    height,
     language,
     data,
     tokens: [],

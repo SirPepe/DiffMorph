@@ -48,7 +48,7 @@ function extractCode(source: InputContainer): CodeContainer {
 
 // Only exported for unit testing code extraction
 export function processCode(
-  source: InputContainer,
+  source: InputContainer
 ): Box<TextToken | Decoration> {
   return tokenize(extractCode(source));
 }

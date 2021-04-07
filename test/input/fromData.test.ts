@@ -54,7 +54,7 @@ describe("processing code from a data source", () => {
       width: 13,
       height: 1,
       tokens: expect.any(Array),
-      parent: undefined
+      parent: undefined,
     });
     const tokens = root.tokens;
     expect(tokens).toEqual([
@@ -138,7 +138,7 @@ describe("processing code from a data source", () => {
       size: 5,
       prev: undefined,
       next: box.tokens[0],
-      parent: root
+      parent: root,
     });
     expect(box).toEqual({
       kind: "BOX",
@@ -173,7 +173,7 @@ describe("processing code from a data source", () => {
           isDecoration: false,
           language: undefined,
         },
-        " = 42;"
+        " = 42;",
       ],
       id: "root",
       isDecoration: false,
@@ -215,7 +215,7 @@ describe("processing code from a data source", () => {
           prev: tokens[0],
           next: tokens[2],
           parent: box,
-        }
+        },
       ],
       parent: root,
     });
@@ -263,8 +263,10 @@ describe("processing code from a data source", () => {
       content: [
         "const \n",
         {
-          content: [`a =
-  42;`],
+          content: [
+            `a =
+  42;`,
+          ],
           id: "box",
           isDecoration: false,
           language: undefined,
@@ -292,7 +294,7 @@ describe("processing code from a data source", () => {
       size: 5,
       prev: undefined,
       next: box.tokens[0],
-      parent: root
+      parent: root,
     });
     expect(box).toMatchObject({
       x: 0,
@@ -315,9 +317,11 @@ describe("processing code from a data source", () => {
       content: [
         "const ",
         {
-          content: [`a = [
+          content: [
+            `a = [
   42
-]`],
+]`,
+          ],
           id: "box",
           isDecoration: false,
           language: undefined,
@@ -347,7 +351,7 @@ describe("processing code from a data source", () => {
       size: 5,
       prev: undefined,
       next: box.tokens[0],
-      parent: root
+      parent: root,
     });
     expect(box).toMatchObject({
       x: 6,
@@ -372,7 +376,7 @@ describe("processing code from a data source", () => {
       size: 1,
       prev: box.tokens[4],
       next: undefined,
-      parent: root
+      parent: root,
     });
   });
 
@@ -567,6 +571,6 @@ describe("processing code from a data source", () => {
       id: "red0",
       hash: "red",
       data: {},
-    },)
+    });
   });
 });
