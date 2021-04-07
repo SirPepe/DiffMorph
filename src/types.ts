@@ -65,7 +65,6 @@ export type Box<Content> = Token & {
 // Represents a marker token that takes up no space and contains no other
 // elements, but has set dimensions over a number of lines.
 export type Decoration = Token & {
-  id: string; // hash plus count for unique identification
   readonly kind: "DECO";
   data: Record<string, any>; // tag name and attributes for DOM sources
   endX: number;
