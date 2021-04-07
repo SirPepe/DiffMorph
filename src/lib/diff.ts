@@ -134,7 +134,10 @@ const diffLines = <T extends DiffTextToken>(
   };
 };
 
-const diffTokens = <T extends DiffTextToken>(from: T[], to: T[]): DiffOp<T>[] => {
+const diffTokens = <T extends DiffTextToken>(
+  from: T[],
+  to: T[]
+): DiffOp<T>[] => {
   const result: DiffOp<T>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
@@ -164,7 +167,7 @@ function boxMeasurementsEql(a: Box<any>, b: Box<any>): boolean {
   return true;
 }
 
-function diffBox <T>(
+function diffBox<T>(
   from: Box<T> | undefined,
   to: Box<T> | undefined
 ): DiffOp<Box<T>> | undefined {
@@ -188,14 +191,14 @@ function diffBox <T>(
     };
   }
   return undefined;
-};
+}
 
-function diffDecorations <T extends DiffDecoToken>(
+function diffDecorations<T extends DiffDecoToken>(
   from: T | undefined,
   to: T | undefined
 ): DiffOp<T> {
   throw new Error("Can't diff two non-existing decorations!");
-};
+}
 
 function partitionTokens<T extends DiffTextToken, U extends DiffDecoToken>(
   source: Box<T | U> | undefined
@@ -261,7 +264,7 @@ export function diffBoxes<T extends DiffTextToken, U extends DiffDecoToken>(
   }*/
   const items = [...textOps, ...decoOps, ...boxOps];
   return { root, items };
-};
+}
 
 export const diff = <T extends DiffTextToken, U extends DiffDecoToken>(
   roots: Box<T | U>[]
