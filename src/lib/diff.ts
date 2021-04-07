@@ -22,7 +22,6 @@ type DiffDecoToken = {
   endX: number;
   endY: number;
   hash: string;
-  id: string;
 };
 
 // Self-explanatory operations for all kinds of tokens
@@ -230,11 +229,6 @@ export function diffBoxes<T extends DiffTextToken, U extends DiffDecoToken>(
     throw new Error("Refusing to diff two undefined frames!");
   }
   const root = diffBox<T | U>(from as any, to as any);
-  // No need to do more work; everything inside the box in question gets added
-  // or removed as well.
-  if (root && (root.type === "ADD" || root.type === "DEL")) {
-    return { root, items: [] };
-  }
   const textOps: DiffOp<T>[] = [];
   const decoOps: DiffOp<U>[] = [];
   const boxOps: DiffTree<T | U>[] = [];
