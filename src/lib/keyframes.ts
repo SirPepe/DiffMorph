@@ -1,8 +1,8 @@
 // Turns diffing operations into rendering information.
 
-import { DiffOp } from "./diff";
+import { DiffOp, DiffTree } from "./diff";
 import { createIdGenerator } from "./util";
-import { Highlight, RenderToken, TypedToken } from "../types";
+import { Decoration, RenderToken, TypedToken } from "../types";
 
 // Manages the available render tokens. The goal is to use as few render tokens
 // as possible, so this class keeps track of which render token is in use by
@@ -37,16 +37,18 @@ class TokenPool {
         list = [];
         this.reserved.set(token.hash, []);
       }
-      const renderToken = {
+      const renderToken: RenderToken = {
+        kind: "RENDER",
         x: token.x,
         y: token.y,
         text: token.text,
-        size: token.size,
+        width: token.width,
+        height: token.height,
         type: token.type,
         hash: token.hash,
         parent: token.parent,
         id: this.nextId(null, token.hash),
-        visible: true,
+        isVisible: true,
       };
       this.inUse.set(this.hashTypedToken(token), renderToken);
       return renderToken;
@@ -93,32 +95,33 @@ export type Keyframe = {
   height: number;
 };
 
-export function toKeyframes(
-  diffs: DiffOp<TypedToken>[][],
-  highlights: Highlight[][]
-): Keyframe[] {
+export function toKeyframes(diffs: DiffTree<TypedToken>[]): Keyframe[] {
   const tokenPool = new TokenPool();
   const keyframes: Keyframe[] = [];
   for (let i = 0; i < diffs.length; i++) {
     const tokens = new Map(keyframes[i - 1]?.tokens || []);
     let width = 0;
     let height = 0;
-    for (const op of diffs[i]) {
-      if (op.type === "ADD") {
-        const token = tokenPool.require(op.item);
-        tokens.set(token.id, token);
-      } else if (op.type === "DEL") {
-        const id = tokenPool.free(op.item);
-        tokens.delete(id);
-      } else if (op.type === "MOV") {
-        const token = tokenPool.reuse(op.ref, op.item);
-        tokens.set(token.id, token);
-      }
-      if (op.item.x > width) {
-        width = op.item.x;
-      }
-      if (op.item.y > height) {
-        height = op.item.y;
+    for (const item of diffs[i].items) {
+      if (item.type === "TREE") {
+        // TODO
+      } else {
+        if (item.type === "ADD") {
+          const token = tokenPool.require(item.item);
+          tokens.set(token.id, token);
+        } else if (item.type === "DEL") {
+          const id = tokenPool.free(item.item);
+          tokens.delete(id);
+        } else if (item.type === "MOV") {
+          const token = tokenPool.reuse(item.from, item.item);
+          tokens.set(token.id, token);
+        }
+        if (item.item.x > width) {
+          width = item.item.x;
+        }
+        if (item.item.y > height) {
+          height = item.item.y;
+        }
       }
     }
     // Width and height are at this point the largest _offsets_, not dimensions,

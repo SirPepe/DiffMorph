@@ -12,9 +12,7 @@ type Data = {
   highlights: [];
 };
 
-export function toData(
-  keyframes: Keyframe[]
-): Data {
+export function toData(keyframes: Keyframe[]): Data {
   const tokenData = new Map<string, TokenData>();
   for (const { tokens } of keyframes) {
     for (const [id, token] of tokens) {

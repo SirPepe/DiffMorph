@@ -3,15 +3,16 @@ import { applyLanguage } from "../../src/lib/language";
 import { tokenize } from "../../src/lib/tokenizer";
 import { Box } from "../../src/types";
 
-const applyJSON = (input: Box<any>) => applyLanguage(
-  {
-    name: languageDefinition.name,
-    definitionFactory: () =>
-      languageDefinition.definitionFactory({ comments: false }),
-    postprocessor: languageDefinition.postprocessor,
-  },
-  input
-);
+const applyJSON = (input: Box<any>) =>
+  applyLanguage(
+    {
+      name: languageDefinition.name,
+      definitionFactory: () =>
+        languageDefinition.definitionFactory({ comments: false }),
+      postprocessor: languageDefinition.postprocessor,
+    },
+    input
+  );
 
 describe("In-place modifications", () => {
   test("It modifies the tokens in-place", () => {
@@ -26,28 +27,35 @@ describe("In-place modifications", () => {
     const output = applyJSON(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
-      type: "BOX",
+      kind: "BOX",
+      x: 0,
+      y: 0,
+      width: 13,
+      height: 1,
       id: "root",
       hash: "root",
-      language: "json",
       data: {},
+      language: "json",
+      parent: undefined,
       tokens: [
         {
+          kind: "TEXT",
           x: 0,
           y: 0,
+          width: 13,
+          height: 1,
           prev: undefined,
           next: undefined,
           text: '"Hello World"',
-          size: 13,
-          parent: subject,
           type: "string",
           hash: expect.any(String),
+          parent: subject,
         },
       ],
     });
   });
 
-  test("It leaves boxes untouched", () => {
+  test("applying a language leaves boxes untouched", () => {
     const subject = tokenize({
       content: [
         '"Hello',
@@ -71,57 +79,75 @@ describe("In-place modifications", () => {
     expect(output).toBe(subject);
     const nested = output.tokens[1] as Box<any>;
     expect(output).toEqual({
-      type: "BOX",
+      kind: "BOX",
+      x: 0,
+      y: 0,
+      width: 16,
+      height: 1,
       id: "root",
       hash: "root",
-      language: "json",
       data: {},
+      language: "json",
+      parent: undefined,
       tokens: [
         {
+          kind: "TEXT",
           x: 0,
           y: 0,
+          width: 6,
+          height: 1,
           prev: undefined,
           next: nested.tokens[0],
           text: '"Hello',
-          size: 6,
-          parent: output,
           type: "string",
           hash: expect.any(String),
+          parent: output,
         },
         {
-          type: "BOX",
+          kind: "BOX",
+          x: 6,
+          y: 0,
+          width: 4,
+          height: 1,
           id: "nested",
           hash: "nested",
           data: {},
           language: "json",
-          tokens: [{
-            x: 7,
-            y: 0,
-            prev: output.tokens[0],
-            next: output.tokens[2],
-            text: '42',
-            size: 2,
-            parent: nested,
-            type: "string",
-            hash: expect.any(String),
-          }]
+          parent: output,
+          tokens: [
+            {
+              kind: "TEXT",
+              x: 1,
+              y: 0,
+              width: 2,
+              height: 1,
+              prev: output.tokens[0],
+              next: output.tokens[2],
+              text: "42",
+              parent: nested,
+              type: "string",
+              hash: expect.any(String),
+            },
+          ],
         },
         {
-          x: 0,
+          kind: "TEXT",
+          x: 10,
           y: 0,
+          width: 6,
+          height: 1,
           prev: nested.tokens[0],
           next: undefined,
           text: 'World"',
-          size: 6,
-          parent: output,
           type: "string",
           hash: expect.any(String),
+          parent: output,
         },
       ],
     });
   });
 
-  test("It leaves highlights untouched", () => {
+  test("applying a language leaves decorations untouched", () => {
     const subject = tokenize({
       content: [
         '"Hello',
@@ -144,31 +170,40 @@ describe("In-place modifications", () => {
     const output = applyJSON(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
-      type: "BOX",
+      kind: "BOX",
+      x: 0,
+      y: 0,
+      width: 16,
+      height: 1,
       id: "root",
       hash: "root",
-      language: "json",
       data: {},
+      language: "json",
+      parent: undefined,
       tokens: [
         {
+          kind: "TEXT",
           x: 0,
           y: 0,
+          width: 16,
+          height: 1,
           prev: undefined,
           next: undefined,
           text: '"Hello 42 World"',
-          size: 16,
-          parent: expect.any(Object),
           type: "string",
           hash: expect.any(String),
+          parent: output,
         },
         {
-          type: "HIGHLIGHT",
-          id: "highlight",
+          kind: "DECO",
+          x: 6,
+          y: 0,
+          width: 4,
+          height: 1,
           hash: "highlight",
           data: {},
-          start: [6, 0],
-          end: [10, 0],
-        }
+          parent: output,
+        },
       ],
     });
   });
@@ -182,10 +217,8 @@ describe("In-place modifications", () => {
           language: undefined, // should turn into "json"
           isDecoration: false,
           data: {},
-          content: [
-            "null"
-          ],
-        }
+          content: ["null"],
+        },
       ],
       hash: "root",
       id: "root",
@@ -208,10 +241,8 @@ describe("In-place modifications", () => {
           language: "html", // should remain as it is
           isDecoration: false,
           data: {},
-          content: [
-            "null"
-          ],
-        }
+          content: ["null"],
+        },
       ],
       hash: "root",
       id: "root",

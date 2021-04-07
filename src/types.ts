@@ -118,7 +118,7 @@ export type RenderToken = Token & {
   type: string;
   hash: string;
   isVisible: boolean;
-  parent: Box<TypedToken | Decoration<RenderToken>>;
+  parent: Box<TypedToken | Decoration<TypedToken>>;
 };
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;

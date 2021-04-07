@@ -1,13 +1,13 @@
-import { diffAll } from "../../src/lib/diff";
+import { diff } from "../../src/lib/diff";
 import { languageDefinition } from "../../src/languages/json";
 import { toKeyframes } from "../../src/lib/keyframes";
-import { type } from "../helpers";
-const json = type(languageDefinition);
+import { lang } from "../helpers";
+const json = lang(languageDefinition);
 
 describe("Keyframes", () => {
   test("It turns some JSON into keyframes", () => {
-    const diffs = diffAll([json("{}"), json("  {}"), json("    {\n}")]);
-    const keyframes = toKeyframes(diffs, []);
+    const diffs = diff([json("{}"), json("  {}"), json("    {\n}")]);
+    const keyframes = toKeyframes(diffs);
     expect(keyframes.length).toBe(3);
     // All keyframe token ids should be equal
     const aids = Array.from(keyframes[0].tokens.keys());
@@ -24,8 +24,8 @@ describe("Keyframes", () => {
   });
 
   test("does not explode when a line break gets inserted after two identical frames", () => {
-    const diffs = diffAll([json("{}"), json("{}"), json("{\n}")]);
-    const keyframes = toKeyframes(diffs, []);
+    const diffs = diff([json("{}"), json("{}"), json("{\n}")]);
+    const keyframes = toKeyframes(diffs);
     expect(keyframes.length).toBe(3);
   });
 });
