@@ -2,13 +2,12 @@
 // into movements. There is no real high-level concept to this - it's just a
 // bunch of heuristics applied in a brute-force manner.
 
-import { Box } from "../types";
-import { DiffTree, Diffable, MOV, ADD, DEL, DiffOp } from "./diff";
-import { findMin } from "./util";
+import { Box, Token } from "../types";
+import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
+import { findMaxValue, findMin } from "./util";
 
-export type Optimizable = Diffable & {
+export type Optimizable = Token & {
   parent: Box<any>;
-  size: number;
 };
 
 export function optimize<T extends Optimizable>(
@@ -44,9 +43,11 @@ function optimizeFrame<T extends Optimizable>(diff: DiffTree<T>): DiffTree<T> {
       result.items.push(...MOV, ...resolveOptimizations(ADD, DEL));
     }
   }
+  result.items.push(...trees);
   return result;
 }
 
+// Note that additions and deletions get both mutated by this function
 function resolveOptimizations<T extends Optimizable>(
   additions: Set<ADD<T>>,
   deletions: Set<DEL<T>>
@@ -78,11 +79,16 @@ type Offset = {
   right: number;
 };
 
-function getOffset(item: Optimizable): Offset {
-  const { x: left, y: top, size } = item;
-  const bottom = item.parent.height - 1 - top;
-  const right = item.parent.width - size - left;
-  return { top, left, bottom, right };
+function getOffset(
+  item: Optimizable,
+  referenceWidth: number,
+  referenceHeight: number
+): Offset {
+  const { x: left, y: top, width, height } = item;
+  const right = referenceWidth - left - width;
+  const bottom = referenceHeight - top - height;
+  const offset = { top, left, bottom, right };
+  return offset;
 }
 
 function pickAlternative<T extends Optimizable>(
@@ -93,13 +99,23 @@ function pickAlternative<T extends Optimizable>(
   if (additions.size === 1) {
     return Array.from(additions)[0];
   }
-  // Setup and pre-calculate data for picking the best alternative
-  const offset = getOffset(deletion.item);
+  // Setup and pre-calculate data for picking the best alternative. Compute all
+  // offsets based on the largest possible parent box, otherwise right and
+  // bottom offsets may not be comparable.
+  const refWidth = findMaxValue(
+    [deletion, ...additions],
+    ({ item }) => item.parent.width
+  );
+  const refHeight = findMaxValue(
+    [deletion, ...additions],
+    ({ item }) => item.parent.height
+  );
+  const deletionOffset = getOffset(deletion.item, refWidth, refHeight);
   const sameLineCandidates = new Map<ADD<T>, Offset>();
   const allCandidates = new Map<ADD<T>, Offset>();
   for (const addition of additions) {
-    const additionOffset = getOffset(addition.item);
-    if (additionOffset.top === offset.top) {
+    const additionOffset = getOffset(addition.item, refWidth, refHeight);
+    if (additionOffset.top === deletionOffset.top) {
       sameLineCandidates.set(addition, additionOffset);
     }
     allCandidates.set(addition, additionOffset);
@@ -110,21 +126,21 @@ function pickAlternative<T extends Optimizable>(
   }
   // Try to find an alternative with the same offset from right of the same line
   for (const [candidate, { right }] of sameLineCandidates) {
-    if (offset.right === right) {
+    if (deletionOffset.right === right) {
       return candidate;
     }
   }
   // Try to find an alternative that's the closest on the same line
   if (sameLineCandidates.size > 0) {
     const [closest] = findMin(sameLineCandidates, ([, candidateOffset]) => {
-      return Math.abs(candidateOffset.left - offset.left);
+      return Math.abs(candidateOffset.left - deletionOffset.left);
     });
     return closest;
   }
   // Last attempt: take whatever is closest
   return findMin(allCandidates, ([, candidateOffset]) => {
-    const deltaX = Math.abs(candidateOffset.left - offset.left);
-    const deltaY = Math.abs(candidateOffset.top - offset.top);
+    const deltaX = Math.abs(candidateOffset.left - deletionOffset.left);
+    const deltaY = Math.abs(candidateOffset.top - deletionOffset.top);
     return deltaX + deltaY;
   })[0];
 }

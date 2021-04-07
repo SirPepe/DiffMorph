@@ -26,11 +26,11 @@ describe("processing code from a data source", () => {
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, prev: undefined, next: tokens[1], parent: root },
-      { kind: "TEXT", x: 6, y: 0, text: "a", size: 1, prev: tokens[0], next: tokens[2], parent: root },
-      { kind: "TEXT", x: 8, y: 0, text: "=", size: 1, prev: tokens[1], next: tokens[3], parent: root },
-      { kind: "TEXT", x: 10, y: 0, text: "42", size: 2, prev: tokens[2], next: tokens[4], parent: root },
-      { kind: "TEXT", x: 12, y: 0, text: ";", size: 1, prev: tokens[3], next: undefined, parent: root },
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: tokens[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, prev: tokens[0], next: tokens[2], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, prev: tokens[1], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "42", height: 1, width: 2, prev: tokens[2], next: tokens[4], parent: root },
+      { kind: "TEXT", x: 12, y: 0, text: ";", height: 1, width: 1, prev: tokens[3], next: undefined, parent: root },
       /* eslint-enable */
     ]);
   });
@@ -59,11 +59,11 @@ describe("processing code from a data source", () => {
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, prev: undefined, next: tokens[1], parent: root },
-      { kind: "TEXT", x: 6, y: 0, text: "a", size: 1, prev: tokens[0], next: tokens[2], parent: root },
-      { kind: "TEXT", x: 8, y: 0, text: "=", size: 1, prev: tokens[1], next: tokens[3], parent: root },
-      { kind: "TEXT", x: 10, y: 0, text: "42", size: 2, prev: tokens[2], next: tokens[4], parent: root },
-      { kind: "TEXT", x: 12, y: 0, text: ";", size: 1, prev: tokens[3], next: undefined, parent: root },
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: tokens[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, prev: tokens[0], next: tokens[2], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, prev: tokens[1], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "42", height: 1, width: 2, prev: tokens[2], next: tokens[4], parent: root },
+      { kind: "TEXT", x: 12, y: 0, text: ";", height: 1, width: 1, prev: tokens[3], next: undefined, parent: root },
       /* eslint-enable */
     ]);
   });
@@ -89,11 +89,11 @@ describe("processing code from a data source", () => {
     const tokens = root.tokens;
     expect(tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, prev: undefined, next: tokens[1], parent: root },
-      { kind: "TEXT", x: 6, y: 0, text: "a", size: 1, prev: tokens[0], next: tokens[2], parent: root },
-      { kind: "TEXT", x: 2, y: 1, text: "=", size: 1, prev: tokens[1], next: tokens[3], parent: root },
-      { kind: "TEXT", x: 4, y: 2, text: "42", size: 2, prev: tokens[2], next: tokens[4], parent: root },
-      { kind: "TEXT", x: 6, y: 2, text: ";", size: 1, prev: tokens[3], next: undefined, parent: root },
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: tokens[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, prev: tokens[0], next: tokens[2], parent: root },
+      { kind: "TEXT", x: 2, y: 1, text: "=", height: 1, width: 1, prev: tokens[1], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 4, y: 2, text: "42", height: 1, width: 2, prev: tokens[2], next: tokens[4], parent: root },
+      { kind: "TEXT", x: 6, y: 2, text: ";", height: 1, width: 1, prev: tokens[3], next: undefined, parent: root },
       /* eslint-enable */
     ]);
   });
@@ -135,7 +135,8 @@ describe("processing code from a data source", () => {
       x: 0,
       y: 0,
       text: "const",
-      size: 5,
+      width: 5,
+      height: 1,
       prev: undefined,
       next: box.tokens[0],
       parent: root,
@@ -155,10 +156,10 @@ describe("processing code from a data source", () => {
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: txt, next: box.tokens[1], parent: box },
-      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
-      { kind: "TEXT", x: 4, y: 0, text: "42", size: 2, prev: box.tokens[1], next: box.tokens[3], parent: box },
-      { kind: "TEXT", x: 6, y: 0, text: ";", size: 1, prev: box.tokens[2], next: undefined, parent: box },
+      { kind: "TEXT", x: 0, y: 0, text: "a", height: 1, width: 1, prev: txt, next: box.tokens[1], parent: box },
+      { kind: "TEXT", x: 2, y: 0, text: "=", height: 1, width: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
+      { kind: "TEXT", x: 4, y: 0, text: "42", height: 1, width: 2, prev: box.tokens[1], next: box.tokens[3], parent: box },
+      { kind: "TEXT", x: 6, y: 0, text: ";", height: 1, width: 1, prev: box.tokens[2], next: undefined, parent: box },
       /* eslint-enable */
     ]);
   });
@@ -211,7 +212,8 @@ describe("processing code from a data source", () => {
           x: 0,
           y: 0,
           text: "a",
-          size: 1,
+          width: 1,
+          height: 1,
           prev: tokens[0],
           next: tokens[2],
           parent: box,
@@ -221,11 +223,11 @@ describe("processing code from a data source", () => {
     });
     expect(tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, prev: undefined, next: box.tokens[0], parent: root },
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: box.tokens[0], parent: root },
       box,
-      { kind: "TEXT", x: 8, y: 0, text: "=", size: 1, prev: box.tokens[0], next: tokens[3], parent: root },
-      { kind: "TEXT", x: 10, y: 0, text: "42", size: 2, prev: tokens[2], next: tokens[4], parent: root },
-      { kind: "TEXT", x: 12, y: 0, text: ";", size: 1, prev: tokens[3], next: undefined, parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, prev: box.tokens[0], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "42", height: 1, width: 2, prev: tokens[2], next: tokens[4], parent: root },
+      { kind: "TEXT", x: 12, y: 0, text: ";", height: 1, width: 1, prev: tokens[3], next: undefined, parent: root },
       /* eslint-enable */
     ]);
   });
@@ -291,7 +293,8 @@ describe("processing code from a data source", () => {
       x: 0,
       y: 0,
       text: "const",
-      size: 5,
+      width: 5,
+      height: 1,
       prev: undefined,
       next: box.tokens[0],
       parent: root,
@@ -304,10 +307,10 @@ describe("processing code from a data source", () => {
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: txt, next: box.tokens[1], parent: box },
-      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
-      { kind: "TEXT", x: 2, y: 1, text: "42", size: 2, prev: box.tokens[1], next: box.tokens[3], parent: box },
-      { kind: "TEXT", x: 4, y: 1, text: ";", size: 1, prev: box.tokens[2], next: undefined, parent: box },
+      { kind: "TEXT", x: 0, y: 0, text: "a", height: 1, width: 1, prev: txt, next: box.tokens[1], parent: box },
+      { kind: "TEXT", x: 2, y: 0, text: "=", height: 1, width: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
+      { kind: "TEXT", x: 2, y: 1, text: "42", height: 1, width: 2, prev: box.tokens[1], next: box.tokens[3], parent: box },
+      { kind: "TEXT", x: 4, y: 1, text: ";", height: 1, width: 1, prev: box.tokens[2], next: undefined, parent: box },
       /* eslint-enable */
     ]);
   });
@@ -348,7 +351,8 @@ describe("processing code from a data source", () => {
       x: 0,
       y: 0,
       text: "const",
-      size: 5,
+      width: 5,
+      height: 1,
       prev: undefined,
       next: box.tokens[0],
       parent: root,
@@ -361,11 +365,11 @@ describe("processing code from a data source", () => {
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, prev: first, next: box.tokens[1], parent: box },
-      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
-      { kind: "TEXT", x: 4, y: 0, text: "[", size: 1, prev: box.tokens[1], next: box.tokens[3], parent: box },
-      { kind: "TEXT", x: -4, y: 1, text: "42", size: 2, prev: box.tokens[2], next: box.tokens[4], parent: box },
-      { kind: "TEXT", x: -6, y: 2, text: "]", size: 1, prev: box.tokens[3], next: last, parent: box },
+      { kind: "TEXT", x: 0, y: 0, text: "a", height: 1, width: 1, prev: first, next: box.tokens[1], parent: box },
+      { kind: "TEXT", x: 2, y: 0, text: "=", height: 1, width: 1, prev: box.tokens[0], next: box.tokens[2], parent: box },
+      { kind: "TEXT", x: 4, y: 0, text: "[", height: 1, width: 1, prev: box.tokens[1], next: box.tokens[3], parent: box },
+      { kind: "TEXT", x: -4, y: 1, text: "42", height: 1, width: 2, prev: box.tokens[2], next: box.tokens[4], parent: box },
+      { kind: "TEXT", x: -6, y: 2, text: "]", height: 1, width: 1, prev: box.tokens[3], next: last, parent: box },
       /* eslint-enable */
     ]);
     expect(last).toEqual({
@@ -373,7 +377,8 @@ describe("processing code from a data source", () => {
       x: 1,
       y: 2,
       text: ";",
-      size: 1,
+      width: 1,
+      height: 1,
       prev: box.tokens[4],
       next: undefined,
       parent: root,
@@ -420,7 +425,8 @@ describe("processing code from a data source", () => {
       x: 0,
       y: 0,
       text: "const",
-      size: 5,
+      width: 5,
+      height: 1,
       prev: undefined,
       next: box1.tokens[0],
       parent: root,
@@ -434,12 +440,12 @@ describe("processing code from a data source", () => {
     });
     expect(box1.tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "a", size: 1, next: box1.tokens[1], prev: txt, parent: box1, },
-      { kind: "TEXT", x: 2, y: 0, text: "=", size: 1, next: box1.tokens[2], prev: box1.tokens[0], parent: box1, },
-      { kind: "TEXT", x: 4, y: 0, text: "(", size: 1, next: box1.tokens[3], prev: box1.tokens[1], parent: box1, },
-      { kind: "TEXT", x: 5, y: 0, text: ")", size: 1, next: box1.tokens[4], prev: box1.tokens[2], parent: box1, },
-      { kind: "TEXT", x: 7, y: 0, text: "=", size: 1, next: box1.tokens[5], prev: box1.tokens[3], parent: box1, },
-      { kind: "TEXT", x: 8, y: 0, text: ">", size: 1, next: box2.tokens[0], prev: box1.tokens[4], parent: box1, },
+      { kind: "TEXT", x: 0, y: 0, text: "a", height: 1, width: 1, next: box1.tokens[1], prev: txt, parent: box1, },
+      { kind: "TEXT", x: 2, y: 0, text: "=", height: 1, width: 1, next: box1.tokens[2], prev: box1.tokens[0], parent: box1, },
+      { kind: "TEXT", x: 4, y: 0, text: "(", height: 1, width: 1, next: box1.tokens[3], prev: box1.tokens[1], parent: box1, },
+      { kind: "TEXT", x: 5, y: 0, text: ")", height: 1, width: 1, next: box1.tokens[4], prev: box1.tokens[2], parent: box1, },
+      { kind: "TEXT", x: 7, y: 0, text: "=", height: 1, width: 1, next: box1.tokens[5], prev: box1.tokens[3], parent: box1, },
+      { kind: "TEXT", x: 8, y: 0, text: ">", height: 1, width: 1, next: box2.tokens[0], prev: box1.tokens[4], parent: box1, },
       box2,
       /* eslint-enable */
     ]);
@@ -452,11 +458,11 @@ describe("processing code from a data source", () => {
     });
     expect(box2.tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "{", size: 1, next: box2.tokens[1], prev: box1.tokens[5], parent: box2 },
-      { kind: "TEXT", x: 2, y: 0, text: "return", size: 6, next: box2.tokens[2], prev: box2.tokens[0], parent: box2 },
-      { kind: "TEXT", x: 9, y: 0, text: "42", size: 2, next: box2.tokens[3], prev: box2.tokens[1], parent: box2 },
-      { kind: "TEXT", x: 11, y: 0, text: ";", size: 1, next: box2.tokens[4], prev: box2.tokens[2], parent: box2 },
-      { kind: "TEXT", x: 13, y: 0, text: "}", size: 1, next: undefined, prev: box2.tokens[3], parent: box2 },
+      { kind: "TEXT", x: 0, y: 0, text: "{", height: 1, width: 1, next: box2.tokens[1], prev: box1.tokens[5], parent: box2 },
+      { kind: "TEXT", x: 2, y: 0, text: "return", height: 1, width: 6, next: box2.tokens[2], prev: box2.tokens[0], parent: box2 },
+      { kind: "TEXT", x: 9, y: 0, text: "42", height: 1, width: 2, next: box2.tokens[3], prev: box2.tokens[1], parent: box2 },
+      { kind: "TEXT", x: 11, y: 0, text: ";", height: 1, width: 1, next: box2.tokens[4], prev: box2.tokens[2], parent: box2 },
+      { kind: "TEXT", x: 13, y: 0, text: "}", height: 1, width: 1, next: undefined, prev: box2.tokens[3], parent: box2 },
       /* eslint-enable */
     ]);
   });
@@ -516,10 +522,10 @@ describe("processing code from a data source", () => {
             parent: root.tokens[0],
             tokens: [
               /* eslint-disable */
-              { kind: "TEXT", x: 0, y: 0, text: "let", size: 3, next: contentBox.tokens[1], prev: undefined, parent: contentBox },
-              { kind: "TEXT", x: 4, y: 0, text: "x", size: 1, next: contentBox.tokens[2], prev: contentBox.tokens[0], parent: contentBox },
-              { kind: "TEXT", x: 6, y: 0, text: "=", size: 1, next: contentBox.tokens[3], prev: contentBox.tokens[1], parent: contentBox },
-              { kind: "TEXT", x: 8, y: 0, text: "42", size: 2, next: undefined, prev: contentBox.tokens[2], parent: contentBox },
+              { kind: "TEXT", x: 0, y: 0, text: "let", height: 1, width: 3, next: contentBox.tokens[1], prev: undefined, parent: contentBox },
+              { kind: "TEXT", x: 4, y: 0, text: "x", height: 1, width: 1, next: contentBox.tokens[2], prev: contentBox.tokens[0], parent: contentBox },
+              { kind: "TEXT", x: 6, y: 0, text: "=", height: 1, width: 1, next: contentBox.tokens[3], prev: contentBox.tokens[1], parent: contentBox },
+              { kind: "TEXT", x: 8, y: 0, text: "42", height: 1, width: 2, next: undefined, prev: contentBox.tokens[2], parent: contentBox },
               /* eslint-enable */
             ],
           },
@@ -549,28 +555,28 @@ describe("processing code from a data source", () => {
     };
     const root = processCode(rootContainer);
     const tokens = root.tokens;
-    const decoration = root.tokens.pop() as Decoration;
+    const decoration = root.tokens.pop() as Decoration<any>;
     expect(tokens).toEqual([
       /* eslint-disable */
-      { kind: "TEXT", x: 0, y: 0, text: "const", size: 5, next: tokens[1], prev: undefined, parent: root },
-      { kind: "TEXT", x: 6, y: 0, text: "a", size: 1, next: tokens[2], prev: tokens[0], parent: root },
-      { kind: "TEXT", x: 8, y: 0, text: "=", size: 1, next: tokens[3], prev: tokens[1], parent: root },
-      { kind: "TEXT", x: 10, y: 0, text: "(", size: 1, next: tokens[4], prev: tokens[2], parent: root },
-      { kind: "TEXT", x: 11, y: 0, text: ")", size: 1, next: tokens[5], prev: tokens[3], parent: root },
-      { kind: "TEXT", x: 13, y: 0, text: "=", size: 1, next: tokens[6], prev: tokens[4], parent: root },
-      { kind: "TEXT", x: 14, y: 0, text: ">", size: 1, next: tokens[7], prev: tokens[5], parent: root },
-      { kind: "TEXT", x: 16, y: 0, text: "42", size: 2, next: undefined, prev: tokens[6], parent: root },
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, next: tokens[1], prev: undefined, parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, next: tokens[2], prev: tokens[0], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, next: tokens[3], prev: tokens[1], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, next: tokens[4], prev: tokens[2], parent: root },
+      { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, next: tokens[5], prev: tokens[3], parent: root },
+      { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, next: tokens[6], prev: tokens[4], parent: root },
+      { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, next: tokens[7], prev: tokens[5], parent: root },
+      { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, next: undefined, prev: tokens[6], parent: root },
       /* eslint-enable */
     ]);
     expect(decoration).toEqual({
       kind: "DECO",
       x: 16,
       y: 0,
-      endX: 18,
-      endY: 0,
-      id: "red0",
+      width: 2,
+      height: 1,
       hash: "red",
       data: {},
+      parent: root,
     });
   });
 });

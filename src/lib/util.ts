@@ -10,7 +10,7 @@ export function isBox<T>(x: any): x is Box<T> {
   return false;
 }
 
-export function isDecoration(x: any): x is Decoration {
+export function isDecoration<T = any>(x: any): x is Decoration<T> {
   if (typeof x === "object" && x.kind === "DECO") {
     return true;
   }
@@ -18,7 +18,7 @@ export function isDecoration(x: any): x is Decoration {
 }
 
 export function getFirstTextToken<T>(
-  tokens: (T | Decoration | Box<T | Decoration>)[]
+  tokens: (T | Decoration<T> | Box<T | Decoration<T>>)[]
 ): T | undefined {
   for (const token of tokens) {
     if (isDecoration(token)) {
@@ -37,7 +37,7 @@ export function getFirstTextToken<T>(
 }
 
 export function getLastTextToken<T>(
-  tokens: (T | Decoration | Box<T | Decoration>)[]
+  tokens: (T | Decoration<T> | Box<T | Decoration<T>>)[]
 ): T | undefined {
   for (let i = tokens.length - 1; i >= 0; i--) {
     const token = tokens[i];
@@ -150,11 +150,25 @@ export function findMax<T>(
   return pick as T; // can't not be T when max is not undefined
 }
 
+export function findMaxValue<T>(
+  items: Iterable<T>,
+  computer: (item: T) => number
+): number {
+  return computer(findMax(items, computer));
+}
+
 export function findMin<T>(
   items: Iterable<T>,
   computer: (item: T) => number
 ): T {
   return findMax(items, (item: T) => computer(item) * -1);
+}
+
+export function findMinValue<T>(
+  items: Iterable<T>,
+  computer: (item: T) => number
+): number {
+  return computer(findMin(items, computer));
 }
 
 export const lookaheadText = <T extends { text: string; next: T | undefined }>(

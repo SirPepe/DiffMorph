@@ -85,9 +85,11 @@ function extractCode(source: Element): CodeContainer {
 }
 
 // Only exported for unit testing code extraction
-export function processCode(source: Element): Box<TextToken | Decoration> {
+export function processCode(
+  source: Element
+): Box<TextToken | Decoration<TextToken>> {
   return tokenize(extractCode(source));
-};
+}
 
 // Actual facade for dom content extraction
 export function fromDom(

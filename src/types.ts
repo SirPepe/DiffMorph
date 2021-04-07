@@ -14,7 +14,8 @@ export type Code = string | CodeContainer;
 // highlight container. Two container with the same hash are considered
 // exchangeable, containers with the same ID are considered identical. Because
 // container content can change between frames, the hash (and by proxy the ID as
-// well) is build from the container's data and language
+// well) is build from the container's data and language. Identifying a
+// container with a "key" prop like in React is totally possible!
 export type CodeContainer = {
   id: string; // hash plus count for unique identification
   hash: string; // built from "meta"
@@ -41,34 +42,35 @@ export type CodeContainer = {
 // the above types also have a readonly "kind" discriminant and a string id.
 // Both fields are left out of this type because most functions don't need them
 // and said functions are best served by defining a type argument constrained by
-// this type as it is.
+// this type as it is. The height is irrelevant for text tokens, but for
+// simplicity's sake it's always there and always 1.
 export type Token = {
-  hash: string;
   x: number;
   y: number;
+  hash: string;
+  width: number;
+  height: number;
 };
 
-// The source element or object can be reconstructed from the "data" field,
-// which together with the language attribute serves as the input to the box
-// hash.
+// A container that contains other tokens, containers and decorations (or
+// anything, really). The container's source object can be reconstructed from
+// the "data" field, which together with the language attribute serves as the
+// input to the box hash.
 export type Box<Content> = Token & {
   id: string; // hash plus count for unique identification
   readonly kind: "BOX";
   data: Record<string, any>; // tag name and attributes for DOM sources
-  width: number;
-  height: number;
   language: string | undefined;
   tokens: (Content | Box<Content>)[];
-  parent: Box<Content> | undefined; // required for traversing
+  parent: Box<Content> | undefined;
 };
 
 // Represents a marker token that takes up no space and contains no other
 // elements, but has set dimensions over a number of lines.
-export type Decoration = Token & {
+export type Decoration<Content> = Token & {
   readonly kind: "DECO";
   data: Record<string, any>; // tag name and attributes for DOM sources
-  endX: number;
-  endY: number;
+  parent: Box<Content | Decoration<Content>>;
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
@@ -76,10 +78,9 @@ export type Decoration = Token & {
 export type TextToken = Omit<Token, "hash"> & {
   readonly kind: "TEXT";
   text: string;
-  size: number; // number of characters on the x axis
   next: TextToken | undefined;
   prev: TextToken | undefined;
-  parent: Box<TextToken | Decoration>;
+  parent: Box<TextToken | Decoration<TextToken>>;
 };
 
 // Represents a text token that has been linked up to its siblings and parent
@@ -90,10 +91,9 @@ export type RawToken = Token & {
   id: string; // hash plus count for unique identification
   readonly kind: "RAW";
   text: string;
-  size: number;
   prev: TypedToken | undefined;
   next: RawToken | undefined;
-  parent: Box<RawToken | Decoration>;
+  parent: Box<RawToken | Decoration<RawToken>>;
 };
 
 // Represents a text token that has been passed through a language function and
@@ -102,12 +102,11 @@ export type TypedToken = Token & {
   id: string; // hash plus count for unique identification
   readonly kind: "TYPED";
   text: string;
-  size: number;
   type: string;
   hash: string;
   prev: TypedToken | undefined;
   next: TypedToken | undefined;
-  parent: Box<TypedToken | Decoration>;
+  parent: Box<TypedToken | Decoration<TypedToken>>;
 };
 
 // Represents a concrete token in the output, derived from (but not identical
@@ -116,11 +115,10 @@ export type RenderToken = Token & {
   id: string; // hash plus count for unique identification
   readonly kind: "RENDER";
   text: string;
-  size: number;
   type: string;
   hash: string;
   isVisible: boolean;
-  parent: Box<TypedToken | Decoration>;
+  parent: Box<TypedToken | Decoration<RenderToken>>;
 };
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;

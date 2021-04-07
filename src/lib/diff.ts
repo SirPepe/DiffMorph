@@ -4,24 +4,9 @@
 
 import { diffArrays } from "diff";
 import { groupBy, mapBy } from "@sirpepe/shed";
-import { Box, Decoration } from "../types";
+import { Box, Token } from "../types";
 import { createIdGenerator, isBox, isDecoration } from "./util";
 
-// The minimal token info that diffing functions require to work.
-export type Diffable = {
-  x: number;
-  y: number;
-  hash: string;
-};
-
-// The minimal decoration info that diffing functions require to work.
-type DiffableDecoration = Diffable & {
-  readonly kind: "DECO";
-  endX: number;
-  endY: number;
-};
-
-// Self-explanatory operations for all kinds of tokens
 export type ADD<T> = {
   readonly type: "ADD";
   item: T;
@@ -32,6 +17,7 @@ export type DEL<T> = {
   item: T;
 };
 
+// also responsible for changes in dimensions
 export type MOV<T> = {
   readonly type: "MOV";
   item: T;
@@ -46,7 +32,7 @@ export type DiffTree<T> = {
   items: (DiffOp<T> | DiffTree<T>)[];
 };
 
-type Line<T extends Diffable> = {
+type Line<T extends Token> = {
   readonly x: number;
   readonly y: number;
   readonly id: string;
@@ -58,7 +44,7 @@ type Line<T extends Diffable> = {
 // their *relative* distance on the x axis. The allover level of indentation is
 // not reflected in the hash - two lines containing the same characters the same
 // distance apart get the same hash, no matter the indentation
-const hashLine = (items: Diffable[]): string => {
+const hashLine = (items: Token[]): string => {
   const hashes = items.map((item, idx) => {
     const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
     return item.hash + String(xDelta);
@@ -67,7 +53,7 @@ const hashLine = (items: Diffable[]): string => {
 };
 
 // Organize tokens into lines
-const asLines = <T extends Diffable>(tokens: T[]): Line<T>[] => {
+const asLines = <T extends Token>(tokens: T[]): Line<T>[] => {
   const nextId = createIdGenerator();
   const byLine = groupBy(tokens, "y");
   return Array.from(byLine, ([y, items]) => {
@@ -78,7 +64,7 @@ const asLines = <T extends Diffable>(tokens: T[]): Line<T>[] => {
   });
 };
 
-const diffLines = <T extends Diffable>(
+const diffLines = <T extends Token>(
   from: Line<T>[],
   to: Line<T>[]
 ): {
@@ -131,7 +117,7 @@ const diffLines = <T extends Diffable>(
   };
 };
 
-const diffTokens = <T extends Diffable>(from: T[], to: T[]): DiffOp<T>[] => {
+const diffTokens = <T extends Token>(from: T[], to: T[]): DiffOp<T>[] => {
   const result: DiffOp<T>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
@@ -187,26 +173,26 @@ function diffBox<T>(
   return undefined;
 }
 
-function diffDecorations<T extends DiffableDecoration>(
+function diffDecorations<T extends Token>(
   from: T | undefined,
   to: T | undefined
 ): DiffOp<T> {
   throw new Error("Can't diff two non-existing decorations!");
 }
 
-function partitionTokens<T extends Diffable, U extends DiffableDecoration>(
-  source: Box<T | U> | undefined
-): [Box<T | U>[], T[], U[]] {
-  const boxes: Box<T | U>[] = [];
+function partitionTokens<T extends Token>(
+  source: Box<T> | undefined
+): [Box<T>[], T[], T[]] {
+  const boxes: Box<T>[] = [];
   const textTokens: T[] = [];
-  const decoTokens: U[] = [];
+  const decoTokens: T[] = [];
   if (!source) {
     return [[], [], []];
   }
   for (const item of source.tokens) {
     if (isBox(item)) {
       boxes.push(item);
-    } else if ("kind" in item && item.kind === "DECO") {
+    } else if (isDecoration(item)) {
       decoTokens.push(item);
     } else {
       textTokens.push(item);
@@ -216,19 +202,19 @@ function partitionTokens<T extends Diffable, U extends DiffableDecoration>(
 }
 
 // Only exported for unit tests
-export function diffBoxes<T extends Diffable, U extends DiffableDecoration>(
-  from: Box<T | U> | undefined,
-  to: Box<T | U> | undefined
-): DiffTree<T | U> {
+export function diffBoxes<T extends Token>(
+  from: Box<T> | undefined,
+  to: Box<T> | undefined
+): DiffTree<T> {
   if (!from && !to) {
     throw new Error("Refusing to diff two undefined frames!");
   }
-  const root = diffBox<T | U>(from as any, to as any);
+  const root = diffBox<T>(from as any, to as any);
   const textOps: DiffOp<T>[] = [];
-  const decoOps: DiffOp<U>[] = [];
-  const boxOps: DiffTree<T | U>[] = [];
-  const [fromBoxes, fromTokens, fromDecorations] = partitionTokens<T, U>(from);
-  const [toBoxes, toTokens, toDecorations] = partitionTokens<T, U>(to);
+  const decoOps: DiffOp<T>[] = [];
+  const boxOps: DiffTree<T>[] = [];
+  const [fromBoxes, fromTokens, fromDecorations] = partitionTokens(from);
+  const [toBoxes, toTokens, toDecorations] = partitionTokens(to);
   const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
   textOps.push(...lineDiff.result);
   textOps.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
@@ -255,15 +241,13 @@ export function diffBoxes<T extends Diffable, U extends DiffableDecoration>(
   return { type: "TREE", root, items };
 }
 
-export const diff = <T extends Diffable, U extends DiffableDecoration>(
-  roots: Box<T | U>[]
-): DiffTree<T | U>[] => {
+export const diff = <T extends Token>(roots: Box<T>[]): DiffTree<T>[] => {
   if (roots.length < 2) {
     throw new Error("Need at least two frames to diff");
   }
-  const diffs: DiffTree<T | U>[] = [diffBoxes<T, U>(undefined, roots[0])];
+  const diffs: DiffTree<T>[] = [diffBoxes(undefined, roots[0])];
   for (let i = 0; i < roots.length - 1; i++) {
-    diffs.push(diffBoxes<T, U>(roots[i], roots[i + 1]));
+    diffs.push(diffBoxes(roots[i], roots[i + 1]));
   }
   return diffs;
 };
