@@ -8,7 +8,7 @@
 import { getFirstTextToken, hash } from "./util";
 import {
   Box,
-  Highlight,
+  Decoration,
   LanguageDefinition,
   LanguagePostprocessor,
   TextToken,
@@ -28,9 +28,9 @@ function applyPostprocessor(
       token.parent.hash === token.prev.parent.hash && // don't join across boxes
       postprocessor(token)
     ) {
-      const padding = Math.abs(token.prev.x + token.prev.size - token.x);
+      const padding = Math.abs(token.prev.x + token.prev.width - token.x);
       token.prev.text += " ".repeat(padding) + token.text;
-      token.prev.size += padding + token.size;
+      token.prev.width += padding + token.width;
       token.prev.hash = hash(hash(token.prev.type) + hash(token.prev.text));
       token.prev.next = token.next;
       // This indexOf() is expensive, but keeping track of the index while the
@@ -55,10 +55,10 @@ function applyPostprocessor(
 // TypedTokens without ever touching the MetaTokens.
 export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
-  root: Box<TextToken | Highlight>
-): Box<TypedToken | Highlight> => {
+  root: Box<TextToken | Decoration<TextToken>>
+): Box<TypedToken | Decoration<TypedToken>> => {
   const language = languageDefinition.definitionFactory({});
-  const first: any = getFirstTextToken([ root ]);
+  const first: any = getFirstTextToken([root]);
   let current: any = first;
   while (current) {
     const results = language(current);
