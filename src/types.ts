@@ -60,7 +60,7 @@ export type Box<Content, Deco> = Token & {
   readonly kind: "BOX";
   data: Record<string, any>; // tag name and attributes for DOM sources
   language: string | undefined;
-  tokens: (Content | Box<Content, Deco>)[];
+  content: (Content | Box<Content, Deco>)[];
   decorations: Deco[];
   parent: Box<Content, Deco> | undefined;
 };
@@ -118,15 +118,34 @@ export type RenderToken = Token & {
   type: string;
   hash: string;
   isVisible: boolean;
-  parent: Box<TypedToken, Decoration<TypedToken>>;
+};
+
+// Represents a box in the output
+export type RenderBox = {
+  readonly kind: "RENDER_BOX";
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  tokens: Map<string, RenderToken>;
+  boxes: Map<string, RenderBox>;
+  decorations: Map<string, RenderDecoration>;
+  data: Record<string, any>;
+  isVisible: boolean;
 };
 
 // Represents a decoration in the output
-export type RenderDecoration = Omit<Decoration<RenderToken>, "kind"> & {
-  id: string; // hash plus count for unique identification
+export type RenderDecoration = {
   readonly kind: "RENDER_DECO";
+  id: string;
+  hash: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  data: Record<string, any>;
   isVisible: boolean;
-  parent: Box<TypedToken, Decoration<TypedToken>>;
 };
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;

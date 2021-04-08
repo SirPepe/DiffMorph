@@ -14,7 +14,7 @@ type BoxArgs<T, D> = {
   y?: number;
   width?: number;
   height?: number;
-  tokens?: (T | BoxArgs<T, D>)[];
+  content?: (T | BoxArgs<T, D>)[];
   decorations?: D[];
   id?: string;
   hash?: string;
@@ -41,7 +41,7 @@ export function stubBox<T, D>(
     hash = nested ? `nested-${nested}` : "root",
     language = "none",
     data = {},
-    tokens = [],
+    content = [],
     decorations = [],
   } = args;
   const result: Box<T, D> = {
@@ -54,11 +54,11 @@ export function stubBox<T, D>(
     height,
     language,
     data,
-    tokens: [],
+    content: [],
     decorations,
     parent,
   };
-  result.tokens = tokens.map((token) => {
+  result.content = content.map((token) => {
     if (isBoxArgs(token)) {
       return stubBox(token, nested + 1, result);
     } else {

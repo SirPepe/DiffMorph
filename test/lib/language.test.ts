@@ -84,7 +84,7 @@ describe("In-place modifications", () => {
       data: {},
       language: "json",
       parent: undefined,
-      tokens: [
+      content: [
         {
           kind: "TEXT",
           x: 0,
@@ -125,7 +125,7 @@ describe("In-place modifications", () => {
     });
     const output = applyJSON(subject);
     expect(output).toBe(subject);
-    const nested = output.tokens[1] as Box<any, any>;
+    const nested = output.content[1] as Box<any, any>;
     expect(output).toEqual({
       kind: "BOX",
       x: 0,
@@ -137,7 +137,7 @@ describe("In-place modifications", () => {
       data: {},
       language: "json",
       parent: undefined,
-      tokens: [
+      content: [
         {
           kind: "TEXT",
           x: 0,
@@ -145,7 +145,7 @@ describe("In-place modifications", () => {
           width: 6,
           height: 1,
           prev: undefined,
-          next: nested.tokens[0],
+          next: nested.content[0],
           text: '"Hello',
           type: "string",
           hash: expect.any(String),
@@ -162,15 +162,15 @@ describe("In-place modifications", () => {
           data: {},
           language: "json",
           parent: output,
-          tokens: [
+          content: [
             {
               kind: "TEXT",
               x: 7,
               y: 0,
               width: 2,
               height: 1,
-              prev: output.tokens[0],
-              next: output.tokens[2],
+              prev: output.content[0],
+              next: output.content[2],
               text: "42",
               parent: nested,
               type: "string",
@@ -185,7 +185,7 @@ describe("In-place modifications", () => {
           y: 0,
           width: 6,
           height: 1,
-          prev: nested.tokens[0],
+          prev: nested.content[0],
           next: undefined,
           text: 'World"',
           type: "string",
@@ -230,7 +230,7 @@ describe("In-place modifications", () => {
       data: {},
       language: "json",
       parent: undefined,
-      tokens: [
+      content: [
         {
           kind: "TEXT",
           x: 0,
@@ -281,7 +281,7 @@ describe("In-place modifications", () => {
     const subject = tokenize(input);
     const output = applyJSON(subject);
     expect(output).toBe(subject);
-    expect(output.tokens[0]).toHaveProperty("language", "json");
+    expect(output.content[0]).toHaveProperty("language", "json");
   });
 
   test("does not overwrite nested boxes languages", () => {
@@ -305,6 +305,6 @@ describe("In-place modifications", () => {
     const subject = tokenize(input);
     const output = applyJSON(subject);
     expect(output).toBe(subject);
-    expect(output.tokens[0]).toHaveProperty("language", "html");
+    expect(output.content[0]).toHaveProperty("language", "html");
   });
 });

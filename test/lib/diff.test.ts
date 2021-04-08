@@ -14,8 +14,8 @@ describe("diffing lines", () => {
       { x: 0, y: 1, width: 1, height: 1, hash: "b0" },
       { x: 0, y: 2, width: 1, height: 1, hash: "c0" }, // new line!
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -39,8 +39,8 @@ describe("diffing lines", () => {
       { x: 0, y: 1, width: 1, height: 1, hash: "b0" },
       // missing c0
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -64,8 +64,8 @@ describe("diffing lines", () => {
       { x: 0, y: 1, width: 1, height: 1, hash: "b0" }, // decreased indent
       { x: 2, y: 2, width: 1, height: 1, hash: "c0" }, // increased indent
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -92,8 +92,8 @@ describe("diffing lines", () => {
       { x: 4, y: 2, width: 1, height: 1, hash: "b0" }, // was: y1
       { x: 0, y: 1, width: 1, height: 1, hash: "c0" }, // was: y2
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -125,8 +125,8 @@ describe("diff tokens", () => {
       { x: 0, y: 1, width: 1, height: 1, hash: "b2" },
       { x: 0, y: 2, width: 1, height: 1, hash: "c0" },
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -154,8 +154,8 @@ describe("diff tokens", () => {
       { x: 0, y: 1, width: 1, height: 1, hash: "b2" },
       { x: 0, y: 2, width: 1, height: 1, hash: "c0" },
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -183,8 +183,8 @@ describe("diff tokens", () => {
       { x: 0, y: 1, width: 1, height: 1, hash: "b2" },
       { x: 0, y: 2, width: 1, height: 1, hash: "c0" },
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -213,8 +213,8 @@ describe("diff tokens", () => {
       { x: 0, y: 1, width: 1, height: 1, hash: "b0" },
       { x: 0, y: 2, width: 1, height: 1, hash: "c0" },
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -243,8 +243,8 @@ describe("diff tokens", () => {
       { x: 0, y: 1, width: 1, height: 1, hash: "b0" },
       { x: 0, y: 2, width: 1, height: 1, hash: "c0" },
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -316,7 +316,7 @@ describe("diff with boxes", () => {
     const aTokens = [
       { x: 0, y: 0, width: 1, height: 1, hash: "a0" },
       { x: 2, y: 0, width: 1, height: 1, hash: "a1" },
-      { tokens: aNestedTokens },
+      { content: aNestedTokens },
     ];
     const bNestedTokens = [
       { x: 0, y: 1, width: 1, height: 1, hash: "a0" },
@@ -325,10 +325,10 @@ describe("diff with boxes", () => {
     const bTokens = [
       { x: 0, y: 0, width: 1, height: 1, hash: "a0" },
       { x: 2, y: 1, width: 1, height: 1, hash: "a1" },
-      { tokens: bNestedTokens },
+      { content: bNestedTokens },
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
@@ -380,10 +380,10 @@ describe("diff across multiple frames", () => {
       // b1 went away
       { x: 0, y: 2, width: 1, height: 1, hash: "c0" },
     ];
-    const a = stubBox({ tokens: aTokens });
-    const b = stubBox({ tokens: bTokens });
-    const c = stubBox({ tokens: cTokens });
-    const d = stubBox({ tokens: dTokens });
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
+    const c = stubBox({ content: cTokens });
+    const d = stubBox({ content: dTokens });
     const [first, second, third, fourth] = diff<any, any>([a, b, c, d]);
     expect(first).toEqual({
       kind: "TREE",

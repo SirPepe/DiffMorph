@@ -2,7 +2,7 @@
 
 import { DiffTree } from "./diff";
 import { createIdGenerator } from "./util";
-import { Box, Decoration, RenderDecoration, RenderToken, Token, TypedToken } from "../types";
+import { Box, Decoration, RenderBox, RenderDecoration, RenderToken, Token, TypedToken } from "../types";
 import { mapBy } from "@sirpepe/shed";
 
 // Manages the available render tokens. The goal is to use as few render tokens
@@ -98,7 +98,6 @@ function toRenderToken(input: TypedToken, newId: string): RenderToken {
     height: input.height,
     type: input.type,
     hash: input.hash,
-    parent: input.parent,
     id: newId,
     isVisible: true,
   };
@@ -114,25 +113,12 @@ function toRenderDecoration(
     y: input.y,
     width: input.width,
     height: input.height,
-    hash: input.hash,
     data: input.data,
-    parent: input.parent,
+    hash: input.hash,
     id: newId,
     isVisible: true,
   };
 }
-
-export type RenderBox = {
-  readonly kind: "RENDER_BOX";
-  id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  tokens: Map<string, RenderToken>;
-  boxes: Map<string, RenderBox>;
-  decorations: Map<string, RenderDecoration>;
-};
 
 export function toRenderData(
   diffs: DiffTree<TypedToken, Decoration<TypedToken>>[],
@@ -183,6 +169,8 @@ export function toRenderData(
       decorations,
       width,
       height,
+      data: parent?.data || {},
+      isVisible: true,
     });
   }
   return renderBoxes;

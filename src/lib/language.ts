@@ -38,7 +38,8 @@ function applyPostprocessor(
       // indexOf() is the least worst choice for removing the token from not
       // only the linked list of tokens, but from the flat array of box members
       // also.
-      token.parent.tokens.splice(token.parent.tokens.indexOf(token), 1);
+      // TODO: the above is no longer true. This can be simplified.
+      token.parent.content.splice(token.parent.content.indexOf(token), 1);
       if (token.next) {
         token.next.prev = token.prev;
       }
@@ -55,8 +56,8 @@ function applyPostprocessor(
 // TypedTokens without ever touching the MetaTokens.
 export const applyLanguage = (
   languageDefinition: LanguageDefinition<Record<string, any>>,
-  root: Box<TextToken | Decoration<TextToken>>
-): Box<TypedToken | Decoration<TypedToken>> => {
+  root: Box<TextToken, Decoration<TextToken>>
+): Box<TypedToken, Decoration<TypedToken>> => {
   const language = languageDefinition.definitionFactory({});
   const first: any = getFirstTextToken([root]);
   let current: any = first;
@@ -71,5 +72,5 @@ export const applyLanguage = (
     }
   }
   applyPostprocessor(first, languageDefinition.postprocessor);
-  return root as Box<TypedToken>; // ¯\_(ツ)_/¯
+  return root as Box<TypedToken, Decoration<TypedToken>>; // ¯\_(ツ)_/¯
 };

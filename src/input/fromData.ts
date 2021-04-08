@@ -8,11 +8,12 @@ import {
   CodeContainer,
   Decoration,
   LanguageDefinition,
+  RenderBox,
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
-import { RenderBox, toRenderData } from "../lib/render";
+import { toRenderData } from "../lib/render";
 import { optimize } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { createIdGenerator } from "../lib/util";

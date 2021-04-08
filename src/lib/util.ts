@@ -25,7 +25,7 @@ export function getFirstTextToken<T>(
       continue;
     }
     if (isBox(token)) {
-      const first = getFirstTextToken(token.tokens);
+      const first = getFirstTextToken(token.content);
       if (first) {
         return first;
       } else {
@@ -45,7 +45,7 @@ export function getLastTextToken<T>(
       continue;
     }
     if (isBox(token)) {
-      const first = getLastTextToken(token.tokens);
+      const first = getLastTextToken(token.content);
       if (first) {
         return first;
       } else {
@@ -109,7 +109,9 @@ export function isAdjacent(
   return false;
 }
 
-export function isNewLine<T extends { y: number; prev: T | undefined }>(
+export function isNewLine<
+  T extends { y: number; prev: { y: number } | undefined }
+>(
   token: T
 ): boolean {
   return Boolean(token.prev && token.y > token.prev.y);

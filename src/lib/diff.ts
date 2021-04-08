@@ -183,7 +183,7 @@ function partitionTokens<T extends Token, D extends Token>(
   if (!source) {
     return [[], [], []];
   }
-  for (const item of source.tokens) {
+  for (const item of source.content) {
     if (isBox(item)) {
       boxes.push(item);
     } else {
