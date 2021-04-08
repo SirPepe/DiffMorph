@@ -4,7 +4,7 @@ import { tokenize } from "../../src/lib/tokenizer";
 import { Box, LanguageDefinition } from "../../src/types";
 import { type } from "../helpers";
 
-const applyJSON = (input: Box<any>) =>
+const applyJSON = (input: Box<any, any>) =>
   applyLanguage(
     {
       name: languageDefinition.name,
@@ -99,6 +99,7 @@ describe("In-place modifications", () => {
           parent: subject,
         },
       ],
+      decorations: [],
     });
   });
 
@@ -124,7 +125,7 @@ describe("In-place modifications", () => {
     });
     const output = applyJSON(subject);
     expect(output).toBe(subject);
-    const nested = output.tokens[1] as Box<any>;
+    const nested = output.tokens[1] as Box<any, any>;
     expect(output).toEqual({
       kind: "BOX",
       x: 0,
@@ -176,6 +177,7 @@ describe("In-place modifications", () => {
               hash: expect.any(String),
             },
           ],
+          decorations: [],
         },
         {
           kind: "TEXT",
@@ -191,6 +193,7 @@ describe("In-place modifications", () => {
           parent: output,
         },
       ],
+      decorations: [],
     });
   });
 
@@ -241,6 +244,8 @@ describe("In-place modifications", () => {
           hash: expect.any(String),
           parent: output,
         },
+      ],
+      decorations: [
         {
           kind: "DECO",
           x: 6,

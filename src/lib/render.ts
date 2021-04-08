@@ -147,7 +147,7 @@ export function toRenderData(
     const decorations = renderBoxes[i - 1]?.decorations || new Map();
     let width = 0;
     let height = 0;
-    for (const item of diffs[i].tokens) {
+    for (const item of diffs[i].content) {
       if (item.kind === "TREE") {
         // TODO
       } else {

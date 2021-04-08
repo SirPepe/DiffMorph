@@ -7,43 +7,45 @@ import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
 import { findMaxValue, findMin } from "./util";
 
 export type Optimizable = Token & {
-  parent: Box<any>;
+  parent: Box<any, any>;
 };
 
-export function optimize<T extends Optimizable>(
-  diffs: DiffTree<T>[]
-): DiffTree<T>[] {
-  return diffs.map(optimizeFrame);
+export function optimize<T extends Optimizable, D extends Optimizable>(
+  diffs: DiffTree<T, D>[]
+): DiffTree<T, D>[] {
+  return diffs.map(optimizeDiff);
 }
 
-function optimizeFrame<T extends Optimizable>(diff: DiffTree<T>): DiffTree<T> {
-  const trees: DiffTree<T>[] = [];
+function optimizeDiff<T extends Optimizable, D extends Optimizable>(
+  diff: DiffTree<T, D>
+): DiffTree<T, D> {
+  const trees: DiffTree<T, D>[] = [];
   const byHash: Record<string, [Set<MOV<T>>, Set<ADD<T>>, Set<DEL<T>>]> = {};
-  for (const operation of diff.items) {
-    if (operation.type === "TREE") {
-      trees.push(optimizeFrame(operation));
+  for (const operation of diff.content) {
+    if (operation.kind === "TREE") {
+      trees.push(optimizeDiff(operation));
     } else {
       if (!byHash[operation.item.hash]) {
         byHash[operation.item.hash] = [new Set(), new Set(), new Set()];
       }
-      if (operation.type == "MOV") {
+      if (operation.kind == "MOV") {
         byHash[operation.item.hash][0].add(operation);
-      } else if (operation.type == "ADD") {
+      } else if (operation.kind == "ADD") {
         byHash[operation.item.hash][1].add(operation);
-      } else if (operation.type === "DEL") {
+      } else if (operation.kind === "DEL") {
         byHash[operation.item.hash][2].add(operation);
       }
     }
   }
-  const result: DiffTree<T> = { ...diff, items: [] };
+  const result: DiffTree<T, D> = { ...diff, content: [] };
   for (const [MOV, ADD, DEL] of Object.values(byHash)) {
     if (ADD.size === 0 || DEL.size === 0) {
-      result.items.push(...MOV, ...ADD, ...DEL);
+      result.content.push(...MOV, ...ADD, ...DEL);
     } else {
-      result.items.push(...MOV, ...resolveOptimizations(ADD, DEL));
+      result.content.push(...MOV, ...resolveOptimizations(ADD, DEL));
     }
   }
-  result.items.push(...trees);
+  result.content.push(...trees);
   return result;
 }
 
@@ -57,7 +59,7 @@ function resolveOptimizations<T extends Optimizable>(
     const alternative = pickAlternative(deletion, additions);
     if (alternative) {
       movements.push({
-        type: "MOV",
+        kind: "MOV",
         item: alternative.item,
         from: deletion.item,
       });

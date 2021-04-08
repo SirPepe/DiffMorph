@@ -30,7 +30,7 @@ export type DiffTree<T, D> = {
   readonly kind: "TREE";
   id: string; // box id
   root: DiffOp<Box<T, D>> | undefined;
-  tokens: (DiffOp<T> | DiffTree<T, D>)[];
+  content: (DiffOp<T> | DiffTree<T, D>)[];
   decorations: DiffOp<D>[];
 };
 
@@ -223,7 +223,7 @@ export function diffBoxes<T extends Token, D extends Token>(
     kind: "TREE",
     root: root,
     id: from?.id || to?.id || fail(),
-    tokens: [...textOps, ...boxOps],
+    content: [...textOps, ...boxOps],
     decorations: decoOps,
   };
 }

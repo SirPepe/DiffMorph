@@ -21,7 +21,7 @@ describe("diffing lines", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [{ kind: "ADD", item: bTokens[3] }],
+      content: [{ kind: "ADD", item: bTokens[3] }],
       decorations: [],
     });
   });
@@ -46,7 +46,7 @@ describe("diffing lines", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [{ kind: "DEL", item: aTokens[3] }],
+      content: [{ kind: "DEL", item: aTokens[3] }],
       decorations: [],
     });
   });
@@ -71,7 +71,7 @@ describe("diffing lines", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [
+      content: [
         { kind: "MOV", item: bTokens[2], from: aTokens[2] },
         { kind: "MOV", item: bTokens[3], from: aTokens[3] },
       ],
@@ -99,7 +99,7 @@ describe("diffing lines", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [
+      content: [
         { kind: "MOV", item: bTokens[2], from: aTokens[2] },
         { kind: "MOV", item: bTokens[3], from: aTokens[3] },
       ],
@@ -132,7 +132,7 @@ describe("diff tokens", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [{ kind: "ADD", item: bTokens[1] }],
+      content: [{ kind: "ADD", item: bTokens[1] }],
       decorations: [],
     });
   });
@@ -161,7 +161,7 @@ describe("diff tokens", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [{ kind: "DEL", item: aTokens[1] }],
+      content: [{ kind: "DEL", item: aTokens[1] }],
       decorations: [],
     });
   });
@@ -190,7 +190,7 @@ describe("diff tokens", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [
+      content: [
         { kind: "DEL", item: aTokens[1] },
         { kind: "ADD", item: bTokens[1] },
       ],
@@ -220,7 +220,7 @@ describe("diff tokens", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [
+      content: [
         { kind: "DEL", item: aTokens[1] },
         { kind: "ADD", item: bTokens[1] },
       ],
@@ -250,7 +250,7 @@ describe("diff tokens", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [
+      content: [
         { kind: "DEL", item: aTokens[2] },
         { kind: "ADD", item: bTokens[2] },
       ],
@@ -269,7 +269,7 @@ describe("diff with boxes", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [],
+      content: [],
       decorations: [],
     });
   });
@@ -286,7 +286,7 @@ describe("diff with boxes", () => {
         item: b,
         kind: "MOV",
       },
-      tokens: [],
+      content: [],
       decorations: [],
     });
   });
@@ -303,7 +303,7 @@ describe("diff with boxes", () => {
         item: b,
         kind: "MOV",
       },
-      tokens: [],
+      content: [],
       decorations: [],
     });
   });
@@ -334,14 +334,14 @@ describe("diff with boxes", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [
+      content: [
         { kind: "DEL", item: aTokens[1] },
         { kind: "ADD", item: bTokens[1] },
         {
           kind: "TREE",
           id: "nested-1",
           root: undefined,
-          tokens: [
+          content: [
             { kind: "DEL", item: aNestedTokens[1] },
             { kind: "ADD", item: bNestedTokens[1] },
           ],
@@ -392,7 +392,7 @@ describe("diff across multiple frames", () => {
         kind: "ADD",
         item: a,
       },
-      tokens: [
+      content: [
         { kind: "ADD", item: aTokens[0] },
         { kind: "ADD", item: aTokens[1] },
         { kind: "ADD", item: aTokens[2] },
@@ -403,21 +403,21 @@ describe("diff across multiple frames", () => {
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [{ kind: "ADD", item: bTokens[3] }],
+      content: [{ kind: "ADD", item: bTokens[3] }],
       decorations: [],
     });
     expect(third).toEqual({
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [{ kind: "ADD", item: cTokens[3] }],
+      content: [{ kind: "ADD", item: cTokens[3] }],
       decorations: [],
     });
     expect(fourth).toEqual({
       kind: "TREE",
       id: "root",
       root: undefined,
-      tokens: [
+      content: [
         { kind: "MOV", item: dTokens[0], from: cTokens[0] },
         { kind: "MOV", item: dTokens[1], from: cTokens[1] },
         { kind: "DEL", item: cTokens[3] },
