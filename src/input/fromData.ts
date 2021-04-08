@@ -49,7 +49,7 @@ function extractCode(source: InputContainer): CodeContainer {
 // Only exported for unit testing code extraction
 export function processCode(
   source: InputContainer
-): Box<TextToken | Decoration<TextToken>> {
+): Box<TextToken, Decoration<TextToken>> {
   return tokenize(extractCode(source));
 }
 

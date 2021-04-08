@@ -21,6 +21,7 @@ describe("processing code from a data source", () => {
       width: 13,
       height: 1,
       tokens: expect.any(Array),
+      decorations: [],
       parent: undefined,
     });
     const tokens = root.tokens;
@@ -54,6 +55,7 @@ describe("processing code from a data source", () => {
       width: 13,
       height: 1,
       tokens: expect.any(Array),
+      decorations: [],
       parent: undefined,
     });
     const tokens = root.tokens;
@@ -125,11 +127,12 @@ describe("processing code from a data source", () => {
       width: 13,
       height: 1,
       tokens: expect.any(Array),
+      decorations: [],
       parent: undefined,
     });
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box = tokens[1] as Box<TextToken>;
+    const box = tokens[1] as Box<TextToken, never>;
     expect(txt).toEqual({
       kind: "TEXT",
       x: 0,
@@ -152,6 +155,7 @@ describe("processing code from a data source", () => {
       width: 7,
       height: 1,
       tokens: expect.any(Array),
+      decorations: [],
       parent: root,
     });
     expect(box.tokens).toEqual([
@@ -192,10 +196,11 @@ describe("processing code from a data source", () => {
       width: 13,
       height: 1,
       tokens: expect.any(Array),
+      decorations: [],
       parent: undefined,
     });
     const tokens = root.tokens;
-    const box = tokens[1] as Box<TextToken>;
+    const box = tokens[1] as Box<TextToken, never>;
     expect(box).toEqual({
       kind: "BOX",
       data: {},
@@ -219,6 +224,7 @@ describe("processing code from a data source", () => {
           parent: box,
         },
       ],
+      decorations: [],
       parent: root,
     });
     expect(tokens).toEqual([
@@ -284,10 +290,11 @@ describe("processing code from a data source", () => {
       y: 0,
       width: 6, // Should really be 5, the space after "const" should not count
       height: 3,
+      decorations: [],
     });
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box = tokens[1] as Box<TextToken>;
+    const box = tokens[1] as Box<TextToken, never>;
     expect(txt).toEqual({
       kind: "TEXT",
       x: 0,
@@ -304,6 +311,7 @@ describe("processing code from a data source", () => {
       y: 1,
       width: 5,
       height: 2,
+      decorations: [],
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
@@ -341,10 +349,11 @@ describe("processing code from a data source", () => {
       y: 0,
       width: 11,
       height: 3,
+      decorations: [],
     });
     const tokens = root.tokens;
     const first = tokens[0] as TextToken;
-    const box = tokens[1] as Box<TextToken>;
+    const box = tokens[1] as Box<TextToken, never>;
     const last = tokens[tokens.length - 1] as TextToken;
     expect(first).toEqual({
       kind: "TEXT",
@@ -362,6 +371,7 @@ describe("processing code from a data source", () => {
       y: 0,
       width: 5,
       height: 3,
+      decorations: [],
     });
     expect(box.tokens).toEqual([
       /* eslint-disable */
@@ -415,11 +425,12 @@ describe("processing code from a data source", () => {
       width: 30,
       height: 1,
       parent: undefined,
+      decorations: [],
     });
     const tokens = root.tokens;
     const txt = tokens[0] as TextToken;
-    const box1 = tokens[1] as Box<TextToken>;
-    const box2 = box1.tokens[6] as Box<TextToken>;
+    const box1 = tokens[1] as Box<TextToken, never>;
+    const box2 = box1.tokens[6] as Box<TextToken, never>;
     expect(txt).toEqual({
       kind: "TEXT",
       x: 0,
@@ -437,6 +448,7 @@ describe("processing code from a data source", () => {
       width: 24,
       height: 1,
       parent: root,
+      decorations: [],
     });
     expect(box1.tokens).toEqual([
       /* eslint-disable */
@@ -455,6 +467,7 @@ describe("processing code from a data source", () => {
       width: 14,
       height: 1,
       parent: box1,
+      decorations: [],
     });
     expect(box2.tokens).toEqual([
       /* eslint-disable */
@@ -494,6 +507,7 @@ describe("processing code from a data source", () => {
       y: 0,
       width: 10,
       height: 1,
+      decorations: [],
     });
     const contentBox = (root as any).tokens[0].tokens[0];
     expect(root.tokens).toEqual([
@@ -528,8 +542,10 @@ describe("processing code from a data source", () => {
               { kind: "TEXT", x: 8, y: 0, text: "42", height: 1, width: 2, next: undefined, prev: contentBox.tokens[2], parent: contentBox },
               /* eslint-enable */
             ],
+            decorations: [],
           },
         ],
+        decorations: [],
       },
     ]);
   });
@@ -554,8 +570,7 @@ describe("processing code from a data source", () => {
       language: undefined,
     };
     const root = processCode(rootContainer);
-    const tokens = root.tokens;
-    const decoration = root.tokens.pop() as Decoration<any>;
+    const { tokens, decorations } = root;
     expect(tokens).toEqual([
       /* eslint-disable */
       { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, next: tokens[1], prev: undefined, parent: root },
@@ -568,15 +583,17 @@ describe("processing code from a data source", () => {
       { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, next: undefined, prev: tokens[6], parent: root },
       /* eslint-enable */
     ]);
-    expect(decoration).toEqual({
-      kind: "DECO",
-      x: 16,
-      y: 0,
-      width: 2,
-      height: 1,
-      hash: "red",
-      data: {},
-      parent: root,
-    });
+    expect(decorations).toEqual([
+      {
+        kind: "DECO",
+        x: 16,
+        y: 0,
+        width: 2,
+        height: 1,
+        hash: "red",
+        data: {},
+        parent: root,
+      },
+    ]);
   });
 });

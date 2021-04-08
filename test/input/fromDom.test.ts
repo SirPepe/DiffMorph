@@ -1,5 +1,5 @@
 import { processCode } from "../../src/input/fromDom";
-import { Box, TextToken } from "../../src/types";
+import { Box, Decoration, TextToken } from "../../src/types";
 
 describe("processing code from a DOM source", () => {
   const container = document.createElement("pre");
@@ -32,6 +32,7 @@ describe("processing code from a DOM source", () => {
       hash: expect.any(String),
       id: root.hash + "0",
       tokens: expect.any(Array),
+      decorations: [],
       parent: undefined,
     });
     const tokens = root.tokens;
@@ -59,6 +60,7 @@ describe("processing code from a DOM source", () => {
       y: 0,
       width: 17,
       height: 3,
+      decorations: [],
     });
     const tokens = root.tokens;
     expect(tokens).toEqual([
@@ -91,7 +93,7 @@ describe("processing code from a DOM source", () => {
     });
     const [txt, box, ...rest] = root.tokens as [
       TextToken,
-      Box<TextToken>,
+      Box<TextToken, never>,
       ...TextToken[]
     ];
     expect(txt).toEqual({
@@ -131,6 +133,7 @@ describe("processing code from a DOM source", () => {
           parent: box,
         },
       ],
+      decorations: [],
       parent: root,
     });
     expect(rest).toEqual([
@@ -151,7 +154,7 @@ describe("processing code from a DOM source", () => {
 }</span>;`;
     const root = processCode(container);
     const textTokens = root.tokens.slice(0, 7);
-    const box = root.tokens[7] as Box<TextToken>;
+    const box = root.tokens[7] as Box<TextToken, never>;
     expect(textTokens).toEqual([
       /* eslint-disable */
       { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: textTokens[1], parent: root },
@@ -185,6 +188,7 @@ describe("processing code from a DOM source", () => {
         { kind: "TEXT", x: 0, y: 2, text: "}", height: 1, width: 1, next: expect.any(Object), prev: box.tokens[3], parent: box },
         /* eslint-enable */
       ],
+      decorations: [],
       parent: root,
     });
   });
@@ -194,8 +198,8 @@ describe("processing code from a DOM source", () => {
     const root = processCode(container);
     const tokens = root.tokens;
     const firstToken = tokens[0] as TextToken;
-    const outerBox = tokens[1] as Box<TextToken>;
-    const innerBox = outerBox.tokens[2] as Box<TextToken>;
+    const outerBox = tokens[1] as Box<TextToken, never>;
+    const innerBox = outerBox.tokens[2] as Box<TextToken, never>;
     expect(firstToken).toEqual({
       kind: "TEXT",
       x: 0,
@@ -230,6 +234,7 @@ describe("processing code from a DOM source", () => {
         { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, prev: outerBox.tokens[4], next: undefined, parent: outerBox },
         /* eslint-enable */
       ],
+      decorations: [],
       parent: root,
     });
     expect(innerBox).toEqual({
@@ -251,6 +256,7 @@ describe("processing code from a DOM source", () => {
         { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, prev: innerBox.tokens[0], next: outerBox.tokens[3], parent: innerBox },
         /* eslint-enable */
       ],
+      decorations: [],
       parent: outerBox,
     });
   });
@@ -263,8 +269,8 @@ describe("processing code from a DOM source", () => {
 ]</span>;`;
     const root = processCode(container);
     const firstToken = root.tokens[0] as TextToken;
-    const outerBox = root.tokens[1] as Box<TextToken>;
-    const innerBox = outerBox.tokens[2] as Box<TextToken>;
+    const outerBox = root.tokens[1] as Box<TextToken, never>;
+    const innerBox = outerBox.tokens[2] as Box<TextToken, never>;
     const lastToken = root.tokens[2] as TextToken;
     expect(firstToken).toEqual({
       kind: "TEXT",
@@ -302,6 +308,7 @@ describe("processing code from a DOM source", () => {
         { kind: "TEXT", x: 0, y: 4, text: "]", height: 1, width: 1, prev: outerBox.tokens[6], next: lastToken, parent: outerBox },
         /* eslint-enable */
       ],
+      decorations: [],
       parent: root,
     });
     expect(innerBox).toEqual({
@@ -324,6 +331,7 @@ describe("processing code from a DOM source", () => {
         { kind: "TEXT", x: 0, y: 2, text: ")", height: 1, width: 1, prev: innerBox.tokens[1], next: outerBox.tokens[3], parent: innerBox },
         /* eslint-enable */
       ],
+      decorations: [],
       parent: outerBox,
     });
     expect(lastToken).toEqual({
@@ -342,7 +350,7 @@ describe("processing code from a DOM source", () => {
   test("it handles decorations", () => {
     container.innerHTML = "const a = () => <mark>42</mark>";
     const root = processCode(container);
-    const tokens = root.tokens;
+    const { tokens, decorations } = root;
     expect(tokens).toEqual([
       /* eslint-disable */
       { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: tokens[1], parent: root },
@@ -353,6 +361,9 @@ describe("processing code from a DOM source", () => {
       { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, prev: tokens[4], next: tokens[6], parent: root },
       { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, prev: tokens[5], next: tokens[7], parent: root },
       { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, prev: tokens[6], next: undefined, parent: root },
+      /* eslint-enable */
+    ]);
+    expect(decorations).toEqual([
       {
         kind: "DECO",
         x: 16,
@@ -366,7 +377,6 @@ describe("processing code from a DOM source", () => {
         hash: expect.any(String),
         parent: root,
       },
-      /* eslint-enable */
     ]);
   });
 
@@ -374,11 +384,20 @@ describe("processing code from a DOM source", () => {
     container.innerHTML =
       "const <mark class='a'>a</mark> = () => <mark class='b'>42</mark>";
     const root = processCode(container);
-    const tokens = root.tokens;
+    const { tokens, decorations } = root;
     expect(tokens).toEqual([
       /* eslint-disable */
       { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: tokens[1], parent: root },
-      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, prev: tokens[0], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, prev: tokens[0], next: tokens[2], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, prev: tokens[1], next: tokens[3], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, prev: tokens[2], next: tokens[4], parent: root },
+      { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, prev: tokens[3], next: tokens[5], parent: root },
+      { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, prev: tokens[4], next: tokens[6], parent: root },
+      { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, prev: tokens[5], next: tokens[7], parent: root },
+      { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, prev: tokens[6], next: undefined, parent: root },
+      /* eslint-enable */
+    ]);
+    expect(decorations).toEqual([
       {
         kind: "DECO",
         x: 6,
@@ -392,12 +411,6 @@ describe("processing code from a DOM source", () => {
         hash: expect.any(String),
         parent: root,
       },
-      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, prev: tokens[1], next: tokens[4], parent: root },
-      { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, prev: tokens[3], next: tokens[5], parent: root },
-      { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, prev: tokens[4], next: tokens[6], parent: root },
-      { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, prev: tokens[5], next: tokens[7], parent: root },
-      { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, prev: tokens[6], next: tokens[8], parent: root },
-      { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, prev: tokens[7], next: undefined, parent: root },
       {
         kind: "DECO",
         x: 16,
@@ -411,7 +424,6 @@ describe("processing code from a DOM source", () => {
         hash: expect.any(String),
         parent: root,
       },
-      /* eslint-enable */
     ]);
   });
 
@@ -420,7 +432,7 @@ describe("processing code from a DOM source", () => {
   return 42;
 }</mark>`;
     const root = processCode(container);
-    const tokens = root.tokens;
+    const { tokens, decorations } = root;
     expect(tokens).toEqual([
       /* eslint-disable */
       { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: tokens[1], parent: root },
@@ -435,6 +447,9 @@ describe("processing code from a DOM source", () => {
       { kind: "TEXT", x: 9, y: 1, text: "42", height: 1, width: 2, prev: tokens[8], next: tokens[10], parent: root },
       { kind: "TEXT", x: 11, y: 1, text: ";", height: 1, width: 1, prev: tokens[9], next: tokens[11], parent: root },
       { kind: "TEXT", x: 0, y: 2, text: "}", height: 1, width: 1, prev: tokens[10], next: undefined, parent: root },
+      /* eslint-enable */
+    ]);
+    expect(decorations).toEqual([
       {
         kind: "DECO",
         x: 16,
@@ -448,7 +463,6 @@ describe("processing code from a DOM source", () => {
         hash: expect.any(String),
         parent: root,
       },
-      /* eslint-enable */
     ]);
   });
 
@@ -457,8 +471,8 @@ describe("processing code from a DOM source", () => {
       "const <span foo='bar'>a = <b><mark>()</mark></b> => 42</span>";
     const root = processCode(container);
     const firstToken = root.tokens[0] as TextToken;
-    const outerBox = root.tokens[1] as Box<TextToken>;
-    const innerBox = outerBox.tokens[2] as Box<TextToken>;
+    const outerBox = root.tokens[1] as Box<TextToken, Decoration<any>>;
+    const innerBox = outerBox.tokens[2] as Box<TextToken, Decoration<any>>;
     expect(firstToken).toEqual({
       kind: "TEXT",
       x: 0,
@@ -493,6 +507,7 @@ describe("processing code from a DOM source", () => {
         { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, prev: outerBox.tokens[4], next: undefined, parent: outerBox },
         /* eslint-enable */
       ],
+      decorations: [],
       parent: root,
     });
     expect(innerBox).toEqual({
@@ -512,6 +527,9 @@ describe("processing code from a DOM source", () => {
         /* eslint-disable */
         { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, prev: outerBox.tokens[1], next: innerBox.tokens[1], parent: innerBox },
         { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, prev: innerBox.tokens[0], next: outerBox.tokens[3], parent: innerBox },
+        /* eslint-enable */
+      ],
+      decorations: [
         {
           kind: "DECO",
           x: 10,
@@ -525,7 +543,6 @@ describe("processing code from a DOM source", () => {
           hash: expect.any(String),
           parent: innerBox,
         },
-        /* eslint-enable */
       ],
       parent: outerBox,
     });

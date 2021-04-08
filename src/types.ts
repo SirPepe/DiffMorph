@@ -56,13 +56,14 @@ export type Token = {
 // anything, really). The container's source object can be reconstructed from
 // the "data" field, which together with the language attribute serves as the
 // input to the box hash.
-export type Box<Content> = Token & {
+export type Box<Content, Deco> = Token & {
   id: string; // hash plus count for unique identification
   readonly kind: "BOX";
   data: Record<string, any>; // tag name and attributes for DOM sources
   language: string | undefined;
-  tokens: (Content | Box<Content>)[];
-  parent: Box<Content> | undefined;
+  tokens: (Content | Box<Content, Deco>)[];
+  decorations: Deco[];
+  parent: Box<Content, Deco> | undefined;
 };
 
 // Represents a marker token that takes up no space and contains no other
@@ -70,7 +71,7 @@ export type Box<Content> = Token & {
 export type Decoration<Content> = Token & {
   readonly kind: "DECO";
   data: Record<string, any>; // tag name and attributes for DOM sources
-  parent: Box<Content | Decoration<Content>>;
+  parent: Box<Content, Decoration<Content>>;
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
@@ -80,7 +81,7 @@ export type TextToken = Omit<Token, "hash"> & {
   text: string;
   next: TextToken | undefined;
   prev: TextToken | undefined;
-  parent: Box<TextToken | Decoration<TextToken>>;
+  parent: Box<TextToken, Decoration<TextToken>>;
 };
 
 // Represents a text token that has been linked up to its siblings and parent
@@ -93,7 +94,7 @@ export type RawToken = Token & {
   text: string;
   prev: TypedToken | undefined;
   next: RawToken | undefined;
-  parent: Box<RawToken | Decoration<RawToken>>;
+  parent: Box<RawToken, Decoration<RawToken>>;
 };
 
 // Represents a text token that has been passed through a language function and
@@ -106,7 +107,7 @@ export type TypedToken = Token & {
   hash: string;
   prev: TypedToken | undefined;
   next: TypedToken | undefined;
-  parent: Box<TypedToken | Decoration<TypedToken>>;
+  parent: Box<TypedToken, Decoration<TypedToken>>;
 };
 
 // Represents a concrete text token in the output, derived from (but not
@@ -118,7 +119,7 @@ export type RenderToken = Token & {
   type: string;
   hash: string;
   isVisible: boolean;
-  parent: Box<TypedToken | Decoration<TypedToken>>;
+  parent: Box<TypedToken, Decoration<TypedToken>>;
 };
 
 // Represents a decoration in the output
@@ -126,7 +127,7 @@ export type RenderDecoration = Decoration<RenderToken> & {
   id: string; // hash plus count for unique identification
   readonly kind: "RENDER_DECO";
   isVisible: boolean;
-  parent: Box<TypedToken | Decoration<TypedToken>>;
+  parent: Box<TypedToken, Decoration<TypedToken>>;
 };
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;
