@@ -1,9 +1,8 @@
 // This module implements a very non-smart tokenizer that chops code into small
 // pieces. It has to be non-smart to be useful for every conceivable computer
 // language. It returns its result as a nested structure but also joins all text
-// tokens (the _actual_ content) in a doubly-linked list. Note that the tokens
-// all have relative positions and can be nested inside boxes of arbitrary
-// depth.
+// tokens (the _actual_ content) in a doubly-linked list. Note that all tokens
+// use absolute positions and can be nested inside boxes of arbitrary depth.
 
 import { Box, Code, CodeContainer, Decoration, TextToken } from "../types";
 import { getFirstTextToken, getLastTextToken } from "./util";
@@ -60,7 +59,6 @@ function tokenizeText(
   text: string,
   x: number,
   y: number,
-  firstLineIndent: number,
   prev: TextToken | undefined,
   parent: Box<TextToken | Decoration<TextToken>>
 ): TokenizerResult<TextToken> {
@@ -73,7 +71,7 @@ function tokenizeText(
       const { breaks, length } = measureWhitespace(part);
       if (breaks > 0) {
         y += breaks;
-        x = length - firstLineIndent;
+        x = length;
       } else {
         x += length;
       }
@@ -132,16 +130,16 @@ function tokenizeContainer(
     tokens: [], // will be updated in a few lines
     parent,
   };
-  const result = tokenizeCodes(container.content, 0, 0, x, prev, box);
-  box.width = result.maxX;
-  box.height = result.maxY + 1;
+  const result = tokenizeCodes(container.content, x, y, prev, box);
+  box.width = result.maxX - x;
+  box.height = result.maxY - y + 1;
   box.tokens = result.tokens;
   return {
     tokens: [box],
     maxX: result.maxX,
     maxY: result.maxY,
-    lastX: result.lastX + x,
-    lastY: result.lastY + y,
+    lastX: result.lastX,
+    lastY: result.lastY,
   };
 }
 
@@ -152,7 +150,7 @@ function tokenizeDecoration(
   prev: TextToken | undefined,
   parent: Box<TextToken | Decoration<TextToken>>
 ): FullTokenizerResult {
-  const result = tokenizeCodes(container.content, x, y, 0, prev, parent);
+  const result = tokenizeCodes(container.content, x, y, prev, parent);
   const width = result.maxX - x;
   const height = result.maxY - y + 1;
   const tokens = result.tokens;
@@ -179,7 +177,6 @@ function tokenizeCodes(
   codes: Code[],
   x: number,
   y: number,
-  firstLineIndent: number,
   prev: TextToken | undefined,
   parent: Box<TextToken | Decoration<TextToken>>
 ): FullTokenizerResult {
@@ -188,7 +185,7 @@ function tokenizeCodes(
   const tokens = [];
   for (const code of codes) {
     if (typeof code === "string") {
-      const result = tokenizeText(code, x, y, firstLineIndent, prev, parent);
+      const result = tokenizeText(code, x, y, prev, parent);
       if (prev) {
         prev.next = result.tokens[0];
       }
@@ -211,8 +208,8 @@ function tokenizeCodes(
       }
       prev = getLastTextToken(result.tokens);
       tokens.push(...result.tokens);
-      if (x + result.maxX > maxX) {
-        maxX = x + result.maxX;
+      if (result.maxX > maxX) {
+        maxX = result.maxX;
       }
       if (result.maxY > maxY) {
         maxY = result.maxY;

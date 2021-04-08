@@ -1,6 +1,6 @@
 // The general input to DiffMorph is code. Code can be either stings or
 // container objects, which in turn can contain strings and container objects.
-// Container objects can be constructed from DOM nodes, JSON data or frankly
+// Container objects can be constructed from DOM nodes, JSON data or really
 // anything else. They carry a bit of metadata, most important of all a flag
 // on whether the container is a regular container or a highlight. Regular
 // containers constrain the diffing algorithm to their content, which highlights
@@ -43,7 +43,8 @@ export type CodeContainer = {
 // Both fields are left out of this type because most functions don't need them
 // and said functions are best served by defining a type argument constrained by
 // this type as it is. The height is irrelevant for text tokens, but for
-// simplicity's sake it's always there and always 1.
+// simplicity's sake it's always there and always 1. All coordinates are
+// absolute, even those for tokens nested in boxes.
 export type Token = {
   x: number;
   y: number;

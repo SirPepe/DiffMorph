@@ -1,7 +1,8 @@
 import { languageDefinition } from "../../src/languages/json";
 import { applyLanguage } from "../../src/lib/language";
 import { tokenize } from "../../src/lib/tokenizer";
-import { Box } from "../../src/types";
+import { Box, LanguageDefinition } from "../../src/types";
+import { type } from "../helpers";
 
 const applyJSON = (input: Box<any>) =>
   applyLanguage(
@@ -13,6 +14,52 @@ const applyJSON = (input: Box<any>) =>
     },
     input
   );
+
+// Test language types tokens "a", "b" as "a" and "b" IF they are directly
+// adjacent. This can be used to test the token proxies, which simulate a
+// continuous coordinate system.
+const testLanguage: LanguageDefinition<Record<string, any>> = {
+  name: "test",
+  definitionFactory: () => (token) => {
+    if (
+      token.text === "a" &&
+      token.next?.text === "b" &&
+      token.x + token.width === token.next.x
+    ) {
+      return "a";
+    }
+    if (
+      token.text === "b" &&
+      token.prev?.text === "a" &&
+      token.x === token.prev?.x + token.prev?.width
+    ) {
+      return "b";
+    }
+    return "f";
+  },
+  postprocessor: (): boolean => false,
+};
+
+describe("Continuous coordinate system", () => {
+  test("continuous coordinate system without boxes", () => {
+    const tokens = type(testLanguage)("a", "b");
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["a", "b"]);
+  });
+
+  test("continuous coordinate system with boxes", () => {
+    const tokens = type(testLanguage)("a", {
+      id: "box",
+      hash: "box",
+      language: undefined,
+      data: {},
+      isDecoration: false,
+      content: ["b"], // has x = 0 as the first member of a box
+    });
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual(["a", "b"]);
+  });
+});
 
 describe("In-place modifications", () => {
   test("It modifies the tokens in-place", () => {
@@ -117,7 +164,7 @@ describe("In-place modifications", () => {
           tokens: [
             {
               kind: "TEXT",
-              x: 1,
+              x: 7,
               y: 0,
               width: 2,
               height: 1,
