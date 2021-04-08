@@ -7,10 +7,12 @@ describe("Basic JSON", () => {
     const tokens = json(`{}`);
     expect(tokens).toEqual([
       {
+        kind: "TEXT",
         x: 0,
         y: 0,
+        width: 1,
+        height: 1,
         text: "{",
-        size: 1,
         type: "token-object-start-0",
         hash: "emolrh",
         parent: expect.any(Object),
@@ -18,10 +20,12 @@ describe("Basic JSON", () => {
         prev: undefined,
       },
       {
+        kind: "TEXT",
         x: 1,
         y: 0,
+        width: 1,
+        height: 1,
         text: "}",
-        size: 1,
         type: "token-object-end-0",
         hash: "4ie197",
         parent: expect.any(Object),
@@ -35,10 +39,12 @@ describe("Basic JSON", () => {
     const tokens = json(`"string"`);
     expect(tokens).toEqual([
       {
+        kind: "TEXT",
         x: 0,
         y: 0,
+        width: 8,
+        height: 1,
         text: '"string"',
-        size: 8,
         type: "string",
         hash: "wbp31a",
         parent: expect.any(Object),
@@ -188,7 +194,7 @@ describe("Boxes", () => {
         id: "asdf",
         hash: "asdf",
         content: ['"x": 42'],
-        isHighlight: false,
+        isDecoration: false,
         language: undefined,
       },
       "}"
@@ -218,7 +224,7 @@ describe("Boxes", () => {
         id: "asdf",
         hash: "asdf",
         content: ['bar"'],
-        isHighlight: false,
+        isDecoration: false,
         language: undefined,
       },
       ": 42}"
