@@ -27,7 +27,8 @@ export type MOV<T> = {
 export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
 
 export type DiffTree<T> = {
-  type: "TREE";
+  readonly kind: "TREE";
+  id: string; // box id
   root: DiffOp<Box<T>> | undefined;
   items: (DiffOp<T> | DiffTree<T>)[];
 };
@@ -221,7 +222,12 @@ export function diffBoxes<T extends Token>(
     boxOps.push(diffBoxes(fromBox, toBox));
   }
   const items = [...textOps, ...decoOps, ...boxOps];
-  return { type: "TREE", root, items };
+  return {
+    kind: "TREE",
+    root: root,
+    id: from?.id || to?.id || fail(),
+    items,
+  };
 }
 
 export const diff = <T extends Token>(roots: Box<T>[]): DiffTree<T>[] => {
