@@ -38,14 +38,13 @@ export type CodeContainer = {
 // inside the box in question is not part of the linked list that the tokens in
 // the parent frame are part of.
 
-// Fields common to Boxes, Decorations and all subtypes of tokens. Almost all of
+// Fields common to Boxes, Decorations and all subtypes of tokens. All of those
 // the above types also have a readonly "kind" discriminant and a string id.
-// Both fields are left out of this type because most functions don't need them
-// and said functions are best served by defining a type argument constrained by
-// this type as it is. The height is irrelevant for text tokens, but for
-// simplicity's sake it's always there and always 1. All coordinates are
-// absolute, even those for tokens nested in boxes.
+// The height is irrelevant for text tokens, but for simplicity's sake it's
+// always there and always 1. All coordinates are absolute, even those for
+// tokens nested in boxes.
 export type Token = {
+  kind: string; // must be a readonly string literal on derived types
   x: number;
   y: number;
   hash: string;
@@ -110,14 +109,22 @@ export type TypedToken = Token & {
   parent: Box<TypedToken | Decoration<TypedToken>>;
 };
 
-// Represents a concrete token in the output, derived from (but not identical
-// to) a TypedToken
+// Represents a concrete text token in the output, derived from (but not
+// identical to) a TypedToken
 export type RenderToken = Token & {
   id: string; // hash plus count for unique identification
   readonly kind: "RENDER";
   text: string;
   type: string;
   hash: string;
+  isVisible: boolean;
+  parent: Box<TypedToken | Decoration<TypedToken>>;
+};
+
+// Represents a decoration in the output
+export type RenderDecoration = Decoration<RenderToken> & {
+  id: string; // hash plus count for unique identification
+  readonly kind: "RENDER_DECO";
   isVisible: boolean;
   parent: Box<TypedToken | Decoration<TypedToken>>;
 };
