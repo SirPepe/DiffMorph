@@ -173,13 +173,6 @@ function diffBox<T>(
   return undefined;
 }
 
-function diffDecorations<T extends Token>(
-  from: T | undefined,
-  to: T | undefined
-): DiffOp<T> {
-  throw new Error("Can't diff two non-existing decorations!");
-}
-
 function partitionTokens<T extends Token>(
   source: Box<T> | undefined
 ): [Box<T>[], T[], T[]] {
@@ -209,7 +202,7 @@ export function diffBoxes<T extends Token>(
   if (!from && !to) {
     throw new Error("Refusing to diff two undefined frames!");
   }
-  const root = diffBox<T>(from as any, to as any);
+  const root = diffBox<T>(from, to);
   const textOps: DiffOp<T>[] = [];
   const decoOps: DiffOp<T>[] = [];
   const boxOps: DiffTree<T>[] = [];
@@ -218,6 +211,7 @@ export function diffBoxes<T extends Token>(
   const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
   textOps.push(...lineDiff.result);
   textOps.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
+  decoOps.push(...diffTokens(fromDecorations, toDecorations));
   const fromBoxesById = mapBy(fromBoxes, "id");
   const toBoxesById = mapBy(toBoxes, "id");
   const boxIds = new Set([...fromBoxesById.keys(), ...toBoxesById.keys()]);
@@ -226,17 +220,6 @@ export function diffBoxes<T extends Token>(
     const toBox = toBoxesById.get(id);
     boxOps.push(diffBoxes(fromBox, toBox));
   }
-  /*const fromDecorationsById = mapBy(fromDecorations, "id");
-  const toDecorationsById = mapBy(toDecorations, "id");
-  const decorationIds = new Set([
-    ...fromDecorationsById.keys(),
-    ...toDecorationsById.keys(),
-  ]);
-  for (const id of decorationIds) {
-    const fromHighlight = fromDecorationsById.get(id);
-    const toHighlight = toDecorationsById.get(id);
-    decoOps.push(diffDecorations<U>(fromHighlight, toHighlight));
-  }*/
   const items = [...textOps, ...decoOps, ...boxOps];
   return { type: "TREE", root, items };
 }
