@@ -67,7 +67,7 @@ export function stubBox<T>(
 
 export const lang = (language: LanguageDefinition<any>) => (
   ...input: Code[]
-): Box<TypedToken | Decoration> => {
+): Box<TypedToken | Decoration<TypedToken>> => {
   return applyLanguage(
     language,
     tokenize({
