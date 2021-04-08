@@ -1,4 +1,4 @@
-import { Keyframe } from "../lib/keyframes";
+import { RenderBox } from "../lib/render";
 
 type TokenData = { text: string; type: string };
 type PositionData = { id: string; x: number; y: number; visible: boolean };
@@ -12,7 +12,7 @@ type Data = {
   highlights: [];
 };
 
-export function toData(keyframes: Keyframe[]): Data {
+export function toData(keyframes: RenderBox[]): Data {
   const tokenData = new Map<string, TokenData>();
   for (const { tokens } of keyframes) {
     for (const [id, token] of tokens) {

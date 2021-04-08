@@ -12,7 +12,7 @@ import {
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
-import { Keyframe, toKeyframes } from "../lib/keyframes";
+import { RenderBox, toRenderData } from "../lib/render";
 import { optimize } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { createIdGenerator } from "../lib/util";
@@ -57,8 +57,8 @@ export function processCode(
 export function fromData(
   inputs: InputContainer[],
   lang: LanguageDefinition<Record<string, any>>
-): Keyframe[] {
+): RenderBox[] {
   const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
   const ops = optimize(diff(typed));
-  return toKeyframes(ops);
+  return toRenderData(ops, undefined);
 }

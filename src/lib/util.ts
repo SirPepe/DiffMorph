@@ -3,7 +3,7 @@ import { Box, Decoration } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
-export function isBox<T>(x: any): x is Box<T> {
+export function isBox<T, D>(x: any): x is Box<T, D> {
   if (typeof x === "object" && x.kind === "BOX") {
     return true;
   }
@@ -18,7 +18,7 @@ export function isDecoration<T = any>(x: any): x is Decoration<T> {
 }
 
 export function getFirstTextToken<T>(
-  tokens: (T | Decoration<T> | Box<T | Decoration<T>>)[]
+  tokens: (T | Decoration<T> | Box<T, Decoration<T>>)[]
 ): T | undefined {
   for (const token of tokens) {
     if (isDecoration(token)) {
@@ -37,7 +37,7 @@ export function getFirstTextToken<T>(
 }
 
 export function getLastTextToken<T>(
-  tokens: (T | Decoration<T> | Box<T | Decoration<T>>)[]
+  tokens: (T | Decoration<T> | Box<T, Decoration<T>>)[]
 ): T | undefined {
   for (let i = tokens.length - 1; i >= 0; i--) {
     const token = tokens[i];
@@ -85,41 +85,25 @@ export const createIdGenerator = (): ((realm: any, hash: any) => string) => {
 type PositionedToken = {
   x: number;
   y: number;
-  parent: Box<any> | undefined;
+  width: number;
 };
 
-function absoluteCoordinates(token: PositionedToken): { x: number; y: number } {
-  if (!token.parent) {
-    return {
-      x: token.x,
-      y: token.y,
-    };
-  }
-  const { x, y } = absoluteCoordinates(token.parent);
-  return {
-    x: token.x + x,
-    y: token.y + y,
-  };
-}
-
 export function isAdjacent(
-  a: (PositionedToken & { text: string }) | undefined,
-  b: (PositionedToken & { text: string }) | undefined
+  a: PositionedToken | undefined,
+  b: PositionedToken | undefined
 ): boolean {
   if (!a || !b) {
     return false;
   }
-  const aCoords =
-    a.parent === b.parent ? { x: a.x, y: a.y } : absoluteCoordinates(a);
-  const bCoords =
-    a.parent === b.parent ? { x: b.x, y: b.y } : absoluteCoordinates(b);
+  const aCoords = { x: a.x, y: a.y };
+  const bCoords = { x: b.x, y: b.y };
   if (aCoords.y !== bCoords.y) {
     return false;
   }
-  if (aCoords.x + a.text.length === bCoords.x) {
+  if (aCoords.x + a.width === bCoords.x) {
     return true;
   }
-  if (bCoords.x + b.text.length === aCoords.x) {
+  if (bCoords.x + b.width === aCoords.x) {
     return true;
   }
   return false;

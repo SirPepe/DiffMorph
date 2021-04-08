@@ -44,7 +44,6 @@ export type CodeContainer = {
 // always there and always 1. All coordinates are absolute, even those for
 // tokens nested in boxes.
 export type Token = {
-  kind: string; // must be a readonly string literal on derived types
   x: number;
   y: number;
   hash: string;
@@ -123,7 +122,7 @@ export type RenderToken = Token & {
 };
 
 // Represents a decoration in the output
-export type RenderDecoration = Decoration<RenderToken> & {
+export type RenderDecoration = Omit<Decoration<RenderToken>, "kind"> & {
   id: string; // hash plus count for unique identification
   readonly kind: "RENDER_DECO";
   isVisible: boolean;

@@ -1,5 +1,5 @@
 import { createIdGenerator } from "../lib/util";
-import { Keyframe } from "../lib/keyframes";
+import { RenderBox } from "../lib/render";
 
 const nextId = createIdGenerator();
 
@@ -16,7 +16,7 @@ const DEFAULT_STYLES = `
 }`;
 
 function generateContent(
-  keyframes: Keyframe[],
+  keyframes: RenderBox[],
   classPrefix: string
 ): { style: HTMLStyleElement; tokens: HTMLSpanElement[] } {
   const styles = [];
@@ -48,7 +48,7 @@ function generateContent(
 }
 
 export function toDom(
-  keyframes: Keyframe[]
+  keyframes: RenderBox[]
 ): [Wrapper: HTMLElement, MaxWidth: number, MaxHeight: number] {
   const wrapper = document.createElement("div");
   const code = document.createElement("pre");

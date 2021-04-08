@@ -9,12 +9,13 @@ import {
   TypedToken,
 } from "../src/types";
 
-type BoxArgs<T> = {
+type BoxArgs<T, D> = {
   x?: number;
   y?: number;
   width?: number;
   height?: number;
-  tokens?: (T | BoxArgs<T>)[];
+  tokens?: (T | BoxArgs<T, D>)[];
+  decorations?: D[];
   id?: string;
   hash?: string;
   language?: string;
@@ -22,15 +23,15 @@ type BoxArgs<T> = {
   parent?: any;
 };
 
-function isBoxArgs<T>(x: any | BoxArgs<T>): x is BoxArgs<T> {
+function isBoxArgs<T, D>(x: any | BoxArgs<T, D>): x is BoxArgs<T, D> {
   return typeof x.x === "undefined" && typeof x.y === "undefined";
 }
 
-export function stubBox<T>(
-  args: BoxArgs<T>,
+export function stubBox<T, D>(
+  args: BoxArgs<T, D>,
   nested = 0,
-  parent?: Box<T>
-): Box<T> {
+  parent?: Box<T, D>
+): Box<T, D> {
   const {
     x = 0,
     y = 0,
@@ -41,8 +42,9 @@ export function stubBox<T>(
     language = "none",
     data = {},
     tokens = [],
+    decorations = [],
   } = args;
-  const result: Box<T> = {
+  const result: Box<T, D> = {
     kind: "BOX",
     x,
     y,
@@ -53,6 +55,7 @@ export function stubBox<T>(
     language,
     data,
     tokens: [],
+    decorations,
     parent,
   };
   result.tokens = tokens.map((token) => {
@@ -67,7 +70,7 @@ export function stubBox<T>(
 
 export const lang = (language: LanguageDefinition<any>) => (
   ...input: Code[]
-): Box<TypedToken | Decoration<TypedToken>> => {
+): Box<TypedToken, Decoration<TypedToken>> => {
   return applyLanguage(
     language,
     tokenize({

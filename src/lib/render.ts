@@ -1,6 +1,6 @@
 // Turns diffing operations into rendering information.
 
-import { DiffOp, DiffTree } from "./diff";
+import { DiffTree } from "./diff";
 import { createIdGenerator } from "./util";
 import { Box, Decoration, RenderDecoration, RenderToken, Token, TypedToken } from "../types";
 import { mapBy } from "@sirpepe/shed";
@@ -11,8 +11,8 @@ import { mapBy } from "@sirpepe/shed";
 // are never the actual render tokens that it uses internally to track usage,
 // but rather immutable copies with modified x/y values.
 class TokenPool<
-  Input extends Token & { id: string },
-  Output extends Token & { id: string }
+  Input extends Token & { kind: string },
+  Output extends Token & { kind: string; id: string }
 > {
   private nextId = createIdGenerator();
 
@@ -104,29 +104,60 @@ function toRenderToken(input: TypedToken, newId: string): RenderToken {
   };
 }
 
-export function toKeyframes(
-  diffs: DiffTree<TypedToken>[]
-): Box<RenderToken | RenderDecoration>[] {
+function toRenderDecoration(
+  input: Decoration<any>,
+  newId: string,
+): RenderDecoration {
+  return {
+    kind: "RENDER_DECO",
+    x: input.x,
+    y: input.y,
+    width: input.width,
+    height: input.height,
+    hash: input.hash,
+    data: input.data,
+    parent: input.parent,
+    id: newId,
+    isVisible: true,
+  };
+}
+
+export type RenderBox = {
+  readonly kind: "RENDER_BOX";
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  tokens: Map<string, RenderToken>;
+  boxes: Map<string, RenderBox>;
+  decorations: Map<string, RenderDecoration>;
+};
+
+export function toRenderData(
+  diffs: DiffTree<TypedToken, Decoration<TypedToken>>[],
+  parent: Box<any, any> | undefined
+): RenderBox[] {
   const renderTokenPool = new TokenPool(toRenderToken);
-  const keyframes: Box<RenderToken | RenderDecoration>[] = [];
+  const renderDecorationPool = new TokenPool(toRenderDecoration);
+  const renderBoxes: RenderBox[] = [];
   for (let i = 0; i < diffs.length; i++) {
-    const id = keyframes[i].id;
-
-    const tokens = mapBy(keyframes[i - 1]?.tokens || [], "id");
-
+    const tokens = renderBoxes[i - 1]?.tokens || new Map();
+    const boxes = renderBoxes[i - 1]?.boxes || new Map();
+    const decorations = renderBoxes[i - 1]?.decorations || new Map();
     let width = 0;
     let height = 0;
-    for (const item of diffs[i].items) {
-      if (item.type === "TREE") {
+    for (const item of diffs[i].tokens) {
+      if (item.kind === "TREE") {
         // TODO
       } else {
-        if (item.type === "ADD") {
+        if (item.kind === "ADD") {
           const token = renderTokenPool.require(item.item);
           tokens.set(token.id, token);
-        } else if (item.type === "DEL") {
+        } else if (item.kind === "DEL") {
           const id = renderTokenPool.free(item.item);
           tokens.delete(id);
-        } else if (item.type === "MOV") {
+        } else if (item.kind === "MOV") {
           const token = renderTokenPool.reuse(item.from, item.item);
           tokens.set(token.id, token);
         }
@@ -139,10 +170,20 @@ export function toKeyframes(
       }
     }
     // Width and height are at this point the largest _offsets_, not dimensions,
-    // so we compensate for that
+    // so we compensate for that by adding 1
     width++;
     height++;
-    keyframes.push({ id, tokens, width, height });
+    renderBoxes.push({
+      kind: "RENDER_BOX",
+      x: parent?.x || 0,
+      y: parent?.y || 0,
+      id: diffs[i].id,
+      tokens,
+      boxes,
+      decorations,
+      width,
+      height,
+    });
   }
-  return keyframes;
+  return renderBoxes;
 }
