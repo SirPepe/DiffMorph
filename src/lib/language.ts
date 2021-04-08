@@ -34,11 +34,10 @@ function applyPostprocessor(
       token.prev.hash = hash(hash(token.prev.type) + hash(token.prev.text));
       token.prev.next = token.next;
       // This indexOf() is expensive, but keeping track of the index while the
-      // loop runs is cumbersome because tokens are mixed with highlights. So
-      // indexOf() is the least worst choice for removing the token from not
-      // only the linked list of tokens, but from the flat array of box members
-      // also.
-      // TODO: the above is no longer true. This can be simplified.
+      // loop runs is cumbersome because tokens are mixed with boxes. So
+      // indexOf() is, at least for now, the least worst choice for removing the
+      // token from not only the linked list of tokens, but from the flat array
+      // of box members as well.
       token.parent.content.splice(token.parent.content.indexOf(token), 1);
       if (token.next) {
         token.next.prev = token.prev;
