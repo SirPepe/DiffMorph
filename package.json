@@ -9,8 +9,8 @@
   "scripts": {
     "lint": "eslint src",
     "check": "tsc --noEmit",
-    "test": "jest",
-    "test-dev": "jest --watch",
+    "test": "jest --maxWorkers=25%",
+    "test-dev": "jest --maxWorkers=25% --watch",
     "build": "webpack --mode=production",
     "build-dev": "webpack --mode=development"
   },
