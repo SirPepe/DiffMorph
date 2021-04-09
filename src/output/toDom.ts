@@ -1,5 +1,5 @@
+import { RenderBox } from "../types";
 import { createIdGenerator } from "../lib/util";
-import { RenderBox } from "../lib/render";
 
 const nextId = createIdGenerator();
 

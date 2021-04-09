@@ -2,8 +2,15 @@
 
 import { DiffTree } from "./diff";
 import { createIdGenerator } from "./util";
-import { Box, Decoration, RenderBox, RenderDecoration, RenderToken, Token, TypedToken } from "../types";
-import { mapBy } from "@sirpepe/shed";
+import {
+  Box,
+  Decoration,
+  RenderBox,
+  RenderDecoration,
+  RenderToken,
+  Token,
+  TypedToken,
+} from "../types";
 
 // Manages the available render tokens. The goal is to use as few render tokens
 // as possible, so this class keeps track of which render token is in use by

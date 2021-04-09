@@ -109,10 +109,8 @@ export function isAdjacent(
   return false;
 }
 
-export function isNewLine<
-  T extends { y: number; prev: { y: number } | undefined }
->(
-  token: T
+export function isNewLine(
+  token: { y: number; prev: { y: number } | undefined }
 ): boolean {
   return Boolean(token.prev && token.y > token.prev.y);
 }

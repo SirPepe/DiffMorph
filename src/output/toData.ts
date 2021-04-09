@@ -1,4 +1,4 @@
-import { RenderBox } from "../lib/render";
+import { RenderBox } from "../types";
 
 type TokenData = { text: string; type: string };
 type PositionData = { id: string; x: number; y: number; visible: boolean };
