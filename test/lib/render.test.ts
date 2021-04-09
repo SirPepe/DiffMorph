@@ -4,10 +4,10 @@ import { toRenderData } from "../../src/lib/render";
 import { lang } from "../helpers";
 const json = lang(languageDefinition);
 
-describe("Keyframes", () => {
+describe("rendering", () => {
   test("It turns some JSON into keyframes", () => {
     const diffs = diff([json("{}"), json("  {}"), json("    {\n}")]);
-    const keyframes = toRenderData(diffs, undefined);
+    const keyframes = toRenderData(diffs);
     expect(keyframes.length).toBe(3);
     // All keyframe token ids should be equal
     const aids = Array.from(keyframes[0].tokens.keys());
@@ -25,7 +25,7 @@ describe("Keyframes", () => {
 
   test("does not explode when a line break gets inserted after two identical frames", () => {
     const diffs = diff([json("{}"), json("{}"), json("{\n}")]);
-    const keyframes = toRenderData(diffs, undefined);
+    const keyframes = toRenderData(diffs);
     expect(keyframes.length).toBe(3);
   });
 });

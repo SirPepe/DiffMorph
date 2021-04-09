@@ -127,9 +127,10 @@ export function isAdjacent(
   return false;
 }
 
-export function isNewLine(
-  token: { y: number; prev: { y: number } | undefined }
-): boolean {
+export function isNewLine(token: {
+  y: number;
+  prev: { y: number } | undefined;
+}): boolean {
   return Boolean(token.prev && token.y > token.prev.y);
 }
 

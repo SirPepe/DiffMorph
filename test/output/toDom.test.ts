@@ -8,8 +8,7 @@ const json = lang(languageDefinition);
 describe("toDom", () => {
   test("renders tokens to DOM", () => {
     const keyframes = toRenderData(
-      diff([json("{}"), json("  {}"), json("    {\n}")]),
-      undefined
+      diff([json("{}"), json("  {}"), json("    {\n}")])
     );
     const [element, maxWidth, maxHeight] = toDom(keyframes);
     expect(maxWidth).toBe(5);
@@ -36,9 +35,8 @@ describe("toDom", () => {
             data: { id: "hello" },
           },
           "]"
-        )
-      ]),
-      undefined
+        ),
+      ])
     );
     const [element, maxWidth, maxHeight] = toDom(keyframes);
     // console.log(element.children[0].outerHTML)

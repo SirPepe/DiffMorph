@@ -3,7 +3,6 @@
 import { DiffTree } from "./diff";
 import { assertIs, assertIsNot, createIdGenerator } from "./util";
 import {
-  Box,
   Decoration,
   RenderBox,
   RenderDecoration,
@@ -112,7 +111,7 @@ function toRenderToken(input: TypedToken, newId: string): RenderToken {
 
 function toRenderDecoration(
   input: Decoration<any>,
-  newId: string,
+  newId: string
 ): RenderDecoration {
   return {
     kind: "RENDER_DECO",
@@ -127,23 +126,22 @@ function toRenderDecoration(
   };
 }
 
-type TokenPools = Map<string, [
-  TokenPool<TypedToken, RenderToken>,
-  TokenPool<Decoration<any>, RenderDecoration>
-]>;
+type RenderTokenPool = TokenPool<TypedToken, RenderToken>;
+type RenderDecorationPool = TokenPool<Decoration<any>, RenderDecoration>;
+type TokenPools = Map<string, [RenderTokenPool, RenderDecorationPool]>;
 
-function getPools(pools: TokenPools, boxId: string): [
-  TokenPool<TypedToken, RenderToken>,
-  TokenPool<Decoration<any>, RenderDecoration>
-] {
+function getPools(
+  pools: TokenPools,
+  boxId: string
+): [RenderTokenPool, RenderDecorationPool] {
   const existing = pools.get(boxId);
   if (existing) {
     return existing;
   }
   const renderTokenPool = new TokenPool(toRenderToken);
   const renderDecorationPool = new TokenPool(toRenderDecoration);
-  pools.set(boxId, [ renderTokenPool, renderDecorationPool ]);
-  return [ renderTokenPool, renderDecorationPool ];
+  pools.set(boxId, [renderTokenPool, renderDecorationPool]);
+  return [renderTokenPool, renderDecorationPool];
 }
 
 function toRenderBox(
@@ -154,7 +152,7 @@ function toRenderBox(
   let width = 0;
   let height = 0;
   const { x, y, id, data } = diff.root.item;
-  const [ renderTokenPool, renderDecorationPool ] = getPools(pools, id);
+  const [renderTokenPool, renderDecorationPool] = getPools(pools, id);
   // Start out with clones of what was there in the previous render box
   const tokens = new Map(prev?.tokens || []);
   const boxes = new Map(prev?.boxes || []);
@@ -163,16 +161,17 @@ function toRenderBox(
     if (operation.kind === "TREE") {
       const previousBox = boxes.get(operation.root.item.id);
       if (operation.root.kind === "NOP") {
-        assertIs(previousBox, "Prev box should be defined for NOP!")
+        assertIs(previousBox, "Prev box should be defined for NOP!");
         boxes.set(id, toRenderBox(operation, previousBox, pools));
       } else {
         if (operation.root.kind === "ADD") {
           assertIsNot(previousBox, "Prev box should not be defined for ADD!");
           boxes.set(id, toRenderBox(operation, previousBox, pools));
         } else if (operation.root.kind === "DEL") {
-          assertIs(previousBox, "Prev box should be defined for DEL!")
+          assertIs(previousBox, "Prev box should be defined for DEL!");
           boxes.delete(id);
-        } else { // MOV
+        } else {
+          // MOV
           assertIs(previousBox, "Prev box should be defined for MOV!");
           boxes.set(id, toRenderBox(operation, previousBox, pools));
         }

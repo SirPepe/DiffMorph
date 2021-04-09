@@ -86,11 +86,7 @@ function asLines<T extends Token>(tokens: T[]): Line<T>[] {
 function diffLines<T extends Token>(
   from: Line<T>[],
   to: Line<T>[]
-): {
-  result: DiffOp<T>[];
-  restFrom: T[];
-  restTo: T[];
-} {
+): { result: DiffOp<T>[]; restFrom: T[]; restTo: T[] } {
   const result: DiffOp<T>[] = [];
   const toById = new Map(to.map((line) => [line.id, line]));
   const fromById = new Map(from.map((line) => [line.id, line]));

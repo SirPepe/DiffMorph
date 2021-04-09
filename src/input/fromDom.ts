@@ -98,6 +98,5 @@ export function fromDom(
   lang: LanguageDefinition<Record<string, any>>
 ): RenderBox[] {
   const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
-  const ops = optimize(diff(typed));
-  return toRenderData(ops, undefined);
+  return toRenderData(optimize(diff(typed)));
 }
