@@ -19,8 +19,7 @@ describe("diffing lines", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [{ kind: "ADD", item: bTokens[3] }],
       decorations: [],
     });
@@ -44,8 +43,7 @@ describe("diffing lines", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [{ kind: "DEL", item: aTokens[3] }],
       decorations: [],
     });
@@ -69,8 +67,7 @@ describe("diffing lines", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [
         { kind: "MOV", item: bTokens[2], from: aTokens[2] },
         { kind: "MOV", item: bTokens[3], from: aTokens[3] },
@@ -97,8 +94,7 @@ describe("diffing lines", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [
         { kind: "MOV", item: bTokens[2], from: aTokens[2] },
         { kind: "MOV", item: bTokens[3], from: aTokens[3] },
@@ -130,8 +126,7 @@ describe("diff tokens", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [{ kind: "ADD", item: bTokens[1] }],
       decorations: [],
     });
@@ -159,8 +154,7 @@ describe("diff tokens", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [{ kind: "DEL", item: aTokens[1] }],
       decorations: [],
     });
@@ -188,8 +182,7 @@ describe("diff tokens", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [
         { kind: "DEL", item: aTokens[1] },
         { kind: "ADD", item: bTokens[1] },
@@ -218,8 +211,7 @@ describe("diff tokens", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [
         { kind: "DEL", item: aTokens[1] },
         { kind: "ADD", item: bTokens[1] },
@@ -248,8 +240,7 @@ describe("diff tokens", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [
         { kind: "DEL", item: aTokens[2] },
         { kind: "ADD", item: bTokens[2] },
@@ -287,8 +278,7 @@ describe("diff with decorations", () => {
     );
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [],
     });
@@ -308,8 +298,7 @@ describe("diff with decorations", () => {
     );
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [{ kind: "ADD", item: added }],
     });
@@ -329,8 +318,7 @@ describe("diff with decorations", () => {
     );
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [{ kind: "DEL", item: removed }],
     });
@@ -357,8 +345,7 @@ describe("diff with decorations", () => {
     );
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [
         { kind: "DEL", item: before },
@@ -388,8 +375,7 @@ describe("diff with decorations", () => {
     );
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [
         { kind: "DEL", item: before },
@@ -407,8 +393,7 @@ describe("diff with boxes", () => {
     );
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [],
     });
@@ -420,12 +405,11 @@ describe("diff with boxes", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
       root: {
         from: a,
         item: b,
         kind: "MOV",
-      },
+     },
       content: [],
       decorations: [],
     });
@@ -437,12 +421,11 @@ describe("diff with boxes", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
       root: {
         from: a,
         item: b,
         kind: "MOV",
-      },
+     },
       content: [],
       decorations: [],
     });
@@ -472,21 +455,22 @@ describe("diff with boxes", () => {
     const actual = diffBoxes<any, any>(a, b);
     expect(actual).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [
         { kind: "DEL", item: aTokens[1] },
         { kind: "ADD", item: bTokens[1] },
         {
           kind: "TREE",
-          id: "nested-1",
-          root: undefined,
+          root: {
+            kind: "NOP",
+            item: expect.objectContaining({ id: "nested-1" }),
+          },
           content: [
             { kind: "DEL", item: aNestedTokens[1] },
             { kind: "ADD", item: bNestedTokens[1] },
           ],
           decorations: [],
-        },
+       },
       ],
       decorations: [],
     });
@@ -527,11 +511,10 @@ describe("diff across multiple frames", () => {
     const [first, second, third, fourth] = diff<any, any>([a, b, c, d]);
     expect(first).toEqual({
       kind: "TREE",
-      id: "root",
       root: {
         kind: "ADD",
         item: a,
-      },
+     },
       content: [
         { kind: "ADD", item: aTokens[0] },
         { kind: "ADD", item: aTokens[1] },
@@ -541,22 +524,19 @@ describe("diff across multiple frames", () => {
     });
     expect(second).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: b },
       content: [{ kind: "ADD", item: bTokens[3] }],
       decorations: [],
     });
     expect(third).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: c },
       content: [{ kind: "ADD", item: cTokens[3] }],
       decorations: [],
     });
     expect(fourth).toEqual({
       kind: "TREE",
-      id: "root",
-      root: undefined,
+      root: { kind: "NOP", item: d },
       content: [
         { kind: "MOV", item: dTokens[0], from: cTokens[0] },
         { kind: "MOV", item: dTokens[1], from: cTokens[1] },

@@ -3,6 +3,24 @@ import { Box, Decoration } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
+export function assertIs<T>(
+  x: T | undefined | null,
+  msg = `Expected value to be defined, but found ${x}`
+): asserts x is T {
+  if (!x) {
+    throw new Error(msg);
+  }
+}
+
+export function assertIsNot<T>(
+  x: T | undefined | null,
+  msg = `Expected value to be null or undefined, but found ${typeof x}`
+): asserts x is undefined | null {
+  if (x) {
+    throw new Error(msg);
+  }
+}
+
 export function isBox<T, D>(x: any): x is Box<T, D> {
   if (typeof x === "object" && x.kind === "BOX") {
     return true;

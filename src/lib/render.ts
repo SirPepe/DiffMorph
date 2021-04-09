@@ -1,7 +1,7 @@
 // Turns diffing operations into rendering information.
 
 import { DiffTree } from "./diff";
-import { createIdGenerator } from "./util";
+import { assertIs, assertIsNot, createIdGenerator } from "./util";
 import {
   Box,
   Decoration,
@@ -127,58 +127,109 @@ function toRenderDecoration(
   };
 }
 
-export function toRenderData(
-  diffs: DiffTree<TypedToken, Decoration<TypedToken>>[],
-  parent: Box<any, any> | undefined
-): RenderBox[] {
+type TokenPools = Map<string, [
+  TokenPool<TypedToken, RenderToken>,
+  TokenPool<Decoration<any>, RenderDecoration>
+]>;
+
+function getPools(pools: TokenPools, boxId: string): [
+  TokenPool<TypedToken, RenderToken>,
+  TokenPool<Decoration<any>, RenderDecoration>
+] {
+  const existing = pools.get(boxId);
+  if (existing) {
+    return existing;
+  }
   const renderTokenPool = new TokenPool(toRenderToken);
   const renderDecorationPool = new TokenPool(toRenderDecoration);
-  const renderBoxes: RenderBox[] = [];
-  for (let i = 0; i < diffs.length; i++) {
-    const tokens = renderBoxes[i - 1]?.tokens || new Map();
-    const boxes = renderBoxes[i - 1]?.boxes || new Map();
-    const decorations = renderBoxes[i - 1]?.decorations || new Map();
-    let width = 0;
-    let height = 0;
-    for (const item of diffs[i].content) {
-      if (item.kind === "TREE") {
-        // TODO
+  pools.set(boxId, [ renderTokenPool, renderDecorationPool ]);
+  return [ renderTokenPool, renderDecorationPool ];
+}
+
+function toRenderBox(
+  diff: DiffTree<TypedToken, Decoration<TypedToken>>,
+  prev: RenderBox | undefined,
+  pools: TokenPools
+): RenderBox {
+  let width = 0;
+  let height = 0;
+  const { x, y, id, data } = diff.root.item;
+  const [ renderTokenPool, renderDecorationPool ] = getPools(pools, id);
+  // Start out with clones of what was there in the previous render box
+  const tokens = new Map(prev?.tokens || []);
+  const boxes = new Map(prev?.boxes || []);
+  const decorations = new Map(prev?.decorations || []);
+  for (const operation of diff.content) {
+    if (operation.kind === "TREE") {
+      const previousBox = boxes.get(operation.root.item.id);
+      if (operation.root.kind === "NOP") {
+        assertIs(previousBox, "Prev box should be defined for NOP!")
+        boxes.set(id, toRenderBox(operation, previousBox, pools));
       } else {
-        if (item.kind === "ADD") {
-          const token = renderTokenPool.require(item.item);
-          tokens.set(token.id, token);
-        } else if (item.kind === "DEL") {
-          const id = renderTokenPool.free(item.item);
-          tokens.delete(id);
-        } else if (item.kind === "MOV") {
-          const token = renderTokenPool.reuse(item.from, item.item);
-          tokens.set(token.id, token);
-        }
-        if (item.item.x > width) {
-          width = item.item.x;
-        }
-        if (item.item.y > height) {
-          height = item.item.y;
+        if (operation.root.kind === "ADD") {
+          assertIsNot(previousBox, "Prev box should not be defined for ADD!");
+          boxes.set(id, toRenderBox(operation, previousBox, pools));
+        } else if (operation.root.kind === "DEL") {
+          assertIs(previousBox, "Prev box should be defined for DEL!")
+          boxes.delete(id);
+        } else { // MOV
+          assertIs(previousBox, "Prev box should be defined for MOV!");
+          boxes.set(id, toRenderBox(operation, previousBox, pools));
         }
       }
+      if (operation.root.item.x > width) {
+        width = operation.root.item.x;
+      }
+      if (operation.root.item.y > height) {
+        height = operation.root.item.y;
+      }
+    } else {
+      if (operation.kind === "ADD") {
+        const token = renderTokenPool.require(operation.item);
+        tokens.set(token.id, token);
+      } else if (operation.kind === "DEL") {
+        const id = renderTokenPool.free(operation.item);
+        tokens.delete(id);
+      } else if (operation.kind === "MOV") {
+        const token = renderTokenPool.reuse(operation.from, operation.item);
+        tokens.set(token.id, token);
+      }
+      if (operation.item.x > width) {
+        width = operation.item.x;
+      }
+      if (operation.item.y > height) {
+        height = operation.item.y;
+      }
     }
-    // Width and height are at this point the largest _offsets_, not dimensions,
-    // so we compensate for that by adding 1
-    width++;
-    height++;
-    renderBoxes.push({
-      kind: "RENDER_BOX",
-      x: parent?.x || 0,
-      y: parent?.y || 0,
-      id: diffs[i].id,
-      tokens,
-      boxes,
-      decorations,
-      width,
-      height,
-      data: parent?.data || {},
-      isVisible: true,
-    });
+  }
+  // TODO: for (const item of diff.decorations) {}
+  // Width and height are at this point the largest _offsets_, not dimensions,
+  // so we compensate for that by adding 1
+  width++;
+  height++;
+  return {
+    kind: "RENDER_BOX",
+    x,
+    y,
+    id,
+    data,
+    tokens,
+    boxes,
+    decorations,
+    width,
+    height,
+    isVisible: true,
+  };
+}
+
+export function toRenderData(
+  diffs: DiffTree<TypedToken, Decoration<TypedToken>>[]
+): RenderBox[] {
+  const renderBoxes: RenderBox[] = [];
+  // box id -> token pools
+  const tokenPools: TokenPools = new Map();
+  for (let i = 0; i < diffs.length; i++) {
+    renderBoxes.push(toRenderBox(diffs[i], renderBoxes[i - 1], tokenPools));
   }
   return renderBoxes;
 }

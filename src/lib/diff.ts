@@ -14,6 +14,13 @@ import { groupBy, mapBy } from "@sirpepe/shed";
 import { Box, Token } from "../types";
 import { createIdGenerator, isBox } from "./util";
 
+// Represents boxes that did not change themselves, but that may have changed
+// contents or decorations.
+export type NOP<T> = {
+  readonly kind: "NOP";
+  item: T;
+};
+
 export type ADD<T> = {
   readonly kind: "ADD";
   item: T;
@@ -35,10 +42,10 @@ export type MOV<T> = {
 
 export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
 
+// Models a box in the diff result
 export type DiffTree<T, D> = {
   readonly kind: "TREE";
-  id: string; // box id
-  root: DiffOp<Box<T, D>> | undefined;
+  root: DiffOp<Box<T, D>> | NOP<Box<T, D>>;
   content: (DiffOp<T> | DiffTree<T, D>)[];
   decorations: DiffOp<D>[];
 };
@@ -182,7 +189,7 @@ function dimensionsEql(a: Token, b: Token): boolean {
 function diffBox<T, D>(
   from: Box<T, D> | undefined,
   to: Box<T, D> | undefined
-): DiffOp<Box<T, D>> | undefined {
+): DiffOp<Box<T, D>> | NOP<Box<T, D>> {
   if (from && !to) {
     return {
       kind: "DEL",
@@ -195,14 +202,21 @@ function diffBox<T, D>(
       item: to,
     };
   }
-  if (from && to && !dimensionsEql(from, to)) {
-    return {
-      kind: "MOV",
-      item: to,
-      from,
-    };
+  if (from && to) {
+    if (dimensionsEql(from, to)) {
+      return {
+        kind: "NOP",
+        item: to,
+      };
+    } else {
+      return {
+        kind: "MOV",
+        item: to,
+        from,
+      };
+    }
   }
-  return undefined;
+  throw new Error("This can never happen");
 }
 
 function partitionTokens<T extends Token, D extends Token>(
@@ -252,7 +266,6 @@ export function diffBoxes<T extends Token, D extends Token>(
   return {
     kind: "TREE",
     root: root,
-    id: from?.id || to?.id || fail(),
     content: [...textOps, ...boxOps],
     decorations: decoOps,
   };
