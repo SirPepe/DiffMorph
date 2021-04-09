@@ -1,11 +1,18 @@
-// This module's main diff() function turns frames of typed tokens into diffing
-// operations. It first attempts to diff the source code on a line-by-line level
-// and only looks at individual tokens in a second pass.
+// This module's main diff() function turns frames of tokens and decorations
+// into diffing operations. It roughly works as follows:
+// 1. diff boxes with equivalent IDs, returning ADD, DEL or MOV operations
+// 2. diff typed tokens by
+//    a. organizing them in lines and diffing the lines by a hash chain
+//    b. diffing the remaining lines one-by one, returning only ADD and DEL
+//       operations. The optimizer stage is responsible for turning an ADD and a
+//       DEL on equivalent tokens into a MOV operation
+// 3. diff decorations by hash, position and dimensions, returning only ADD and
+//    DEL operations. The optimizer stage can again turn ADD and DEL into MOV.
 
 import { diffArrays } from "diff";
 import { groupBy, mapBy } from "@sirpepe/shed";
 import { Box, Token } from "../types";
-import { createIdGenerator, isBox, isDecoration } from "./util";
+import { createIdGenerator, isBox } from "./util";
 
 export type ADD<T> = {
   readonly kind: "ADD";
@@ -17,7 +24,9 @@ export type DEL<T> = {
   item: T;
 };
 
-// also responsible for changes in dimensions
+// MOV is also responsible for changes in dimensions. In many cases MOV
+// operations are created in the optimizer by compensating for ADD operations
+// with DEL operations for equivalent tokens.
 export type MOV<T> = {
   readonly kind: "MOV";
   item: T;
@@ -46,16 +55,16 @@ type Line<T extends Token> = {
 // their *relative* distance on the x axis. The allover level of indentation is
 // not reflected in the hash - two lines containing the same characters the same
 // distance apart get the same hash, no matter the indentation
-const hashLine = (items: Token[]): string => {
+function hashLine(items: Token[]): string {
   const hashes = items.map((item, idx) => {
     const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
     return item.hash + String(xDelta);
   });
   return hashes.join("");
-};
+}
 
 // Organize tokens into lines
-const asLines = <T extends Token>(tokens: T[]): Line<T>[] => {
+function asLines<T extends Token>(tokens: T[]): Line<T>[] {
   const nextId = createIdGenerator();
   const byLine = groupBy(tokens, "y");
   return Array.from(byLine, ([y, items]) => {
@@ -64,16 +73,17 @@ const asLines = <T extends Token>(tokens: T[]): Line<T>[] => {
     const x = items.length > 0 ? items[0].x : 0;
     return { hash, id, items, x, y };
   });
-};
+}
 
-const diffLines = <T extends Token>(
+// Diff entire lines of tokens
+function diffLines<T extends Token>(
   from: Line<T>[],
   to: Line<T>[]
 ): {
   result: DiffOp<T>[];
   restFrom: T[];
   restTo: T[];
-} => {
+} {
   const result: DiffOp<T>[] = [];
   const toById = new Map(to.map((line) => [line.id, line]));
   const fromById = new Map(from.map((line) => [line.id, line]));
@@ -117,9 +127,10 @@ const diffLines = <T extends Token>(
     restTo: Array.from(toById.values()).flatMap(({ items }) => items),
     restFrom: Array.from(fromById.values()).flatMap(({ items }) => items),
   };
-};
+}
 
-const diffTokens = <T extends Token>(from: T[], to: T[]): DiffOp<T>[] => {
+// Diff individual tokes by their hash and x/y positions
+function diffTokens<T extends Token>(from: T[], to: T[]): DiffOp<T>[] {
   const result: DiffOp<T>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
@@ -135,9 +146,28 @@ const diffTokens = <T extends Token>(from: T[], to: T[]): DiffOp<T>[] => {
     }
   }
   return result;
-};
+}
 
-function boxMeasurementsEql(a: Box<any, any>, b: Box<any, any>): boolean {
+// Diff decorations by their hashes, positions and dimensions
+function diffDecorations<T extends Token>(from: T[], to: T[]): DiffOp<T>[] {
+  const result: DiffOp<T>[] = [];
+  const changes = diffArrays(from, to, {
+    comparator: (a, b) => a.hash === b.hash && dimensionsEql(a, b),
+    ignoreCase: false,
+  });
+  for (const change of changes) {
+    for (const value of change.value) {
+      if (change.added) {
+        result.push({ kind: "ADD", item: value });
+      } else if (change.removed) {
+        result.push({ kind: "DEL", item: value });
+      }
+    }
+  }
+  return result;
+}
+
+function dimensionsEql(a: Token, b: Token): boolean {
   if (
     a.x !== b.x ||
     a.y !== b.y ||
@@ -165,7 +195,7 @@ function diffBox<T, D>(
       item: to,
     };
   }
-  if (from && to && !boxMeasurementsEql(from, to)) {
+  if (from && to && !dimensionsEql(from, to)) {
     return {
       kind: "MOV",
       item: to,
@@ -210,7 +240,7 @@ export function diffBoxes<T extends Token, D extends Token>(
   const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
   textOps.push(...lineDiff.result);
   textOps.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
-  decoOps.push(...diffTokens(fromDecorations, toDecorations)); // TODO: this probably does not cut it
+  decoOps.push(...diffDecorations(fromDecorations, toDecorations));
   const fromBoxesById = mapBy(fromBoxes, "id");
   const toBoxesById = mapBy(toBoxes, "id");
   const boxIds = new Set([...fromBoxesById.keys(), ...toBoxesById.keys()]);

@@ -259,6 +259,146 @@ describe("diff tokens", () => {
   });
 });
 
+describe("diff with decorations", () => {
+  test("no changes", () => {
+    const actual = diffBoxes<any, any>(
+      stubBox({
+        decorations: [
+          {
+            x: 0,
+            y: 0,
+            hash: "foo",
+            width: 2,
+            height: 2,
+          }
+        ],
+      }),
+      stubBox({
+        decorations: [
+          {
+            x: 0,
+            y: 0,
+            hash: "foo",
+            width: 2,
+            height: 2,
+          }
+        ],
+      })
+    );
+    expect(actual).toEqual({
+      kind: "TREE",
+      id: "root",
+      root: undefined,
+      content: [],
+      decorations: [],
+    });
+  });
+
+  test("single addition", () => {
+    const added = {
+      x: 0,
+      y: 0,
+      hash: "foo",
+      width: 2,
+      height: 2,
+    };
+    const actual = diffBoxes<any, any>(
+      stubBox({ decorations: [] }),
+      stubBox({ decorations: [ added ]}),
+    );
+    expect(actual).toEqual({
+      kind: "TREE",
+      id: "root",
+      root: undefined,
+      content: [],
+      decorations: [{ kind: "ADD", item: added }],
+    });
+  });
+
+  test("single removal", () => {
+    const removed = {
+      x: 0,
+      y: 0,
+      hash: "foo",
+      width: 2,
+      height: 2,
+    };
+    const actual = diffBoxes<any, any>(
+      stubBox({ decorations: [ removed ] }),
+      stubBox({ decorations: []}),
+    );
+    expect(actual).toEqual({
+      kind: "TREE",
+      id: "root",
+      root: undefined,
+      content: [],
+      decorations: [{ kind: "DEL", item: removed }],
+    });
+  });
+
+  test("single translation", () => {
+    const before = {
+      x: 0,
+      y: 0,
+      hash: "foo",
+      width: 2,
+      height: 2,
+    };
+    const after = {
+      x: 0,
+      y: 1,
+      hash: "foo",
+      width: 2,
+      height: 2,
+    };
+    const actual = diffBoxes<any, any>(
+      stubBox({ decorations: [ before ] }),
+      stubBox({ decorations: [ after ]}),
+    );
+    expect(actual).toEqual({
+      kind: "TREE",
+      id: "root",
+      root: undefined,
+      content: [],
+      decorations: [
+        { kind: "DEL", item: before },
+        { kind: "ADD", item: after }
+      ],
+    });
+  });
+
+  test("single size change", () => {
+    const before = {
+      x: 0,
+      y: 0,
+      hash: "foo",
+      width: 2,
+      height: 2,
+    };
+    const after = {
+      x: 0,
+      y: 0,
+      hash: "foo",
+      width: 1,
+      height: 1,
+    };
+    const actual = diffBoxes<any, any>(
+      stubBox({ decorations: [ before ] }),
+      stubBox({ decorations: [ after ]}),
+    );
+    expect(actual).toEqual({
+      kind: "TREE",
+      id: "root",
+      root: undefined,
+      content: [],
+      decorations: [
+        { kind: "DEL", item: before },
+        { kind: "ADD", item: after }
+      ],
+    });
+  });
+});
+
 describe("diff with boxes", () => {
   test("diffing empty root boxes that don't change", () => {
     const actual = diffBoxes<any, any>(
