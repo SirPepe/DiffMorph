@@ -77,7 +77,7 @@ export const lang = (language: LanguageDefinition<any>) => (
       content: input,
       hash: "root",
       id: "root",
-      language: lang.name,
+      language: language.name,
       isDecoration: false,
       data: {},
     })
