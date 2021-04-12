@@ -8,7 +8,7 @@ import {
   CodeContainer,
   Decoration,
   LanguageDefinition,
-  RenderBox,
+  RenderData,
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
@@ -58,7 +58,7 @@ export function processCode(
 export function fromData(
   inputs: InputContainer[],
   lang: LanguageDefinition<Record<string, any>>
-): RenderBox[] {
+): RenderData {
   const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
   return toRenderData(optimize(diff(typed)));
 }

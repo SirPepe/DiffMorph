@@ -7,17 +7,17 @@ const json = lang(languageDefinition);
 
 describe("toDom", () => {
   test("renders tokens to DOM", () => {
-    const keyframes = toRenderData(
+    const renderData = toRenderData(
       diff([json("{}"), json("  {}"), json("    {\n}")])
     );
-    const [element, maxWidth, maxHeight] = toDom(keyframes);
+    const [el, maxWidth, maxHeight] = toDom(renderData);
     expect(maxWidth).toBe(5);
     expect(maxHeight).toBe(2);
-    const renderChildren = element.querySelector("pre")?.children;
-    expect(renderChildren?.length).toBe(2);
-    const [a, b] = Array.from(renderChildren as any);
-    expect(a).toMatchObject({ tagName: "SPAN", innerText: "{" });
-    expect(b).toMatchObject({ tagName: "SPAN", innerText: "}" });
+    const renderTokens = el.querySelector("pre > .language-json")?.children;
+    expect(renderTokens?.length).toBe(2);
+    const [a, b] = Array.from(renderTokens as any);
+    expect(a).toMatchObject({ tagName: "SPAN", innerHTML: "{" });
+    expect(b).toMatchObject({ tagName: "SPAN", innerHTML: "}" });
   });
 
   test.skip("renders tokens in boxes to DOM", () => {

@@ -109,43 +109,48 @@ export type TypedToken = Token & {
   parent: Box<TypedToken, Decoration<TypedToken>>;
 };
 
-// Represents a concrete text token in the output, derived from (but not
-// identical to) a TypedToken
-export type RenderToken = Token & {
-  id: string; // hash plus count for unique identification
-  readonly kind: "RENDER";
-  text: string;
-  type: string;
-  hash: string;
-  isVisible: boolean;
-};
-
-// Represents a box in the output
-export type RenderBox = {
-  readonly kind: "RENDER_BOX";
+// Describes how to render the token with the given id.
+type BasePosition = {
   id: string;
   x: number;
   y: number;
   width: number;
   height: number;
-  tokens: Map<string, RenderToken>;
-  boxes: Map<string, RenderBox>;
-  decorations: Map<string, RenderDecoration>;
-  data: Record<string, any>;
   isVisible: boolean;
 };
 
-// Represents a decoration in the output
-export type RenderDecoration = {
-  readonly kind: "RENDER_DECO";
+export type TextPosition = BasePosition;
+export type DecorationPosition = BasePosition;
+
+// Box render positions have their own frame to render as well
+export type RenderPositions = BasePosition & { frame: Frame };
+
+export type RenderText = { id: string; text: string; type: string };
+export type RenderDecoration = { id: string; data: Record<string, any> };
+export type RenderRoot = {
   id: string;
-  hash: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
   data: Record<string, any>;
-  isVisible: boolean;
+  language: string | undefined;
+  content: {
+    text: Map<string, RenderText>;
+    decorations: Map<string, RenderDecoration>;
+    boxes: Map<string, RenderRoot>;
+  };
+};
+
+export type Frame = {
+  text: Map<string, TextPosition>;
+  decorations: Map<string, DecorationPosition>;
+  boxes: Map<string, RenderPositions>;
+};
+
+// Object graph that describes the items to render (content) and when and
+// where to render them (frame)
+export type RenderData = {
+  root: RenderRoot;
+  frames: RenderPositions[]; // root boxes
+  maxWidth: number;
+  maxHeight: number;
 };
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;

@@ -3,10 +3,14 @@
 import { DiffTree } from "./diff";
 import { assertIs, assertIsNot, createIdGenerator } from "./util";
 import {
+  Box,
+  RenderPositions,
   Decoration,
-  RenderBox,
-  RenderDecoration,
-  RenderToken,
+  DecorationPosition,
+  Frame,
+  RenderRoot,
+  RenderData,
+  TextPosition,
   Token,
   TypedToken,
 } from "../types";
@@ -18,7 +22,7 @@ import {
 // but rather immutable copies with modified x/y values.
 class TokenPool<
   Input extends Token & { kind: string },
-  Output extends Token & { kind: string; id: string }
+  Output extends { id: string }
 > {
   private nextId = createIdGenerator();
 
@@ -33,7 +37,7 @@ class TokenPool<
   private inUse = new Map<string, Output>();
 
   // Customize how an input token turns into an output token
-  constructor(private toOutputToken: (input: Input, newId: string) => Output) {}
+  constructor(private toOutput: (input: Input, newId: string) => Output) {}
 
   // Probably should be using a real hashing algorithm
   private hashInput(token: Input): string {
@@ -53,7 +57,7 @@ class TokenPool<
         list = [];
         this.reserved.set(token.hash, []);
       }
-      const outputToken = this.toOutputToken(
+      const outputToken = this.toOutput(
         token,
         this.nextId(token.kind, token.hash)
       );
@@ -94,141 +98,180 @@ class TokenPool<
   }
 }
 
-function toRenderToken(input: TypedToken, newId: string): RenderToken {
-  return {
-    kind: "RENDER",
-    x: input.x,
-    y: input.y,
-    text: input.text,
-    width: input.width,
-    height: input.height,
-    type: input.type,
-    hash: input.hash,
-    id: newId,
-    isVisible: true,
-  };
+function toRenderPosition(
+  { x, y, width, height }: TypedToken | Decoration<any>,
+  id: string
+): TextPosition {
+  return { id, x, y, width, height, isVisible: true };
 }
 
-function toRenderDecoration(
-  input: Decoration<any>,
-  newId: string
-): RenderDecoration {
-  return {
-    kind: "RENDER_DECO",
-    x: input.x,
-    y: input.y,
-    width: input.width,
-    height: input.height,
-    data: input.data,
-    hash: input.hash,
-    id: newId,
-    isVisible: true,
-  };
-}
-
-type RenderTokenPool = TokenPool<TypedToken, RenderToken>;
-type RenderDecorationPool = TokenPool<Decoration<any>, RenderDecoration>;
+type RenderTokenPool = TokenPool<TypedToken, TextPosition>;
+type RenderDecorationPool = TokenPool<Decoration<any>, DecorationPosition>;
 type TokenPools = Map<string, [RenderTokenPool, RenderDecorationPool]>;
+
+// Box IDs are guaranteed to be unique within a parent box, but not globally.
+// This fingerprint should remedy this particular problem.
+function fingerprintBox(input: Box<any, any>): string {
+  let fingerprint = input.id;
+  while (input.parent) {
+    fingerprint += "__" + input.parent.id;
+    input = input.parent;
+  }
+  return fingerprint;
+}
 
 function getPools(
   pools: TokenPools,
-  boxId: string
+  box: Box<any, any>
 ): [RenderTokenPool, RenderDecorationPool] {
-  const existing = pools.get(boxId);
+  const id = fingerprintBox(box);
+  const existing = pools.get(id);
   if (existing) {
     return existing;
   }
-  const renderTokenPool = new TokenPool(toRenderToken);
-  const renderDecorationPool = new TokenPool(toRenderDecoration);
-  pools.set(boxId, [renderTokenPool, renderDecorationPool]);
+  const renderTokenPool = new TokenPool(toRenderPosition);
+  const renderDecorationPool = new TokenPool(toRenderPosition);
+  pools.set(id, [renderTokenPool, renderDecorationPool]);
   return [renderTokenPool, renderDecorationPool];
 }
 
-function toRenderBox(
+function toBoxPosition(
   diff: DiffTree<TypedToken, Decoration<TypedToken>>,
-  prev: RenderBox | undefined,
-  pools: TokenPools
-): RenderBox {
-  let width = 0;
-  let height = 0;
-  const { x, y, id, data } = diff.root.item;
-  const [renderTokenPool, renderDecorationPool] = getPools(pools, id);
-  // Start out with clones of what was there in the previous render box
-  const tokens = new Map(prev?.tokens || []);
-  const boxes = new Map(prev?.boxes || []);
-  const decorations = new Map(prev?.decorations || []);
-  for (const operation of diff.content) {
-    if (operation.kind === "TREE") {
-      const previousBox = boxes.get(operation.root.item.id);
-      if (operation.root.kind === "NOP") {
+  prev: RenderPositions | undefined,
+  pools: TokenPools,
+  objects: RenderRoot
+): RenderPositions {
+  const { id, x, y, width, height } = diff.root.item;
+  // Start out with clones of what was there in the previous frame and then add,
+  // remove and replace items where needed.
+  const frame: Frame = {
+    text: new Map(prev?.frame.text || []),
+    boxes: new Map(prev?.frame.boxes || []),
+    decorations: new Map(prev?.frame.decorations || []),
+  };
+  const content = getBoxReference(diff.root.item, objects).content;
+  const [renderTokenPool, renderDecorationPool] = getPools(
+    pools,
+    diff.root.item
+  );
+  for (const op of diff.content) {
+    if (op.kind === "TREE") {
+      const previousBox = frame.boxes.get(id);
+      if (op.root.kind === "NOP") {
         assertIs(previousBox, "Prev box should be defined for NOP!");
-        boxes.set(id, toRenderBox(operation, previousBox, pools));
+        frame.boxes.set(id, toBoxPosition(op, previousBox, pools, objects));
       } else {
-        if (operation.root.kind === "ADD") {
+        if (op.root.kind === "ADD") {
           assertIsNot(previousBox, "Prev box should not be defined for ADD!");
-          boxes.set(id, toRenderBox(operation, previousBox, pools));
-        } else if (operation.root.kind === "DEL") {
+          frame.boxes.set(id, toBoxPosition(op, undefined, pools, objects));
+        } else if (op.root.kind === "DEL") {
           assertIs(previousBox, "Prev box should be defined for DEL!");
-          boxes.delete(id);
+          frame.boxes.delete(id);
         } else {
-          // MOV
           assertIs(previousBox, "Prev box should be defined for MOV!");
-          boxes.set(id, toRenderBox(operation, previousBox, pools));
+          frame.boxes.set(id, toBoxPosition(op, previousBox, pools, objects));
         }
       }
-      if (operation.root.item.x > width) {
-        width = operation.root.item.x;
-      }
-      if (operation.root.item.y > height) {
-        height = operation.root.item.y;
-      }
     } else {
-      if (operation.kind === "ADD") {
-        const token = renderTokenPool.require(operation.item);
-        tokens.set(token.id, token);
-      } else if (operation.kind === "DEL") {
-        const id = renderTokenPool.free(operation.item);
-        tokens.delete(id);
-      } else if (operation.kind === "MOV") {
-        const token = renderTokenPool.reuse(operation.from, operation.item);
-        tokens.set(token.id, token);
-      }
-      if (operation.item.x > width) {
-        width = operation.item.x;
-      }
-      if (operation.item.y > height) {
-        height = operation.item.y;
+      if (op.kind === "ADD") {
+        const token = renderTokenPool.require(op.item);
+        frame.text.set(token.id, token);
+        content.text.set(token.id, {
+          id: token.id,
+          text: op.item.text,
+          type: op.item.type,
+        });
+      } else if (op.kind === "DEL") {
+        const id = renderTokenPool.free(op.item);
+        frame.text.delete(id);
+      } else if (op.kind === "MOV") {
+        const token = renderTokenPool.reuse(op.from, op.item);
+        frame.text.set(token.id, token);
       }
     }
   }
-  // TODO: for (const item of diff.decorations) {}
-  // Width and height are at this point the largest _offsets_, not dimensions,
-  // so we compensate for that by adding 1
-  width++;
-  height++;
-  return {
-    kind: "RENDER_BOX",
-    x,
-    y,
-    id,
-    data,
-    tokens,
-    boxes,
-    decorations,
-    width,
-    height,
-    isVisible: true,
-  };
+  for (const op of diff.decorations) {
+    if (op.kind === "ADD") {
+      const token = renderDecorationPool.require(op.item);
+      frame.decorations.set(token.id, token);
+      content.decorations.set(token.id, {
+        id,
+        data: op.item.data,
+      });
+    } else if (op.kind === "DEL") {
+      const id = renderDecorationPool.free(op.item);
+      frame.decorations.delete(id);
+    } else if (op.kind === "MOV") {
+      const token = renderDecorationPool.reuse(op.from, op.item);
+      frame.decorations.set(token.id, token);
+    }
+  }
+  return { id, x, y, width, height, frame, isVisible: true };
+}
+
+// For a given box object return the matching render box from the object graph
+function getBoxReference(start: Box<any, any>, source: RenderRoot): RenderRoot {
+  let box: Box<any, any> | undefined = start;
+  const path = [];
+  while (box) {
+    path.unshift(box);
+    box = box.parent;
+  }
+  let result: RenderRoot = source;
+  if (path.length === 1 && start.id === source.id) {
+    return source;
+  }
+  for (const element of path) {
+    let renderBox = source.content.boxes.get(element.id);
+    if (!renderBox) {
+      renderBox = {
+        id: element.id,
+        data: element.data,
+        language: element.language,
+        content: {
+          text: new Map(),
+          decorations: new Map(),
+          boxes: new Map(),
+        },
+      };
+      source.content.boxes.set(element.id, renderBox);
+    }
+    result = renderBox;
+  }
+  return result;
 }
 
 export function toRenderData(
   diffs: DiffTree<TypedToken, Decoration<TypedToken>>[]
-): RenderBox[] {
-  const renderBoxes: RenderBox[] = [];
-  // box id -> token pools
+): RenderData {
+  const { id, data, language } = diffs[0].root.item;
+  // This object represents the actual object graph of everything that can ever
+  // become visible and gets mutated in-place while the frame data is generated.
+  const root: RenderRoot = {
+    id,
+    data,
+    language,
+    content: {
+      text: new Map(),
+      decorations: new Map(),
+      boxes: new Map(),
+    },
+  };
+  // box fingerprint -> token pools that manage which token id gets assigned to
+  // render something at a given position
   const tokenPools: TokenPools = new Map();
+  const frames: RenderPositions[] = [];
+  let maxWidth = 0;
+  let maxHeight = 0;
   for (let i = 0; i < diffs.length; i++) {
-    renderBoxes.push(toRenderBox(diffs[i], renderBoxes[i - 1], tokenPools));
+    const frame = toBoxPosition(diffs[i], frames[i - 1], tokenPools, root);
+    if (frame.width > maxWidth) {
+      maxWidth = frame.width;
+    }
+    if (frame.height > maxHeight) {
+      maxHeight = frame.height;
+    }
+    frames.push(frame);
   }
-  return renderBoxes;
+  return { root, frames, maxWidth, maxHeight };
 }
