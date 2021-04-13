@@ -2,42 +2,55 @@
 // into movements. There is no real high-level concept to this - it's just a
 // bunch of heuristics applied in a brute-force manner.
 
-import { ADD, DEL, MOV, DiffOp } from "./diff";
-import { findMin } from "./util";
-import { TokenLike } from "../types";
+import { Box, Token } from "../types";
+import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
+import { findMaxValue, findMin } from "./util";
 
-export function optimize<T extends TokenLike>(
-  diffs: DiffOp<T>[][]
-): DiffOp<T>[][] {
-  return diffs.map(optimizeFrame);
+export type Optimizable = Token & {
+  parent: Box<any, any>;
+};
+
+export function optimize<T extends Optimizable, D extends Optimizable>(
+  diffs: DiffTree<T, D>[]
+): DiffTree<T, D>[] {
+  return diffs.map(optimizeDiff);
 }
 
-function optimizeFrame<T extends TokenLike>(diff: DiffOp<T>[]): DiffOp<T>[] {
+function optimizeDiff<T extends Optimizable, D extends Optimizable>(
+  diff: DiffTree<T, D>
+): DiffTree<T, D> {
+  const trees: DiffTree<T, D>[] = [];
   const byHash: Record<string, [Set<MOV<T>>, Set<ADD<T>>, Set<DEL<T>>]> = {};
-  for (const op of diff) {
-    if (!byHash[op.item.hash]) {
-      byHash[op.item.hash] = [new Set(), new Set(), new Set()];
-    }
-    if (op.type == "MOV") {
-      byHash[op.item.hash][0].add(op);
-    } else if (op.type == "ADD") {
-      byHash[op.item.hash][1].add(op);
-    } else if (op.type === "DEL") {
-      byHash[op.item.hash][2].add(op);
+  for (const operation of diff.content) {
+    if (operation.kind === "TREE") {
+      trees.push(optimizeDiff(operation));
+    } else {
+      if (!byHash[operation.item.hash]) {
+        byHash[operation.item.hash] = [new Set(), new Set(), new Set()];
+      }
+      if (operation.kind == "MOV") {
+        byHash[operation.item.hash][0].add(operation);
+      } else if (operation.kind == "ADD") {
+        byHash[operation.item.hash][1].add(operation);
+      } else if (operation.kind === "DEL") {
+        byHash[operation.item.hash][2].add(operation);
+      }
     }
   }
-  const result: DiffOp<T>[] = [];
+  const result: DiffTree<T, D> = { ...diff, content: [] };
   for (const [MOV, ADD, DEL] of Object.values(byHash)) {
     if (ADD.size === 0 || DEL.size === 0) {
-      result.push(...MOV, ...ADD, ...DEL);
+      result.content.push(...MOV, ...ADD, ...DEL);
     } else {
-      result.push(...MOV, ...resolveOptimizations(ADD, DEL));
+      result.content.push(...MOV, ...resolveOptimizations(ADD, DEL));
     }
   }
+  result.content.push(...trees);
   return result;
 }
 
-function resolveOptimizations<T extends TokenLike>(
+// Note that additions and deletions get both mutated by this function
+function resolveOptimizations<T extends Optimizable>(
   additions: Set<ADD<T>>,
   deletions: Set<DEL<T>>
 ): DiffOp<T>[] {
@@ -46,9 +59,9 @@ function resolveOptimizations<T extends TokenLike>(
     const alternative = pickAlternative(deletion, additions);
     if (alternative) {
       movements.push({
-        type: "MOV",
+        kind: "MOV",
         item: alternative.item,
-        ref: deletion.item,
+        from: deletion.item,
       });
       additions.delete(alternative);
       deletions.delete(deletion);
@@ -68,26 +81,19 @@ type Offset = {
   right: number;
 };
 
-function getOffset(item: TokenLike): Offset {
-  const { x: left, y: top, size } = item;
-  let bottom: number | undefined = undefined;
-  let right: number | undefined = undefined;
-  while (true) {
-    if (!item.next) {
-      bottom = item.y - top;
-      break;
-    }
-    if (typeof bottom === "undefined" && item.next.y === top + 1) {
-      right = item.x + item.size - left + size;
-    }
-    item = item.next;
-  }
-  bottom = bottom || 0;
-  right = right || 0;
-  return { top, left, bottom, right };
+function getOffset(
+  item: Optimizable,
+  referenceWidth: number,
+  referenceHeight: number
+): Offset {
+  const { x: left, y: top, width, height } = item;
+  const right = referenceWidth - left - width;
+  const bottom = referenceHeight - top - height;
+  const offset = { top, left, bottom, right };
+  return offset;
 }
 
-function pickAlternative<T extends TokenLike>(
+function pickAlternative<T extends Optimizable>(
   deletion: DEL<T>,
   additions: Set<ADD<T>>
 ): ADD<T> | null {
@@ -95,13 +101,23 @@ function pickAlternative<T extends TokenLike>(
   if (additions.size === 1) {
     return Array.from(additions)[0];
   }
-  // Setup and pre-calulate data for picking the best alternative
-  const offset = getOffset(deletion.item);
+  // Setup and pre-calculate data for picking the best alternative. Compute all
+  // offsets based on the largest possible parent box, otherwise right and
+  // bottom offsets may not be comparable.
+  const refWidth = findMaxValue(
+    [deletion, ...additions],
+    ({ item }) => item.parent.width
+  );
+  const refHeight = findMaxValue(
+    [deletion, ...additions],
+    ({ item }) => item.parent.height
+  );
+  const deletionOffset = getOffset(deletion.item, refWidth, refHeight);
   const sameLineCandidates = new Map<ADD<T>, Offset>();
   const allCandidates = new Map<ADD<T>, Offset>();
   for (const addition of additions) {
-    const additionOffset = getOffset(addition.item);
-    if (additionOffset.top === offset.top) {
+    const additionOffset = getOffset(addition.item, refWidth, refHeight);
+    if (additionOffset.top === deletionOffset.top) {
       sameLineCandidates.set(addition, additionOffset);
     }
     allCandidates.set(addition, additionOffset);
@@ -112,21 +128,21 @@ function pickAlternative<T extends TokenLike>(
   }
   // Try to find an alternative with the same offset from right of the same line
   for (const [candidate, { right }] of sameLineCandidates) {
-    if (offset.right === right) {
+    if (deletionOffset.right === right) {
       return candidate;
     }
   }
   // Try to find an alternative that's the closest on the same line
   if (sameLineCandidates.size > 0) {
     const [closest] = findMin(sameLineCandidates, ([, candidateOffset]) => {
-      return Math.abs(candidateOffset.left - offset.left);
+      return Math.abs(candidateOffset.left - deletionOffset.left);
     });
     return closest;
   }
   // Last attempt: take whatever is closest
   return findMin(allCandidates, ([, candidateOffset]) => {
-    const deltaX = Math.abs(candidateOffset.left - offset.left);
-    const deltaY = Math.abs(candidateOffset.top - offset.top);
+    const deltaX = Math.abs(candidateOffset.left - deletionOffset.left);
+    const deltaY = Math.abs(candidateOffset.top - deletionOffset.top);
     return deltaX + deltaY;
   })[0];
 }

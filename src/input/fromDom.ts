@@ -5,20 +5,16 @@ import {
   Box,
   Code,
   CodeContainer,
-  HighlightToken,
+  Decoration,
   LanguageDefinition,
+  RenderData,
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
-import {
-  createIdGenerator,
-  flattenTokens,
-  hash,
-  unwrapFirst,
-} from "../lib/util";
-import { toKeyframes, Keyframe } from "../lib/keyframes";
+import { createIdGenerator, getLanguage, hash } from "../lib/util";
+import { toRenderData } from "../lib/render";
 import { optimize } from "../lib/optimize";
-import { diffAll } from "../lib/diff";
+import { diff } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
 
 function isHTMLElement(arg: any): arg is HTMLElement {
@@ -32,7 +28,7 @@ function isHTMLElement(arg: any): arg is HTMLElement {
   );
 }
 
-function isText (arg: any): arg is Text {
+function isText(arg: any): arg is Text {
   if (!arg) {
     return false;
   }
@@ -51,11 +47,6 @@ function getAttributes(element: Element): [string, string][] {
     attr.name,
     attr.value,
   ]);
-};
-
-function getLanguage(element: Element): string | undefined {
-  const { 0: match } = /language-(\S*)/.exec(element.className) ?? [];
-  return match;
 }
 
 function hashDOMBox(tagName: string, attributes: [string, string][]): string {
@@ -83,8 +74,8 @@ function extractCode(source: Element): CodeContainer {
     content,
     hash,
     id,
-    meta: { tagName, attributes },
-    isHighlight: tagName === "mark",
+    data: { tagName, attributes },
+    isDecoration: tagName === "mark",
     language: getLanguage(source),
   };
 }
@@ -92,22 +83,15 @@ function extractCode(source: Element): CodeContainer {
 // Only exported for unit testing code extraction
 export function processCode(
   source: Element
-): { root: Box<TextToken>; highlights: HighlightToken[] } {
+): Box<TextToken, Decoration<TextToken>> {
   return tokenize(extractCode(source));
-};
+}
 
 // Actual facade for dom content extraction
 export function fromDom(
-  sourceElements: Element[],
-  language: LanguageDefinition<Record<string, any>>
-): Keyframe[] {
-  const heads = [];
-  const highlights = [];
-  for (const sourceElement of sourceElements) {
-    const processed = processCode(sourceElement);
-    heads.push(unwrapFirst(applyLanguage(language, processed.root)));
-    highlights.push(processed.highlights);
-  }
-  const tokens = heads.map(flattenTokens);
-  return toKeyframes(optimize(diffAll(tokens)), highlights);
+  inputs: Element[],
+  lang: LanguageDefinition<Record<string, any>>
+): RenderData {
+  const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
+  return toRenderData(optimize(diff(typed)));
 }

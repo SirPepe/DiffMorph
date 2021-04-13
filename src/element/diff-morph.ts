@@ -1,4 +1,5 @@
 import debounce from "debounce";
+import { getLanguage } from "../lib/util";
 import { fromDom } from "../input/fromDom";
 import { toDom } from "../output/toDom";
 
@@ -24,6 +25,9 @@ function createControls(): HTMLElement {
   const element = document.createElement("div");
   element.className = "dm-controls";
   element.innerHTML = `
+    <span class="dm-controls-curr"></span>
+    /
+    <span class="dm-controls-total"></span>
     <button class="dm-controls-prev"><span>Prev</span></button>
     <button class="dm-controls-next"><span>Next</span></button>
   `;
@@ -46,7 +50,10 @@ function createStyles(): HTMLStyleElement {
   :host([controls]) .dm-controls {
     display: block;
   }
-  .dm-code {
+  pre {
+    margin: 0;
+  }
+  .dm {
     margin: 0;
     line-height: 2ch;
     height: calc(var(--max-height) * 2ch);
@@ -60,15 +67,23 @@ function createShadowDom(): [
   HTMLDivElement, // wrapper element
   HTMLDivElement, // keyframe container
   HTMLStyleElement, // element styles
-  HTMLSlotElement // data source
+  HTMLSlotElement, // data source
+  (curr: number, total: number) => void // updater function
 ] {
   const slot = document.createElement("slot");
   slot.hidden = true; // Slot content is just am invisible data source
   const wrapper = document.createElement("div");
   wrapper.className = "dm-wrapper";
   const content = document.createElement("div");
-  wrapper.append(content, createControls());
-  return [wrapper, content, createStyles(), slot];
+  const controls = createControls();
+  const currentIndex = controls.querySelector(".dm-controls-curr") as Element;
+  const totalFrames = controls.querySelector(".dm-controls-total") as Element;
+  wrapper.append(content, controls);
+  function update(curr: number, total: number): void {
+    currentIndex.innerHTML = String(curr);
+    totalFrames.innerHTML = String(total);
+  }
+  return [wrapper, content, createStyles(), slot, update];
 }
 
 export class DiffMorph extends HTMLElement {
@@ -77,13 +92,15 @@ export class DiffMorph extends HTMLElement {
   private shadow: ShadowRoot;
   private source: HTMLSlotElement;
   private content: HTMLElement;
+  private updater: (curr: number, total: number) => void;
 
   constructor() {
     super();
     this.shadow = this.attachShadow({ mode: "open" });
-    const [wrapper, content, styles, source] = createShadowDom();
+    const [wrapper, content, styles, source, updater] = createShadowDom();
     this.content = content;
     this.source = source;
+    this.updater = updater;
     this.shadow.append(source, wrapper, styles);
   }
 
@@ -133,9 +150,12 @@ export class DiffMorph extends HTMLElement {
         return element[Symbol.toStringTag] === "DiffMorphFrameElement";
       });
       this.numFrames = sources.length;
-      const [newContent, maxWidth, maxHeight] = toDom(
-        fromDom(sources, languageDefinition)
-      );
+      const inputData = fromDom(sources, languageDefinition);
+      console.log(inputData);
+      // Get meta data from the wrapper rather than from the sources
+      inputData.objects.data.tagName = "span";
+      inputData.objects.language = getLanguage(this);
+      const [newContent, maxWidth, maxHeight] = toDom(inputData);
       if (!this.content.parentElement) {
         throw new Error();
       }
@@ -177,6 +197,7 @@ export class DiffMorph extends HTMLElement {
     const value = this.computeFrame(input);
     this.content.classList.remove(`frame${this.currentFrame}`);
     this.content.classList.add(`frame${value}`);
+    this.updater(input + 1, this.frames);
     this.currentFrame = value;
   }
 

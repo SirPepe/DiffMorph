@@ -6,24 +6,24 @@ import {
   Box,
   Code,
   CodeContainer,
-  HighlightToken,
+  Decoration,
   LanguageDefinition,
+  RenderData,
   TextToken,
-  TypedToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
-import { Keyframe, toKeyframes } from "../lib/keyframes";
+import { toRenderData } from "../lib/render";
 import { optimize } from "../lib/optimize";
-import { diffAll } from "../lib/diff";
-import { createIdGenerator, flattenTokens, unwrapFirst } from "../lib/util";
+import { diff } from "../lib/diff";
+import { createIdGenerator } from "../lib/util";
 
 type Input = string | InputContainer;
 
 type InputContainer = {
   content: Input[];
   id: string;
-  isHighlight: boolean;
+  isDecoration: boolean;
   language: string | undefined;
 };
 
@@ -39,33 +39,26 @@ function extractCode(source: InputContainer): CodeContainer {
   }
   return {
     content,
-    isHighlight: source.isHighlight,
+    isDecoration: source.isDecoration,
     language: source.language,
     hash: source.id,
     id: idGenerator(null, source.id),
-    meta: {},
+    data: {},
   };
 }
 
 // Only exported for unit testing code extraction
 export function processCode(
-  source: InputContainer,
-): { root: Box<TextToken>; highlights: HighlightToken[] } {
+  source: InputContainer
+): Box<TextToken, Decoration<TextToken>> {
   return tokenize(extractCode(source));
 }
 
 // Actual facade for processing data
 export function fromData(
-  inputContainers: InputContainer[],
-  language: LanguageDefinition<Record<string, any>>
-): Keyframe[] {
-  const heads: TypedToken[] = [];
-  const highlights = [];
-  for (const inputContainer of inputContainers) {
-    const processed = processCode(inputContainer);
-    heads.push(unwrapFirst(applyLanguage(language, processed.root)));
-    highlights.push(processed.highlights);
-  }
-  const tokens = heads.map(flattenTokens);
-  return toKeyframes(optimize(diffAll(tokens)), highlights);
+  inputs: InputContainer[],
+  lang: LanguageDefinition<Record<string, any>>
+): RenderData {
+  const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
+  return toRenderData(optimize(diff(typed)));
 }

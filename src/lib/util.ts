@@ -1,63 +1,91 @@
 import fnv1a from "@sindresorhus/fnv1a";
-import { Box, HighlightToken, TextToken, TokenLike } from "../types";
+import { Box, Decoration } from "../types";
 
 export const hash = (input: string): string => fnv1a(input).toString(36);
 
-export const first = <T extends { prev: T | undefined }>(x: T): T =>
-  x.prev ? first(x.prev) : x;
-
-export const prev = <T extends { prev: T | undefined }>(
-  x: T,
-  steps: number
-): T | undefined => {
-  while (steps > 0) {
-    if (x.prev) {
-      x = x.prev;
-      steps--;
-    } else {
-      return undefined;
-    }
+export function assertIs<T>(
+  x: T | undefined | null,
+  msg = `Expected value to be defined, but found ${x}`
+): asserts x is T {
+  if (!x) {
+    throw new Error(msg);
   }
-  return x.prev;
-};
+}
 
-export const last = <T extends { next: T | undefined }>(x: T): T =>
-  x.next ? last(x.next) : x;
+export function assertIsNot<T>(
+  x: T | undefined | null,
+  msg = `Expected value to be null or undefined, but found ${typeof x}`
+): asserts x is undefined | null {
+  if (x) {
+    throw new Error(msg);
+  }
+}
 
-function isBox<T>(x: any): x is Box<T> {
-  if (
-    typeof x === "object" &&
-    typeof x.id === "string" &&
-    typeof x.hash === "string" &&
-    typeof x.meta === "object" &&
-    Array.isArray(x.tokens)
-  ) {
+export function getLanguage(element: Element): string | undefined {
+  const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
+  return match;
+}
+
+export function isBox<T, D>(x: any): x is Box<T, D> {
+  if (typeof x === "object" && x.kind === "BOX") {
     return true;
   }
   return false;
 }
 
-export const unwrapFirst = <T>(token: T | Box<T>): T => {
-  if (isBox(token)) {
-    return unwrapFirst(token.tokens[0]);
-  } else {
+export function isDecoration<T = any>(x: any): x is Decoration<T> {
+  if (typeof x === "object" && x.kind === "DECO") {
+    return true;
+  }
+  return false;
+}
+
+export function getFirstTextToken<T>(
+  tokens: (T | Decoration<T> | Box<T, Decoration<T>>)[]
+): T | undefined {
+  for (const token of tokens) {
+    if (isDecoration(token)) {
+      continue;
+    }
+    if (isBox(token)) {
+      const first = getFirstTextToken(token.content);
+      if (first) {
+        return first;
+      } else {
+        continue;
+      }
+    }
     return token;
   }
-};
+}
 
-export const unwrapLast = <T>(token: T | Box<T>): T => {
-  if (isBox(token)) {
-    return unwrapFirst(token.tokens[token.tokens.length - 1]);
-  } else {
+export function getLastTextToken<T>(
+  tokens: (T | Decoration<T> | Box<T, Decoration<T>>)[]
+): T | undefined {
+  for (let i = tokens.length - 1; i >= 0; i--) {
+    const token = tokens[i];
+    if (isDecoration(token)) {
+      continue;
+    }
+    if (isBox(token)) {
+      const first = getLastTextToken(token.content);
+      if (first) {
+        return first;
+      } else {
+        continue;
+      }
+    }
     return token;
   }
-};
+}
 
-export function flattenTokens<T extends TokenLike>(token: T | undefined): T[] {
+export function flattenTokens<T extends { next: T | undefined }>(
+  token: T | undefined
+): T[] {
   const result: T[] = [];
   while (token) {
     result.push(token);
-    token = token.next as any;
+    token = token.next;
   }
   return result;
 }
@@ -77,86 +105,37 @@ export const createIdGenerator = (): ((realm: any, hash: any) => string) => {
   };
 };
 
-type GroupFunction = {
-  <T, Key extends keyof T>(values: Iterable<T>, select: Key): Map<T[Key], T[]>;
-  <T, Key>(values: Iterable<T>, select: (arg: T) => Key): Map<Key, T[]>;
+type PositionedToken = {
+  x: number;
+  y: number;
+  width: number;
 };
 
-export const groupBy: GroupFunction = (values: Iterable<any>, select: any) => {
-  const result = new Map();
-  if (typeof select === "function") {
-    for (const value of values) {
-      const key = select(value);
-      result.set(key, [...(result.get(key) || []), value]);
-    }
-  } else {
-    for (const value of values) {
-      const key = value[select];
-      result.set(key, [...(result.get(key) || []), value]);
-    }
-  }
-  return result;
-};
-
-export function partition<T>(
-  input: Iterable<T>,
-  selector: (x: T) => boolean
-): [T[], T[]];
-export function partition<T, U>(
-  input: Iterable<T | U>,
-  selector: (x: T | U) => x is T
-): [T[], U[]];
-export function partition<T>(
-  input: Iterable<T>,
-  selector: (item: T) => boolean
-): [T[], T[]] {
-  const a = [];
-  const b = [];
-  for (const item of input) {
-    if (selector(item)) {
-      a.push(item);
-    } else {
-      b.push(item);
-    }
-  }
-  return [a, b];
-}
-
-export function mapToObject<Value>(
-  input: Map<string, Value>
-): Record<string, Value> {
-  return Object.fromEntries(input.entries());
-}
-
-export function isSameLine<T extends { y: number }>(a: T, b: T): boolean {
-  if (a.y === b.y) {
-    return true;
-  }
-  return false;
-}
-
-export function isAdjacent<T extends { x: number; y: number; text: string }>(
-  a: T | undefined,
-  b: T | undefined
+export function isAdjacent(
+  a: PositionedToken | undefined,
+  b: PositionedToken | undefined
 ): boolean {
   if (!a || !b) {
     return false;
   }
-  if (!isSameLine(a, b)) {
+  const aCoords = { x: a.x, y: a.y };
+  const bCoords = { x: b.x, y: b.y };
+  if (aCoords.y !== bCoords.y) {
     return false;
   }
-  if (a.x + a.text.length === b.x) {
+  if (aCoords.x + a.width === bCoords.x) {
     return true;
   }
-  if (b.x + b.text.length === a.x) {
+  if (bCoords.x + b.width === aCoords.x) {
     return true;
   }
   return false;
 }
 
-export function isNewLine<T extends { y: number; prev: T | undefined }>(
-  token: T
-): boolean {
+export function isNewLine(token: {
+  y: number;
+  prev: { y: number } | undefined;
+}): boolean {
   return Boolean(token.prev && token.y > token.prev.y);
 }
 
@@ -179,11 +158,25 @@ export function findMax<T>(
   return pick as T; // can't not be T when max is not undefined
 }
 
+export function findMaxValue<T>(
+  items: Iterable<T>,
+  computer: (item: T) => number
+): number {
+  return computer(findMax(items, computer));
+}
+
 export function findMin<T>(
   items: Iterable<T>,
   computer: (item: T) => number
 ): T {
   return findMax(items, (item: T) => computer(item) * -1);
+}
+
+export function findMinValue<T>(
+  items: Iterable<T>,
+  computer: (item: T) => number
+): number {
+  return computer(findMin(items, computer));
 }
 
 export const lookaheadText = <T extends { text: string; next: T | undefined }>(
