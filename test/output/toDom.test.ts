@@ -20,7 +20,7 @@ describe("toDom", () => {
     expect(b).toMatchObject({ tagName: "SPAN", innerHTML: "}" });
   });
 
-  test.skip("renders tokens in boxes to DOM", () => {
+  test("renders tokens in boxes to DOM", () => {
     const keyframes = toRenderData(
       diff([
         json("[]"),
@@ -38,9 +38,16 @@ describe("toDom", () => {
         ),
       ])
     );
-    const [element, maxWidth, maxHeight] = toDom(keyframes);
-    // console.log(element.children[0].outerHTML)
+    const [el, maxWidth, maxHeight] = toDom(keyframes);
     expect(maxWidth).toBe(6);
     expect(maxHeight).toBe(1);
+    const renderTokens = el.querySelector("pre > .language-json")?.children;
+    expect(renderTokens?.length).toBe(3);
+    const [a, b, c] = Array.from(renderTokens as any);
+    expect(a).toMatchObject({ tagName: "SPAN", innerHTML: "[" });
+    expect(b).toMatchObject({ tagName: "SPAN", innerHTML: "]" });
+    expect(c).toMatchObject({ className: expect.stringContaining("asdf1") });
+    expect(c.children.length).toBe(1);
+    expect(c.children[0]).toMatchObject({ tagName: "SPAN", innerHTML: "null" });
   });
 });

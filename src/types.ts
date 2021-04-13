@@ -147,7 +147,7 @@ export type Frame = {
 // Object graph that describes the items to render (content) and when and
 // where to render them (frame)
 export type RenderData = {
-  root: RenderRoot;
+  objects: RenderRoot;
   frames: RenderPositions[]; // root boxes
   maxWidth: number;
   maxHeight: number;

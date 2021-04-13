@@ -7,8 +7,8 @@ const json = lang(languageDefinition);
 describe("rendering", () => {
   test("It turns some JSON into render data", () => {
     const diffs = diff([json("{}"), json("  {}"), json("    {\n}")]);
-    const { root, frames, maxWidth, maxHeight } = toRenderData(diffs);
-    expect(root).toEqual({
+    const { objects, frames, maxWidth, maxHeight } = toRenderData(diffs);
+    expect(objects).toEqual({
       id: "root",
       data: {},
       language: "json",
@@ -136,8 +136,8 @@ describe("rendering", () => {
 
   test("It works with static frames", () => {
     const diffs = diff([json("{}"), json("{}"), json("  {}")]);
-    const { root, frames, maxWidth, maxHeight } = toRenderData(diffs);
-    expect(root).toEqual({
+    const { objects, frames, maxWidth, maxHeight } = toRenderData(diffs);
+    expect(objects).toEqual({
       id: "root",
       data: {},
       language: "json",

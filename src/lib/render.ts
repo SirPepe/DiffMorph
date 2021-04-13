@@ -139,7 +139,7 @@ function toBoxPosition(
   diff: DiffTree<TypedToken, Decoration<TypedToken>>,
   prev: RenderPositions | undefined,
   pools: TokenPools,
-  objects: RenderRoot
+  root: RenderRoot
 ): RenderPositions {
   const { id, x, y, width, height } = diff.root.item;
   // Start out with clones of what was there in the previous frame and then add,
@@ -149,7 +149,7 @@ function toBoxPosition(
     boxes: new Map(prev?.frame.boxes || []),
     decorations: new Map(prev?.frame.decorations || []),
   };
-  const content = getBoxReference(diff.root.item, objects).content;
+  const content = getBoxReference(diff.root.item, root).content;
   const [renderTokenPool, renderDecorationPool] = getPools(
     pools,
     diff.root.item
@@ -159,17 +159,17 @@ function toBoxPosition(
       const previousBox = frame.boxes.get(id);
       if (op.root.kind === "NOP") {
         assertIs(previousBox, "Prev box should be defined for NOP!");
-        frame.boxes.set(id, toBoxPosition(op, previousBox, pools, objects));
+        frame.boxes.set(id, toBoxPosition(op, previousBox, pools, root));
       } else {
         if (op.root.kind === "ADD") {
           assertIsNot(previousBox, "Prev box should not be defined for ADD!");
-          frame.boxes.set(id, toBoxPosition(op, undefined, pools, objects));
+          frame.boxes.set(id, toBoxPosition(op, undefined, pools, root));
         } else if (op.root.kind === "DEL") {
           assertIs(previousBox, "Prev box should be defined for DEL!");
           frame.boxes.delete(id);
         } else {
           assertIs(previousBox, "Prev box should be defined for MOV!");
-          frame.boxes.set(id, toBoxPosition(op, previousBox, pools, objects));
+          frame.boxes.set(id, toBoxPosition(op, previousBox, pools, root));
         }
       }
     } else {
@@ -210,35 +210,26 @@ function toBoxPosition(
 }
 
 // For a given box object return the matching render box from the object graph
-function getBoxReference(start: Box<any, any>, source: RenderRoot): RenderRoot {
-  let box: Box<any, any> | undefined = start;
-  const path = [];
-  while (box) {
-    path.unshift(box);
-    box = box.parent;
-  }
-  let result: RenderRoot = source;
-  if (path.length === 1 && start.id === source.id) {
-    return source;
-  }
-  for (const element of path) {
-    let renderBox = source.content.boxes.get(element.id);
-    if (!renderBox) {
-      renderBox = {
-        id: element.id,
-        data: element.data,
-        language: element.language,
+function getBoxReference(box: Box<any, any>, root: RenderRoot): RenderRoot {
+  if (!box.parent) {
+    return root;
+  } else {
+    let newRoot = root.content.boxes.get(box.id);
+    if (!newRoot) {
+      newRoot = {
+        id: box.id,
+        data: box.data,
+        language: box.language,
         content: {
           text: new Map(),
           decorations: new Map(),
           boxes: new Map(),
         },
       };
-      source.content.boxes.set(element.id, renderBox);
+      root.content.boxes.set(box.id, newRoot);
     }
-    result = renderBox;
+    return getBoxReference(box.parent, newRoot);
   }
-  return result;
 }
 
 export function toRenderData(
@@ -247,7 +238,7 @@ export function toRenderData(
   const { id, data, language } = diffs[0].root.item;
   // This object represents the actual object graph of everything that can ever
   // become visible and gets mutated in-place while the frame data is generated.
-  const root: RenderRoot = {
+  const objects: RenderRoot = {
     id,
     data,
     language,
@@ -264,7 +255,7 @@ export function toRenderData(
   let maxWidth = 0;
   let maxHeight = 0;
   for (let i = 0; i < diffs.length; i++) {
-    const frame = toBoxPosition(diffs[i], frames[i - 1], tokenPools, root);
+    const frame = toBoxPosition(diffs[i], frames[i - 1], tokenPools, objects);
     if (frame.width > maxWidth) {
       maxWidth = frame.width;
     }
@@ -273,5 +264,5 @@ export function toRenderData(
     }
     frames.push(frame);
   }
-  return { root, frames, maxWidth, maxHeight };
+  return { objects, frames, maxWidth, maxHeight };
 }

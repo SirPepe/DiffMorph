@@ -134,7 +134,7 @@ export class DiffMorph extends HTMLElement {
       });
       this.numFrames = sources.length;
       const inputData = fromDom(sources, languageDefinition);
-      inputData.root.data.tagName = "span"; // better than <dm-frame>
+      inputData.objects.data.tagName = "span"; // better than <dm-frame>
       const [newContent, maxWidth, maxHeight] = toDom(inputData);
       if (!this.content.parentElement) {
         throw new Error();

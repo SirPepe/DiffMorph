@@ -15,7 +15,7 @@ const DEFAULT_STYLES = `
   transition: transform var(--dm-transition-time, 400ms);
   position: relative
 }
-.dm-token, dm-decoration {
+.dm-token, .dm-decoration {
   transition: transform var(--dm-transition-time, 400ms),
               opacity var(--dm-transition-time, 400ms);
   opacity: 0;
@@ -96,13 +96,13 @@ function generateStyle(
   for (let frameIdx = 0; frameIdx < rootFrames.length; frameIdx++) {
     const { frame } = rootFrames[frameIdx];
     for (const position of frame.text.values()) {
-      styles.push(generateTextCss(position, classPrefix, frameIdx));
+      styles.push(...generateTextCss(position, classPrefix, frameIdx));
     }
     for (const position of frame.decorations.values()) {
-      styles.push(generateDecorationCss(position, classPrefix, frameIdx));
+      styles.push(...generateDecorationCss(position, classPrefix, frameIdx));
     }
     for (const position of frame.boxes.values()) {
-      styles.push(generateBoxCss(position, classPrefix, frameIdx));
+      styles.push(...generateBoxCss(position, classPrefix, frameIdx));
     }
   }
   const css = DEFAULT_STYLES + styles.join("\n");
@@ -155,7 +155,7 @@ export function toDom(
   code.className = "dm-code";
   const id = nextId("dom", "container");
   wrapper.className = `dm dm-${id}`;
-  code.append(generateDom(renderData.root));
+  code.append(generateDom(renderData.objects));
   wrapper.append(code, generateStyle(renderData.frames, `.dm-${id}`));
   return [wrapper, renderData.maxWidth, renderData.maxHeight];
 }
