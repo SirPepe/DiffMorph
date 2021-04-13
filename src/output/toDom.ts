@@ -15,25 +15,30 @@ const DEFAULT_STYLES = `
   transition: transform var(--dm-transition-time, 400ms);
   position: relative
 }
+.dm-token, .dm-decoration, .dm-box {
+  overflow: visible;
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  z-index: 1;
+}
+.dm-decoration {
+  z-index: 0;
+}
 .dm-token, .dm-decoration {
   transition: transform var(--dm-transition-time, 400ms),
               opacity var(--dm-transition-time, 400ms);
-  opacity: 0;
-  position: absolute;
 }`;
 
 function generateTextCss(
-  { id, x, y, width, height, isVisible }: DecorationPosition,
+  { id, x, y, isVisible }: DecorationPosition,
   rootSelector: string,
   frameIdx: number
 ): string[] {
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-${id}`;
-  const rules = [
-    `transform:translate(${x}ch,${y * 100}%)`,
-    `width:${width}`,
-    `height:${height}`,
-  ];
+  const selector = `${rootSelector}.frame${frameIdx} .dm-token.dm-${id}`;
+  const rules = [`transform:translate(${x}ch,${y * 100}%)`];
   if (isVisible) {
     rules.push(`opacity:1`);
   }
@@ -47,11 +52,11 @@ function generateDecorationCss(
   frameIdx: number
 ): string[] {
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-${id}`;
+  const selector = `${rootSelector}.frame${frameIdx} .dm-decoration.dm-${id}`;
   const rules = [
     `transform:translate(${x}ch,${y * 100}%)`,
-    `width:${width}`,
-    `height:${height}`,
+    `width:${width}ch`,
+    `height:${height * 2}ch`,
   ];
   if (isVisible) {
     rules.push(`opacity:1`);
@@ -66,11 +71,11 @@ function generateBoxCss(
   frameIdx: number
 ): string[] {
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-${id}`;
+  const selector = `${rootSelector}.frame${frameIdx} .dm-box.dm-${id}`;
   const rules = [
     `transform:translate(${x}ch,${y * 100}%)`,
-    `width:${width}`,
-    `height:${height}`,
+    `width:${width}ch`,
+    `height:${height * 2}ch`,
   ];
   if (isVisible) {
     rules.push(`opacity:1`);
@@ -95,6 +100,7 @@ function generateStyle(
   const styles = [];
   for (let frameIdx = 0; frameIdx < rootFrames.length; frameIdx++) {
     const { frame } = rootFrames[frameIdx];
+    styles.push(...generateBoxCss(rootFrames[frameIdx], classPrefix, frameIdx));
     for (const position of frame.text.values()) {
       styles.push(...generateTextCss(position, classPrefix, frameIdx));
     }
@@ -128,20 +134,20 @@ function generateDecoration({ id, data }: RenderDecoration): HTMLElement {
   return element;
 }
 
-function generateDom(renderRoot: RenderRoot): HTMLElement {
-  const { tagName = "span", attributes = [] } = renderRoot.data;
+function generateDom(root: RenderRoot): HTMLElement {
+  const { tagName = "span", attributes = [] } = root.data;
   const element = document.createElement(tagName);
-  element.className = `dm-${renderRoot.id} language-${renderRoot.language}`;
+  element.className = `dm-box dm-${root.id} language-${root.language}`;
   for (const [attribute, value] of attributes) {
     element.setAttribute(attribute, value);
   }
-  for (const text of renderRoot.content.text.values()) {
+  for (const text of root.content.text.values()) {
     element.append(generateText(text));
   }
-  for (const decorations of renderRoot.content.decorations.values()) {
+  for (const decorations of root.content.decorations.values()) {
     element.append(generateDecoration(decorations));
   }
-  for (const box of renderRoot.content.boxes.values()) {
+  for (const box of root.content.boxes.values()) {
     element.append(generateDom(box));
   }
   return element;

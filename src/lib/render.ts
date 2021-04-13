@@ -195,7 +195,7 @@ function toBoxPosition(
       const token = renderDecorationPool.require(op.item);
       frame.decorations.set(token.id, token);
       content.decorations.set(token.id, {
-        id,
+        id: token.id,
         data: op.item.data,
       });
     } else if (op.kind === "DEL") {

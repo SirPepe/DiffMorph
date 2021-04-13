@@ -50,7 +50,10 @@ function createStyles(): HTMLStyleElement {
   :host([controls]) .dm-controls {
     display: block;
   }
-  .dm-code {
+  pre {
+    margin: 0;
+  }
+  .dm {
     margin: 0;
     line-height: 2ch;
     height: calc(var(--max-height) * 2ch);
