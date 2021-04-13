@@ -144,11 +144,9 @@ export class DiffMorph extends HTMLElement {
       return element[Symbol.toStringTag] === "DiffMorphFrameElement";
     });
     this.numFrames = sources.length;
-    const inputData = fromDom(sources);
-    console.log(inputData);
+    const inputData = fromDom(sources, getLanguage(this));
     // Get meta data from the wrapper rather than from the sources
-    inputData.objects.data.tagName = "span";
-    inputData.objects.language = getLanguage(this);
+    inputData.objects.data.tagName = "code";
     const [newContent, maxWidth, maxHeight] = toDom(inputData);
     if (!this.content.parentElement) {
       throw new Error();

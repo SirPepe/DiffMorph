@@ -54,7 +54,16 @@ export function processCode(
 }
 
 // Actual facade for processing data
-export function fromData(inputs: InputContainer[]): RenderData {
-  const typed = inputs.map((input) => applyLanguage(processCode(input)));
+export function fromData(
+  inputs: InputContainer[],
+  languageOverride?: string
+): RenderData {
+  const typed = inputs.map((input) => {
+    const tokenized = processCode(input);
+    if (languageOverride) {
+      tokenized.language = languageOverride;
+    }
+    return applyLanguage(tokenized);
+  });
   return toRenderData(optimize(diff(typed)));
 }

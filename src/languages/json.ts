@@ -125,16 +125,16 @@ function defineJSON(
 
     // Objects and arrays
     if (token.text === "{") {
-      return `token-object-start-${state.objectDepth++}`;
+      return `punctuation-object-start-${state.objectDepth++}`;
     }
     if (token.text === "[") {
-      return `token-array-start-${state.arrayDepth++}`;
+      return `punctuation-array-start-${state.arrayDepth++}`;
     }
     if (token.text === "]") {
-      return `token-array-end-${--state.arrayDepth}`;
+      return `punctuation-array-end-${--state.arrayDepth}`;
     }
     if (token.text === "}") {
-      return `token-object-end-${--state.objectDepth}`;
+      return `punctuation-object-end-${--state.objectDepth}`;
     }
 
     if (token.text === "," || token.text === ":") {

@@ -87,7 +87,16 @@ export function processCode(
 }
 
 // Actual facade for dom content extraction
-export function fromDom(inputs: Element[]): RenderData {
-  const typed = inputs.map((input) => applyLanguage(processCode(input)));
+export function fromDom(
+  inputs: Element[],
+  languageOverride?: string
+): RenderData {
+  const typed = inputs.map((input) => {
+    const tokenized = processCode(input);
+    if (languageOverride) {
+      tokenized.language = languageOverride;
+    }
+    return applyLanguage(tokenized);
+  });
   return toRenderData(optimize(diff(typed)));
 }

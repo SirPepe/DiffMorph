@@ -13,7 +13,16 @@ const nextId = createIdGenerator();
 const DEFAULT_STYLES = `
 .dm-code {
   transition: transform var(--dm-transition-time, 400ms);
-  position: relative
+  position: relative;
+  --string: var(--dm-string, hsl(340, 95%, 38%));
+  --number: var(--dm-number, hsl(170, 100%, 25%));
+  --comment: var(--dm-comment, hsl(0, 0%, 50%));
+  --global: var(--dm-global, hsl(215, 100%, 40%));
+  --type: var(--dm-type, hsl(207, 75%, 25%));
+  --tag: var(--dm-tag, hsl(185, 100%, 17.5%));
+  --value: var(--dm-value, hsl(135, 100%, 28%));
+  --literal: var(--dm-literal, hsl(280, 70%, 50%));
+  --punctuation: var(--dm-punctuation, hsl(0, 0%, 25%));
 }
 .dm-token, .dm-decoration, .dm-box {
   overflow: visible;
@@ -29,7 +38,34 @@ const DEFAULT_STYLES = `
 .dm-token, .dm-decoration {
   transition: transform var(--dm-transition-time, 400ms),
               opacity var(--dm-transition-time, 400ms);
-}`;
+}
+/* JSON and JSONC */
+.dm-box.language-json .dm-token.number,
+.dm-box.language-jsonc .dm-token.number {
+  color: var(--number);
+}
+.dm-box.language-json .dm-token.string,
+.dm-box.language-jsonc .dm-token.string {
+  color: var(--string);
+}
+.dm-box.language-json .dm-token.value,
+.dm-box.language-jsonc .dm-token.value {
+  color: var(--value);
+}
+.dm-box.language-json .dm-token[class*="keyword-"],
+.dm-box.language-jsonc .dm-token[class*="keyword-"] {
+  color: var(--literal);
+}
+.dm-box.language-json .dm-token[class*="punctuation"],
+.dm-box.language-jsonc .dm-token[class*="punctuation"] {
+  color: var(--punctuation);
+}
+.dm-box.language-json .dm-token[class*="comment-"],
+.dm-box.language-jsonc .dm-token[class*="comment-"] {
+  color: var(--comment);
+  font-style: italic;
+}
+`;
 
 function generateTextCss(
   { id, x, y, isVisible }: DecorationPosition,
@@ -119,7 +155,7 @@ function generateStyle(
 
 function generateText({ id, text, type }: RenderText): HTMLElement {
   const element = document.createElement("span");
-  element.className = "dm-token dm-" + id + " " + type;
+  element.className = `${type} dm-token dm-${id}`;
   element.append(text);
   return element;
 }
