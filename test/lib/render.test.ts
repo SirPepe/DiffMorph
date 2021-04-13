@@ -1,8 +1,7 @@
 import { diff } from "../../src/lib/diff";
-import { languageDefinition } from "../../src/languages/json";
 import { toRenderData } from "../../src/lib/render";
 import { lang } from "../helpers";
-const json = lang(languageDefinition);
+const json = lang("json");
 
 describe("rendering", () => {
   test("It turns some JSON into render data", () => {

@@ -10,8 +10,6 @@ function isElement(x: any): x is Element {
   return x.nodeType === 1;
 }
 
-const LANGS = new Set(["json"]);
-
 export class DMFrame extends HTMLElement {
   public get [Symbol.toStringTag](): string {
     return "DiffMorphFrameElement";
@@ -141,35 +139,28 @@ export class DiffMorph extends HTMLElement {
   }
 
   public init = debounce(this._init);
-  private async _init(): Promise<void> {
-    if (LANGS.has(this.language)) {
-      const { languageDefinition } = await import(
-        `../languages/${this.language}`
-      );
-      const sources = this.source.assignedElements().filter((element: any) => {
-        return element[Symbol.toStringTag] === "DiffMorphFrameElement";
-      });
-      this.numFrames = sources.length;
-      const inputData = fromDom(sources, languageDefinition);
-      console.log(inputData);
-      // Get meta data from the wrapper rather than from the sources
-      inputData.objects.data.tagName = "span";
-      inputData.objects.language = getLanguage(this);
-      const [newContent, maxWidth, maxHeight] = toDom(inputData);
-      if (!this.content.parentElement) {
-        throw new Error();
-      }
-      this.content.parentElement.setAttribute(
-        "style",
-        `--max-width:${maxWidth}; --max-height:${maxHeight}`
-      );
-      this.content.parentElement.replaceChild(newContent, this.content);
-      this.content = newContent;
-      if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
-        this.frame = this.computeFrame(this.getAttribute("frame"));
-      }
-    } else {
-      throw new Error("LANGUAGE NOT SUPPORTED RIGHT NOW");
+  private _init(): void {
+    const sources = this.source.assignedElements().filter((element: any) => {
+      return element[Symbol.toStringTag] === "DiffMorphFrameElement";
+    });
+    this.numFrames = sources.length;
+    const inputData = fromDom(sources);
+    console.log(inputData);
+    // Get meta data from the wrapper rather than from the sources
+    inputData.objects.data.tagName = "span";
+    inputData.objects.language = getLanguage(this);
+    const [newContent, maxWidth, maxHeight] = toDom(inputData);
+    if (!this.content.parentElement) {
+      throw new Error();
+    }
+    this.content.parentElement.setAttribute(
+      "style",
+      `--max-width:${maxWidth}; --max-height:${maxHeight}`
+    );
+    this.content.parentElement.replaceChild(newContent, this.content);
+    this.content = newContent;
+    if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
+      this.frame = this.computeFrame(this.getAttribute("frame"));
     }
   }
 

@@ -1,8 +1,7 @@
 import { diff } from "../../src/lib/diff";
-import { languageDefinition } from "../../src/languages/none";
 import { optimize } from "../../src/lib/optimize";
 import { lang } from "../helpers";
-const tokenize = lang(languageDefinition);
+const tokenize = lang("none");
 
 describe("Optimizer", () => {
   test("It turns a single addition/deletion into a movement", () => {

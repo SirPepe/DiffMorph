@@ -1,6 +1,5 @@
-import { languageDefinition } from "../../src/languages/html";
 import { type } from "../helpers";
-const html = type(languageDefinition);
+const html = type("html");
 
 describe("Basic HTML", () => {
   test("Simple element", () => {

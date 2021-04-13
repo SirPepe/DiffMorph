@@ -1,6 +1,5 @@
-import { languageDefinition } from "../../src/languages/json";
 import { type } from "../helpers";
-const json = type(languageDefinition);
+const json = type("json");
 
 describe("Basic JSON", () => {
   test("Empty object", () => {

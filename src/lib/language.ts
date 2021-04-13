@@ -6,21 +6,16 @@
 // prejudice.
 
 import { getFirstTextToken, hash } from "./util";
-import {
-  Box,
-  Decoration,
-  LanguageDefinition,
-  LanguagePostprocessor,
-  TextToken,
-  TypedToken,
-} from "../types";
+import { Box, Decoration, TextToken, TypedToken } from "../types";
+import { languages } from "../languages";
 
 // Joins the token in-place so that the glue function can benefit from working
 // with already-glued previous tokens.
-function applyPostprocessor(
-  token: TypedToken,
-  postprocessor: LanguagePostprocessor
-): void {
+function applyPostprocessor(token: TypedToken): void {
+  const postprocessor =
+    token.parent.language && languages[token.parent.language]
+      ? languages[token.parent.language].postprocessor
+      : languages.none.postprocessor;
   while (true) {
     if (
       token.prev &&
@@ -52,11 +47,14 @@ function applyPostprocessor(
 }
 
 // Performs all of its actions in-place, essentially upgrading the TextTokens to
-// TypedTokens without ever touching the MetaTokens.
+// TypedTokens.
 export const applyLanguage = (
-  languageDefinition: LanguageDefinition<Record<string, any>>,
   root: Box<TextToken, Decoration<TextToken>>
 ): Box<TypedToken, Decoration<TypedToken>> => {
+  const languageDefinition =
+    root.language && languages[root.language]
+      ? languages[root.language]
+      : languages.none;
   const language = languageDefinition.definitionFactory({});
   const first: any = getFirstTextToken([root]);
   let current: any = first;
@@ -70,6 +68,6 @@ export const applyLanguage = (
       current = current.next;
     }
   }
-  applyPostprocessor(first, languageDefinition.postprocessor);
+  applyPostprocessor(first);
   return root as Box<TypedToken, Decoration<TypedToken>>; // ¯\_(ツ)_/¯
 };

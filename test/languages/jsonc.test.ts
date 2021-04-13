@@ -1,6 +1,5 @@
-import { languageDefinition } from "../../src/languages/jsonc";
 import { type } from "../helpers";
-const jsonc = type(languageDefinition);
+const jsonc = type("jsonc");
 
 describe("JSONC", () => {
   test("Key and string value", () => {

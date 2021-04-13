@@ -1,12 +1,15 @@
+import { registerLanguage } from "../../src/languages";
 import { languageDefinition } from "../../src/languages/css";
 import { type } from "../helpers";
-const css = type(languageDefinition);
-const inlineCss = type({
-  name: "css",
+
+registerLanguage({
+  name: "inline-css",
   definitionFactory: () =>
     languageDefinition.definitionFactory({ inline: true }),
   postprocessor: languageDefinition.postprocessor,
 });
+const css = type("css");
+const inlineCss = type("inline-css");
 
 describe("Basic CSS", () => {
   test("Simple rule", () => {

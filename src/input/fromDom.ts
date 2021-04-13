@@ -6,7 +6,6 @@ import {
   Code,
   CodeContainer,
   Decoration,
-  LanguageDefinition,
   RenderData,
   TextToken,
 } from "../types";
@@ -88,10 +87,7 @@ export function processCode(
 }
 
 // Actual facade for dom content extraction
-export function fromDom(
-  inputs: Element[],
-  lang: LanguageDefinition<Record<string, any>>
-): RenderData {
-  const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
+export function fromDom(inputs: Element[]): RenderData {
+  const typed = inputs.map((input) => applyLanguage(processCode(input)));
   return toRenderData(optimize(diff(typed)));
 }

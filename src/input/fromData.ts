@@ -7,7 +7,6 @@ import {
   Code,
   CodeContainer,
   Decoration,
-  LanguageDefinition,
   RenderData,
   TextToken,
 } from "../types";
@@ -55,10 +54,7 @@ export function processCode(
 }
 
 // Actual facade for processing data
-export function fromData(
-  inputs: InputContainer[],
-  lang: LanguageDefinition<Record<string, any>>
-): RenderData {
-  const typed = inputs.map((input) => applyLanguage(lang, processCode(input)));
+export function fromData(inputs: InputContainer[]): RenderData {
+  const typed = inputs.map((input) => applyLanguage(processCode(input)));
   return toRenderData(optimize(diff(typed)));
 }
