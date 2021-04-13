@@ -155,7 +155,16 @@ export type RenderData = {
 
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;
 export type LanguagePostprocessor = (token: TypedToken) => boolean;
-export type LanguageFunctionResult = string | string[];
+
+export type EmbeddedLanguageFunctionResult = {
+  language: string;
+  types: (string | EmbeddedLanguageFunctionResult)[];
+};
+
+export type LanguageFunctionResult =
+  | string
+  | EmbeddedLanguageFunctionResult
+  | (string | EmbeddedLanguageFunctionResult)[];
 
 type LanguageFunctionFactory<Flags extends Record<string, any>> = (
   flags?: Flags

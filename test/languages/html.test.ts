@@ -133,7 +133,25 @@ describe("Basic HTML", () => {
 });
 
 describe("embedded languages", () => {
-  test.skip("Inline CSS", () => {
+  test("inline CSS", () => {
+    const tokens = html(`<div style="color: red;"></div>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "property",
+      "punctuation",
+      "token",
+      "punctuation",
+      "value",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test.skip("embedded CSS", () => {
     const tokens = html(`<style>.foo { color: red }</style>`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([

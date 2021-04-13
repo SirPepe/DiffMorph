@@ -2,7 +2,9 @@
 // a flag, which the XML language definition binds to true.
 
 import { isAdjacent, lookaheadText } from "../lib/util";
+import { languageDefinition as css } from "./css";
 import {
+  EmbeddedLanguageFunctionResult,
   LanguageDefinition,
   LanguageFunction,
   LanguageFunctionResult,
@@ -33,6 +35,24 @@ function defaultState(): State {
     tagState: false,
     doctypeState: false,
   };
+}
+
+function processInlineCss(
+  start: RawToken,
+  attributeEnd: string
+): EmbeddedLanguageFunctionResult {
+  const language = css.definitionFactory({ inline: true });
+  const types = [];
+  let current: any = start;
+  while (current && current.text !== attributeEnd) {
+    const results = language(current);
+    const resultTypes = Array.isArray(results) ? results : [results];
+    for (const type of resultTypes) {
+      types.push(type);
+      current = current.next;
+    }
+  }
+  return { language: "css", types };
 }
 
 function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
@@ -139,6 +159,13 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       // enter attribute value state
       if (QUOTES.includes(token.text) && state.attrValueState === false) {
         state.attrValueState = token.text;
+        if (
+          token.next &&
+          token?.prev?.prev?.type === "attribute" &&
+          token?.prev?.prev?.text === "style"
+        ) {
+          return ["value", processInlineCss(token.next, token.text)];
+        }
         return "value";
       }
 
