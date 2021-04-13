@@ -11,7 +11,7 @@ import {
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
-import { createIdGenerator, hash } from "../lib/util";
+import { createIdGenerator, getLanguage, hash } from "../lib/util";
 import { toRenderData } from "../lib/render";
 import { optimize } from "../lib/optimize";
 import { diff } from "../lib/diff";
@@ -47,11 +47,6 @@ function getAttributes(element: Element): [string, string][] {
     attr.name,
     attr.value,
   ]);
-}
-
-function getLanguage(element: Element): string | undefined {
-  const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
-  return match;
 }
 
 function hashDOMBox(tagName: string, attributes: [string, string][]): string {

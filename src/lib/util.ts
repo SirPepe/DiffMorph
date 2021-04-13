@@ -21,6 +21,11 @@ export function assertIsNot<T>(
   }
 }
 
+export function getLanguage(element: Element): string | undefined {
+  const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
+  return match;
+}
+
 export function isBox<T, D>(x: any): x is Box<T, D> {
   if (typeof x === "object" && x.kind === "BOX") {
     return true;
