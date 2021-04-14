@@ -10,11 +10,125 @@ import {
   RawToken,
 } from "../types";
 
+type BlockType =
+  | "curlies"
+  | "object"
+  | "type"
+  | "block"
+  | "class"
+  | "interface"
+  | "enum"
+  | "export"
+  | "import"
+  | "function"
+  | "switch"
+  | "array"
+  | "jsx-interpolation";
+
+type ParenType =
+  | "parens"
+  | "arguments"
+  | "type"
+  | "call"
+  | "switch-condition"
+  | "condition";
+
+type JSXTagType = "tag" | "component" | "fragment" | "none";
+
+const VALUES = ["false", "true", "null", "undefined"];
+const NUMBERS = ["Infinity", "NaN"];
+const OPERATORS = ["!", "=", "&", "|", "+", "-", "<", ">", "/"];
+const PUNCTUATION = [".", ":", ",", ";"];
+const STRINGS = ["'", '"', "`"];
+const NUMBER_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
+const RE_FLAGS_RE = /^[gimuy]+$/;
+
+const TYPE_KEYWORDS = ["type", "enum", "interface", "infer"];
+
+const KEYWORDS = [
+  "async",
+  "await",
+  "catch",
+  "for",
+  "function",
+  "if",
+  "return",
+  "super",
+  "switch",
+  "throw",
+  "try",
+  "while",
+  "class",
+  "let",
+  "var",
+  "const",
+  "with",
+  "do",
+  "break",
+  "case",
+  "continue",
+  "debugger",
+  "delete",
+  "default",
+  "else",
+  "eval",
+  "extends",
+  "finally",
+  "implements",
+  "in",
+  "instanceof",
+  "new",
+  "package",
+  "private",
+  "protected",
+  "public",
+  "static",
+  "this",
+  "self",
+  "typeof",
+  "void",
+  "yield",
+];
+
+const GLOBALS = [
+  "Array",
+  "window",
+  "setTimeout",
+  "setInterval",
+  "clearTimeout",
+  "clearInterval",
+  "console",
+  "navigator",
+  "Promise",
+  "Math",
+  "alert",
+  "document",
+  "Symbol",
+  "decodeURI",
+  "decodeURIComponent",
+  "encodeURI",
+  "encodeURIComponent",
+  "escape",
+  "eval",
+  "isFinite",
+  "isNaN",
+  "Number",
+  "parseFloat",
+  "parseInt",
+  "String",
+  "unescape",
+  "Object",
+  "Boolean",
+];
+
 type Flags = {
   types: boolean;
 };
 
 type State = {
+  statementPosition: boolean;
+  expressionPosition: boolean;
+  typePosition: boolean;
   lineCommentState: boolean;
   blockCommentState: boolean;
   regexState: boolean;
@@ -23,6 +137,9 @@ type State = {
 
 function defaultState(): State {
   return {
+    statementPosition: true,
+    expressionPosition: true,
+    typePosition: false,
     lineCommentState: false,
     blockCommentState: false,
     regexState: false,
@@ -30,8 +147,63 @@ function defaultState(): State {
   };
 }
 
+function processVariableDeclaration(token: RawToken, flags: Flags): string[] {
+  let current: RawToken | undefined = token.next;
+  let destructuringDepth = 0;
+  const types: string[] = [];
+  while (current) {
+    if (current.text === "[" || current.text === "{") {
+      types.push(`punctuation-destruct-start-${destructuringDepth++}`);
+      current = current.next;
+      continue;
+    }
+    if (current.text === "]" || current.text === "}") {
+      types.push(`punctuation-destruct-end-${--destructuringDepth}`);
+      current = current.next;
+      continue;
+    }
+    if (current.text === "=") {
+      types.push("operator-assignment");
+      if (destructuringDepth === 0) {
+        break;
+      } else if (current.next) {
+        types.push(...processExpression(current.next, flags));
+        current = current.next.next;
+      }
+      continue;
+    }
+    if (current.text === ":") {
+      if (destructuringDepth === 0 && flags.types) {
+        types.push("operator-annotation");
+        break;
+      }
+    }
+    if (current.text === ";") {
+      types.push("punctuation");
+      break;
+    }
+    if (current.text === "," || current.text === ":") {
+      types.push(`punctuation`);
+    } else {
+      types.push(`token`);
+    }
+    current = current.next;
+  }
+  return [`keyword-${token.text}`, ...types];
+}
+
+function processExpression(token: RawToken, flags: Flags): string[] {
+  if (
+    token.text === "NaN" ||
+    token.text === "Infinity" ||
+    token.text.match(NUMBER_RE)
+  ) {
+    return ["number"];
+  }
+  return ["token"];
+}
+
 function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
-  const { types } = flags;
   const state = defaultState();
 
   return function ecmaScript(token: RawToken): LanguageFunctionResult {
@@ -83,6 +255,32 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // are we in line comment state?
     if (state.lineCommentState) {
       return "comment-line";
+    }
+
+    if (
+      state.statementPosition &&
+      ["var", "let", "const"].includes(token.text)
+    ) {
+      const declaration = processVariableDeclaration(token, flags);
+      const last = declaration[declaration.length - 1];
+      if (last.endsWith("annotation")) {
+        state.typePosition = true;
+        state.expressionPosition = false;
+        state.statementPosition = false;
+      } else if (last.endsWith("assignment")) {
+        state.typePosition = false;
+        state.expressionPosition = true;
+        state.statementPosition = false;
+      }
+      return declaration;
+    }
+
+    if (state.expressionPosition && token.text !== ";") {
+      return processExpression(token, flags);
+    }
+
+    if (PUNCTUATION.includes(token.text)) {
+      return "punctuation";
     }
 
     return "token";
