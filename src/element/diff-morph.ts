@@ -90,6 +90,7 @@ export class DiffMorph extends HTMLElement {
   private source: HTMLSlotElement;
   private content: HTMLElement;
   private updater: (curr: number, total: number) => void;
+  private autoplayTimeout: any;
 
   constructor() {
     super();
@@ -117,12 +118,15 @@ export class DiffMorph extends HTMLElement {
   }
 
   static get observedAttributes(): string[] {
-    return ["class", "controls"];
+    return ["class", "autoplay"];
   }
 
   public attributeChangedCallback(name: string): void {
     if (name === "class") {
       this.init();
+    }
+    if (name === "autoplay") {
+      this.toggleAutoplay(this.hasAttribute("autoplay"));
     }
   }
 
@@ -137,6 +141,17 @@ export class DiffMorph extends HTMLElement {
     return value;
   }
 
+  private toggleAutoplay(enable: boolean): void {
+    window.clearTimeout(this.autoplayTimeout);
+    if (enable) {
+      const self = this; // eslint-disable-line
+      this.autoplayTimeout = window.setTimeout(function doNext() {
+        self.next();
+        self.autoplayTimeout = window.setTimeout(doNext, 1000);
+      }, 1000);
+    }
+  }
+
   public init = debounce(this._init);
   private _init(): void {
     const sources = this.source.assignedElements().filter((element: any) => {
@@ -144,7 +159,6 @@ export class DiffMorph extends HTMLElement {
     });
     this.numFrames = sources.length;
     const inputData = fromDom(sources, this.language);
-    // Get meta data from the wrapper rather than from the sources
     inputData.objects.data.tagName = "code";
     const [newContent, maxWidth, maxHeight] = toDom(inputData);
     if (!this.content.parentElement) {
