@@ -84,6 +84,8 @@ function createShadowDom(): [
 }
 
 export class DiffMorph extends HTMLElement {
+  private maxWidth = 0;
+  private maxHeight = 0;
   private numFrames = 0;
   private currentFrame = -1;
   private shadow: ShadowRoot;
@@ -164,6 +166,8 @@ export class DiffMorph extends HTMLElement {
     if (!this.content.parentElement) {
       throw new Error();
     }
+    this.maxWidth = maxWidth;
+    this.maxHeight = maxHeight;
     this.content.parentElement.setAttribute(
       "style",
       `--max-width:${maxWidth}; --max-height:${maxHeight}`
@@ -173,6 +177,7 @@ export class DiffMorph extends HTMLElement {
     if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
       this.index = this.computeFrame(this.getAttribute("frame"));
     }
+    this.dispatchEvent(new Event("initialize"));
   }
 
   public next(): void {
@@ -205,6 +210,14 @@ export class DiffMorph extends HTMLElement {
 
   get size(): number {
     return this.numFrames;
+  }
+
+  get width(): number {
+    return this.maxWidth;
+  }
+
+  get height(): number {
+    return this.maxHeight;
   }
 
   get language(): string {

@@ -6,26 +6,28 @@
   <script src="dist/diff-morph.js"></script>
 </head>
 <body>
-  <diff-morph class="language-json" controls autoplay>
-    <dm-frame>{}</dm-frame>
-    <dm-frame>{ "hello": 42 }</dm-frame>
-    <dm-frame>{ "hello": 42, "world": 42 }</dm-frame>
-    <dm-frame>{ "hello": <mark>42</mark>, "world": 42 }</dm-frame>
-    <dm-frame>{ "hello": 42, "world": <mark>42</mark> }</dm-frame>
-    <dm-frame>{
+
+<diff-morph class="language-json" controls>
+  <dm-frame>{}</dm-frame>
+  <dm-frame>{ "hello": 42 }</dm-frame>
+  <dm-frame>{ "hello": 42, "world": 42 }</dm-frame>
+  <dm-frame>{ "hello": <mark>42</mark>, "world": 42 }</dm-frame>
+  <dm-frame>{ "hello": 42, "world": <mark>42</mark> }</dm-frame>
+  <dm-frame>{
   "hello": 42,
   "world": 42
 }</dm-frame>
-    <dm-frame>{
+  <dm-frame>{
   "hello": 42,
   "world": [42, 23]
 }</dm-frame>
-    <dm-frame>{
+<dm-frame>{
   "hello": 42,
   "world": {
     "wee": [42, 23]
   }
 }</dm-frame>
 </diff-morph>
+
 </body>
 </html>
