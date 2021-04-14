@@ -28,6 +28,19 @@ registerLanguage({
   postprocessor: (): boolean => false,
 });
 
+describe("Unexpected input", () => {
+  test("No input", () => {
+    const tokens = type("test")();
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([]);
+  });
+  test("Whitespace-only input", () => {
+    const tokens = type("test")("  ");
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([]);
+  });
+});
+
 describe("Continuous coordinate system", () => {
   test("continuous coordinate system without boxes", () => {
     const tokens = type("test")("a", "b");

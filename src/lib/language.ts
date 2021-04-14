@@ -36,8 +36,12 @@ function embeddedLanguageBoxFactory(
 }
 
 // Joins the token in-place so that the glue function can benefit from working
-// with already-glued previous tokens.
-function applyPostprocessor(token: TypedToken): void {
+// with already-glued previous tokens. The input token may be undefined when
+// dealing with an empty string as input.
+function applyPostprocessor(token: TypedToken | undefined): void {
+  if (!token) {
+    return;
+  }
   const postprocessor =
     token.parent.language && languages[token.parent.language]
       ? languages[token.parent.language].postprocessor
