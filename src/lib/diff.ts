@@ -270,8 +270,8 @@ export function diffBoxes<T extends Token, D extends Token>(
 export const diff = <T extends Token, D extends Token>(
   roots: Box<T, D>[]
 ): DiffTree<T, D>[] => {
-  if (roots.length < 2) {
-    throw new Error("Need at least two frames to diff");
+  if (roots.length === 0) {
+    return [];
   }
   const diffs: DiffTree<T, D>[] = [diffBoxes(undefined, roots[0])];
   for (let i = 0; i < roots.length - 1; i++) {

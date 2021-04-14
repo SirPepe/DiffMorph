@@ -133,7 +133,7 @@ describe("rendering", () => {
     expect(maxWidth).toBe(5);
   });
 
-  test("It works with static frames", () => {
+  test("It works with non-changing frames", () => {
     const diffs = diff([json("{}"), json("{}"), json("  {}")]);
     const { objects, frames, maxWidth, maxHeight } = toRenderData(diffs);
     expect(objects).toEqual({
@@ -227,8 +227,77 @@ describe("rendering", () => {
     expect(maxWidth).toBe(4);
   });
 
-  /*test.skip("does not explode when a line break gets inserted after two identical frames", () => {
-    const diffs = diff([json("{}"), json("{}"), json("{\n}")]);
-    const keyframes = toRenderData(diffs);
-  });*/
+  test("deals with a single frame", () => {
+    const diffs = diff([json("{}")]);
+    const { objects, frames, maxWidth, maxHeight } = toRenderData(diffs);
+    expect(objects).toEqual({
+      id: "root",
+      data: {},
+      language: "json",
+      content: {
+        text: new Map([
+          ["10igw9m0", { id: "10igw9m0", text: "{", type: expect.any(String) }],
+          ["1mj04u80", { id: "1mj04u80", text: "}", type: expect.any(String) }],
+        ]),
+        decorations: new Map(),
+        boxes: new Map(),
+      },
+    });
+    expect(frames.length).toBe(1);
+    expect(frames[0]).toEqual({
+      id: "root",
+      x: 0,
+      y: 0,
+      width: 2,
+      height: 1,
+      frame: {
+        text: new Map([
+          [
+            "10igw9m0",
+            {
+              id: "10igw9m0",
+              x: 0,
+              y: 0,
+              width: 1,
+              height: 1,
+              isVisible: true,
+            },
+          ],
+          [
+            "1mj04u80",
+            {
+              id: "1mj04u80",
+              x: 1,
+              y: 0,
+              width: 1,
+              height: 1,
+              isVisible: true,
+            },
+          ],
+        ]),
+        boxes: new Map(),
+        decorations: new Map(),
+      },
+      isVisible: true,
+    });
+    expect(maxHeight).toBe(1);
+    expect(maxWidth).toBe(2);
+  });
+
+  test("deals with zero frames", () => {
+    const { objects, frames, maxWidth, maxHeight } = toRenderData([]);
+    expect(objects).toEqual({
+      id: "",
+      data: {},
+      language: "none",
+      content: {
+        text: new Map(),
+        decorations: new Map(),
+        boxes: new Map(),
+      },
+    });
+    expect(frames.length).toBe(0);
+    expect(maxHeight).toBe(0);
+    expect(maxWidth).toBe(0);
+  });
 });

@@ -235,6 +235,23 @@ function getBoxReference(box: Box<any, any>, root: RenderRoot): RenderRoot {
 export function toRenderData(
   diffs: DiffTree<TypedToken, Decoration<TypedToken>>[]
 ): RenderData {
+  if (diffs.length === 0) {
+    return {
+      objects: {
+        id: "",
+        data: {},
+        language: "none",
+        content: {
+          text: new Map(),
+          decorations: new Map(),
+          boxes: new Map(),
+        },
+      },
+      frames: [],
+      maxWidth: 0,
+      maxHeight: 0,
+    };
+  }
   const { id, data, language } = diffs[0].root.item;
   // This object represents the actual object graph of everything that can ever
   // become visible and gets mutated in-place while the frame data is generated.

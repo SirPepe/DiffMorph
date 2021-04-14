@@ -204,7 +204,7 @@ export class DiffMorph extends HTMLElement {
     const value = this.computeFrame(input);
     this.content.classList.remove(`frame${this.currentFrame}`);
     this.content.classList.add(`frame${value}`);
-    this.updater(input + 1, this.size);
+    this.updater(value + 1, this.size);
     this.currentFrame = value;
   }
 

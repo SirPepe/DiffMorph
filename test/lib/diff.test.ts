@@ -477,8 +477,38 @@ describe("diff with boxes", () => {
   });
 });
 
-describe("diff across multiple frames", () => {
-  test("diffing lines (addition at end)", () => {
+describe("diff across any number of frames", () => {
+  test("zero frames", () => {
+    const result = diff<any, any>([]);
+    expect(result).toEqual([]);
+  });
+
+  test("one frame", () => {
+    const aTokens = [
+      { x: 0, y: 0, width: 1, height: 1, hash: "a0" },
+      { x: 2, y: 0, width: 1, height: 1, hash: "a1" },
+      { x: 0, y: 1, width: 1, height: 1, hash: "b0" },
+    ];
+    const a = stubBox({ content: aTokens });
+    const result = diff<any, any>([a]);
+    expect(result).toEqual([
+      {
+        kind: "TREE",
+        root: {
+          kind: "ADD",
+          item: a,
+        },
+        content: [
+          { kind: "ADD", item: aTokens[0] },
+          { kind: "ADD", item: aTokens[1] },
+          { kind: "ADD", item: aTokens[2] },
+        ],
+        decorations: [],
+      },
+    ]);
+  });
+
+  test("four frames", () => {
     const aTokens = [
       { x: 0, y: 0, width: 1, height: 1, hash: "a0" },
       { x: 2, y: 0, width: 1, height: 1, hash: "a1" },
