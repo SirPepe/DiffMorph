@@ -1,5 +1,4 @@
 import debounce from "debounce";
-import { getLanguage } from "../lib/util";
 import { fromDom } from "../input/fromDom";
 import { toDom } from "../output/toDom";
 
@@ -144,7 +143,7 @@ export class DiffMorph extends HTMLElement {
       return element[Symbol.toStringTag] === "DiffMorphFrameElement";
     });
     this.numFrames = sources.length;
-    const inputData = fromDom(sources, getLanguage(this));
+    const inputData = fromDom(sources, this.language);
     // Get meta data from the wrapper rather than from the sources
     inputData.objects.data.tagName = "code";
     const [newContent, maxWidth, maxHeight] = toDom(inputData);
@@ -158,39 +157,39 @@ export class DiffMorph extends HTMLElement {
     this.content.parentElement.replaceChild(newContent, this.content);
     this.content = newContent;
     if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
-      this.frame = this.computeFrame(this.getAttribute("frame"));
+      this.index = this.computeFrame(this.getAttribute("frame"));
     }
   }
 
   public next(): void {
-    if (this.frame < this.frames - 1) {
-      this.frame = this.frame + 1;
+    if (this.index < this.size - 1) {
+      this.index = this.index + 1;
     } else {
-      this.frame = 0;
+      this.index = 0;
     }
   }
 
   public prev(): void {
-    if (this.frame > 0) {
-      this.frame = this.frame - 1;
+    if (this.index > 0) {
+      this.index = this.index - 1;
     } else {
-      this.frame = this.frames - 1;
+      this.index = this.size - 1;
     }
   }
 
-  get frame(): number {
+  get index(): number {
     return this.currentFrame;
   }
 
-  set frame(input: number) {
+  set index(input: number) {
     const value = this.computeFrame(input);
     this.content.classList.remove(`frame${this.currentFrame}`);
     this.content.classList.add(`frame${value}`);
-    this.updater(input + 1, this.frames);
+    this.updater(input + 1, this.size);
     this.currentFrame = value;
   }
 
-  get frames(): number {
+  get size(): number {
     return this.numFrames;
   }
 
