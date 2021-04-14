@@ -175,7 +175,10 @@ export class DiffMorph extends HTMLElement {
     this.content.parentElement.replaceChild(newContent, this.content);
     this.content = newContent;
     if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
-      this.index = this.computeFrame(this.getAttribute("frame"));
+      this.index = 0;
+    } else {
+      // triggers reset of the frame attribute in the shadow dom
+      this.index = this.index; // eslint-disable-line
     }
     this.dispatchEvent(new Event("initialize"));
   }
