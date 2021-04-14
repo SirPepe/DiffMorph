@@ -55,6 +55,27 @@ function processInlineCss(
   return { language: "css", types };
 }
 
+function processEmbeddedCss(
+  start: RawToken | undefined
+): EmbeddedLanguageFunctionResult {
+  const language = css.definitionFactory({ inline: false });
+  const types = [];
+  let current: any = start;
+  while (current) {
+    if (current.text === "<" && lookaheadText(current, ["/", "style", ">"])) {
+      return { language: "css", types };
+    }
+    const results = language(current);
+    // console.log(current.text, results);
+    const resultTypes = Array.isArray(results) ? results : [results];
+    for (const type of resultTypes) {
+      types.push(type);
+      current = current.next;
+    }
+  }
+  return { language: "css", types };
+}
+
 function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
   const state = defaultState();
   const { xml } = flags;
@@ -138,6 +159,13 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     // exit tag state
     if (state.tagState && token.text === ">") {
       state.tagState = false;
+      if (
+        token?.prev?.text === "style" &&
+        token.prev.type === "tag" &&
+        token?.prev?.prev?.text !== "/" // don't switch to CSS after </style>
+      ) {
+        return ["tag", processEmbeddedCss(token.next)];
+      }
       return "tag";
     }
     // handle tag contents

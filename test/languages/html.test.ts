@@ -151,12 +151,13 @@ describe("embedded languages", () => {
     ]);
   });
 
-  test.skip("embedded CSS", () => {
+  test("embedded CSS", () => {
     const tokens = html(`<style>.foo { color: red }</style>`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "tag",
       "tag",
+      "value-selector",
       "value-selector",
       "punctuation-rule-start",
       "property",
