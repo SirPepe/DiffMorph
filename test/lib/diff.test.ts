@@ -261,7 +261,7 @@ describe("diff with decorations", () => {
             hash: "foo",
             width: 2,
             height: 2,
-          }
+          },
         ],
       }),
       stubBox({
@@ -272,7 +272,7 @@ describe("diff with decorations", () => {
             hash: "foo",
             width: 2,
             height: 2,
-          }
+          },
         ],
       })
     );
@@ -294,7 +294,7 @@ describe("diff with decorations", () => {
     };
     const actual = diffBoxes<any, any>(
       stubBox({ decorations: [] }),
-      stubBox({ decorations: [ added ]}),
+      stubBox({ decorations: [added] })
     );
     expect(actual).toEqual({
       kind: "TREE",
@@ -313,8 +313,8 @@ describe("diff with decorations", () => {
       height: 2,
     };
     const actual = diffBoxes<any, any>(
-      stubBox({ decorations: [ removed ] }),
-      stubBox({ decorations: []}),
+      stubBox({ decorations: [removed] }),
+      stubBox({ decorations: [] })
     );
     expect(actual).toEqual({
       kind: "TREE",
@@ -340,8 +340,8 @@ describe("diff with decorations", () => {
       height: 2,
     };
     const actual = diffBoxes<any, any>(
-      stubBox({ decorations: [ before ] }),
-      stubBox({ decorations: [ after ]}),
+      stubBox({ decorations: [before] }),
+      stubBox({ decorations: [after] })
     );
     expect(actual).toEqual({
       kind: "TREE",
@@ -349,7 +349,7 @@ describe("diff with decorations", () => {
       content: [],
       decorations: [
         { kind: "DEL", item: before },
-        { kind: "ADD", item: after }
+        { kind: "ADD", item: after },
       ],
     });
   });
@@ -370,8 +370,8 @@ describe("diff with decorations", () => {
       height: 1,
     };
     const actual = diffBoxes<any, any>(
-      stubBox({ decorations: [ before ] }),
-      stubBox({ decorations: [ after ]}),
+      stubBox({ decorations: [before] }),
+      stubBox({ decorations: [after] })
     );
     expect(actual).toEqual({
       kind: "TREE",
@@ -379,7 +379,7 @@ describe("diff with decorations", () => {
       content: [],
       decorations: [
         { kind: "DEL", item: before },
-        { kind: "ADD", item: after }
+        { kind: "ADD", item: after },
       ],
     });
   });
@@ -409,7 +409,7 @@ describe("diff with boxes", () => {
         from: a,
         item: b,
         kind: "MOV",
-     },
+      },
       content: [],
       decorations: [],
     });
@@ -425,7 +425,7 @@ describe("diff with boxes", () => {
         from: a,
         item: b,
         kind: "MOV",
-     },
+      },
       content: [],
       decorations: [],
     });
@@ -470,7 +470,7 @@ describe("diff with boxes", () => {
             { kind: "ADD", item: bNestedTokens[1] },
           ],
           decorations: [],
-       },
+        },
       ],
       decorations: [],
     });
@@ -514,7 +514,7 @@ describe("diff across multiple frames", () => {
       root: {
         kind: "ADD",
         item: a,
-     },
+      },
       content: [
         { kind: "ADD", item: aTokens[0] },
         { kind: "ADD", item: aTokens[1] },
