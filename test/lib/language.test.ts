@@ -1,24 +1,12 @@
-import { languageDefinition } from "../../src/languages/json";
+import { registerLanguage } from "../../src/languages";
 import { applyLanguage } from "../../src/lib/language";
 import { tokenize } from "../../src/lib/tokenizer";
-import { Box, LanguageDefinition } from "../../src/types";
+import { Box } from "../../src/types";
 import { type } from "../helpers";
 
-const applyJSON = (input: Box<any, any>) =>
-  applyLanguage(
-    {
-      name: languageDefinition.name,
-      definitionFactory: () =>
-        languageDefinition.definitionFactory({ comments: false }),
-      postprocessor: languageDefinition.postprocessor,
-    },
-    input
-  );
-
 // Test language types tokens "a", "b" as "a" and "b" IF they are directly
-// adjacent. This can be used to test the token proxies, which simulate a
-// continuous coordinate system.
-const testLanguage: LanguageDefinition<Record<string, any>> = {
+// adjacent. This can be used to test the continuous coordinate system.
+registerLanguage({
   name: "test",
   definitionFactory: () => (token) => {
     if (
@@ -38,17 +26,17 @@ const testLanguage: LanguageDefinition<Record<string, any>> = {
     return "f";
   },
   postprocessor: (): boolean => false,
-};
+});
 
 describe("Continuous coordinate system", () => {
   test("continuous coordinate system without boxes", () => {
-    const tokens = type(testLanguage)("a", "b");
+    const tokens = type("test")("a", "b");
     const types = tokens.map((token) => token.type);
     expect(types).toEqual(["a", "b"]);
   });
 
   test("continuous coordinate system with boxes", () => {
-    const tokens = type(testLanguage)("a", {
+    const tokens = type("test")("a", {
       id: "box",
       hash: "box",
       language: undefined,
@@ -71,7 +59,7 @@ describe("In-place modifications", () => {
       language: "json",
       data: {},
     });
-    const output = applyJSON(subject);
+    const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
       kind: "BOX",
@@ -123,7 +111,7 @@ describe("In-place modifications", () => {
       language: "json",
       data: {},
     });
-    const output = applyJSON(subject);
+    const output = applyLanguage(subject);
     expect(output).toBe(subject);
     const nested = output.content[1] as Box<any, any>;
     expect(output).toEqual({
@@ -217,7 +205,7 @@ describe("In-place modifications", () => {
       language: "json",
       data: {},
     });
-    const output = applyJSON(subject);
+    const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
       kind: "BOX",
@@ -279,7 +267,7 @@ describe("In-place modifications", () => {
       data: {},
     };
     const subject = tokenize(input);
-    const output = applyJSON(subject);
+    const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output.content[0]).toHaveProperty("language", "json");
   });
@@ -303,7 +291,7 @@ describe("In-place modifications", () => {
       data: {},
     };
     const subject = tokenize(input);
-    const output = applyJSON(subject);
+    const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output.content[0]).toHaveProperty("language", "html");
   });

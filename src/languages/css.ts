@@ -229,7 +229,9 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
     if (
       getContext(state) !== "rule" &&
       getContext(state) !== "selector" &&
-      (!token.prev || ["{", "}"].includes(token?.prev?.text))
+      (!token.prev ||
+        ["{", "}"].includes(token.prev.text) ||
+        token.prev.text === ">") // after <style> embedded in HTML
     ) {
       state.contextStack.push("selector");
       return "value-selector";

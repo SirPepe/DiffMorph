@@ -1,17 +1,16 @@
-import { languageDefinition } from "../../src/languages/jsonc";
 import { type } from "../helpers";
-const jsonc = type(languageDefinition);
+const jsonc = type("jsonc");
 
 describe("JSONC", () => {
   test("Key and string value", () => {
     const tokens = jsonc(`{ "foo": "bar" }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "token-object-start-0",
+      "punctuation-object-start-0",
       "string",
       "punctuation",
       "value",
-      "token-object-end-0",
+      "punctuation-object-end-0",
     ]);
   });
 
@@ -21,8 +20,8 @@ describe("JSONC", () => {
     expect(types).toEqual([
       "comment-line",
       "comment-line",
-      "token-object-start-0",
-      "token-object-end-0",
+      "punctuation-object-start-0",
+      "punctuation-object-end-0",
     ]);
   });
 
@@ -33,8 +32,8 @@ describe("JSONC", () => {
       "comment-block",
       "comment-block",
       "comment-block",
-      "token-object-start-0",
-      "token-object-end-0",
+      "punctuation-object-start-0",
+      "punctuation-object-end-0",
     ]);
   });
 
@@ -47,8 +46,8 @@ describe("JSONC", () => {
       "comment-block",
       "comment-block",
       "comment-block",
-      "token-object-start-0",
-      "token-object-end-0",
+      "punctuation-object-start-0",
+      "punctuation-object-end-0",
     ]);
   });
 
@@ -56,11 +55,11 @@ describe("JSONC", () => {
     const tokens = jsonc(`{ "//foo": "/*bar*/" }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "token-object-start-0",
+      "punctuation-object-start-0",
       "string",
       "punctuation",
       "value",
-      "token-object-end-0",
+      "punctuation-object-end-0",
     ]);
   });
 });

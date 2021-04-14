@@ -21,6 +21,43 @@ export function assertIsNot<T>(
   }
 }
 
+// Modifies a source box in-place by re-organizing a number of tokens into
+// sub-boxes. As there may be several box borders between the first and last
+// item, the items are organized into batches (one per parent) and then each
+// parent's content gets modified accordingly.
+export function spliceBoxContent<
+  T extends { parent: any; next: T | undefined },
+  D
+>(
+  firstItem: T,
+  numItems: number,
+  boxFactory: (parent: Box<T, D>) => Box<T, D>
+): void {
+  const batches = [];
+  let lastParent = firstItem.parent;
+  let currentItem = firstItem;
+  let currentBatch = [];
+  while (numItems > 0) {
+    if (currentItem.parent != lastParent) {
+      batches.push(currentBatch);
+      currentBatch = [];
+      lastParent = currentItem.parent;
+    }
+    currentBatch.push(currentItem);
+    if (currentItem.next) {
+      currentItem = currentItem.next;
+    }
+    numItems--;
+  }
+  batches.push(currentBatch);
+  for (const batch of batches) {
+    const parent = batch[0].parent;
+    const firstIdx = parent.content.indexOf(batch[0]);
+    const newBox = boxFactory(parent);
+    newBox.content = parent.content.splice(firstIdx, batch.length, newBox);
+  }
+}
+
 export function getLanguage(element: Element): string | undefined {
   const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
   return match;

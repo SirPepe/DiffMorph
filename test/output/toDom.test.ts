@@ -1,9 +1,8 @@
 import { diff } from "../../src/lib/diff";
-import { languageDefinition } from "../../src/languages/json";
 import { toRenderData } from "../../src/lib/render";
 import { toDom } from "../../src/output/toDom";
 import { lang } from "../helpers";
-const json = lang(languageDefinition);
+const json = lang("json");
 
 describe("toDom", () => {
   test("renders tokens to DOM", () => {

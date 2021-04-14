@@ -5,22 +5,43 @@
 // applyLanguage() in particular as it WILL modify its input with extreme
 // prejudice.
 
-import { getFirstTextToken, hash } from "./util";
 import {
-  Box,
-  Decoration,
-  LanguageDefinition,
-  LanguagePostprocessor,
-  TextToken,
-  TypedToken,
-} from "../types";
+  createIdGenerator,
+  getFirstTextToken,
+  hash,
+  spliceBoxContent,
+} from "./util";
+import { Box, Decoration, TextToken, TypedToken } from "../types";
+import { languages } from "../languages";
+
+function embeddedLanguageBoxFactory(
+  parent: Box<any, any>,
+  id: string,
+  language: string
+): Box<any, any> {
+  return {
+    kind: "BOX" as const,
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    hash: parent.hash + "-embedded-" + language,
+    id,
+    data: {},
+    language,
+    content: [],
+    decorations: [],
+    parent,
+  };
+}
 
 // Joins the token in-place so that the glue function can benefit from working
 // with already-glued previous tokens.
-function applyPostprocessor(
-  token: TypedToken,
-  postprocessor: LanguagePostprocessor
-): void {
+function applyPostprocessor(token: TypedToken): void {
+  const postprocessor =
+    token.parent.language && languages[token.parent.language]
+      ? languages[token.parent.language].postprocessor
+      : languages.none.postprocessor;
   while (true) {
     if (
       token.prev &&
@@ -52,24 +73,48 @@ function applyPostprocessor(
 }
 
 // Performs all of its actions in-place, essentially upgrading the TextTokens to
-// TypedTokens without ever touching the MetaTokens.
-export const applyLanguage = (
-  languageDefinition: LanguageDefinition<Record<string, any>>,
+// TypedTokens.
+export function applyLanguage(
   root: Box<TextToken, Decoration<TextToken>>
-): Box<TypedToken, Decoration<TypedToken>> => {
+): Box<TypedToken, Decoration<TypedToken>> {
+  const nextEmbeddedId = createIdGenerator();
+  const languageDefinition =
+    root.language && languages[root.language]
+      ? languages[root.language]
+      : languages.none;
   const language = languageDefinition.definitionFactory({});
   const first: any = getFirstTextToken([root]);
   let current: any = first;
   while (current) {
     const results = language(current);
     const types = Array.isArray(results) ? results : [results];
-    while (types.length > 0) {
-      const type = types.shift();
-      current.type = type;
-      current.hash = hash(hash(current.type) + hash(current.text));
-      current = current.next;
+    for (let i = 0; i < types.length; i++) {
+      const type = types[i];
+      if (typeof type === "string") {
+        current.type = type;
+        current.hash = hash(hash(current.type) + hash(current.text));
+        current = current.next;
+      } else if (typeof type === "object") {
+        // Move embedded languages items into their own box(es) before
+        // processing their actual types
+        spliceBoxContent(current, type.types.length, (parent) =>
+          embeddedLanguageBoxFactory(
+            parent,
+            nextEmbeddedId(type.language, parent.hash),
+            type.language
+          )
+        );
+        // Insert new types into the current type array and re-process the
+        // current token with the then-current type
+        types.splice(i, 1, ...type.types);
+        i--;
+      } else {
+        throw new Error(
+          `Language definition for ${languageDefinition.name} returned ${type} for "${current.text}"`
+        );
+      }
     }
   }
-  applyPostprocessor(first, languageDefinition.postprocessor);
+  applyPostprocessor(first);
   return root as Box<TypedToken, Decoration<TypedToken>>; // ¯\_(ツ)_/¯
-};
+}

@@ -1,5 +1,4 @@
 import debounce from "debounce";
-import { getLanguage } from "../lib/util";
 import { fromDom } from "../input/fromDom";
 import { toDom } from "../output/toDom";
 
@@ -9,8 +8,6 @@ function isElement(x: any): x is Element {
   }
   return x.nodeType === 1;
 }
-
-const LANGS = new Set(["json"]);
 
 export class DMFrame extends HTMLElement {
   public get [Symbol.toStringTag](): string {
@@ -141,67 +138,58 @@ export class DiffMorph extends HTMLElement {
   }
 
   public init = debounce(this._init);
-  private async _init(): Promise<void> {
-    if (LANGS.has(this.language)) {
-      const { languageDefinition } = await import(
-        `../languages/${this.language}`
-      );
-      const sources = this.source.assignedElements().filter((element: any) => {
-        return element[Symbol.toStringTag] === "DiffMorphFrameElement";
-      });
-      this.numFrames = sources.length;
-      const inputData = fromDom(sources, languageDefinition);
-      console.log(inputData);
-      // Get meta data from the wrapper rather than from the sources
-      inputData.objects.data.tagName = "span";
-      inputData.objects.language = getLanguage(this);
-      const [newContent, maxWidth, maxHeight] = toDom(inputData);
-      if (!this.content.parentElement) {
-        throw new Error();
-      }
-      this.content.parentElement.setAttribute(
-        "style",
-        `--max-width:${maxWidth}; --max-height:${maxHeight}`
-      );
-      this.content.parentElement.replaceChild(newContent, this.content);
-      this.content = newContent;
-      if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
-        this.frame = this.computeFrame(this.getAttribute("frame"));
-      }
-    } else {
-      throw new Error("LANGUAGE NOT SUPPORTED RIGHT NOW");
+  private _init(): void {
+    const sources = this.source.assignedElements().filter((element: any) => {
+      return element[Symbol.toStringTag] === "DiffMorphFrameElement";
+    });
+    this.numFrames = sources.length;
+    const inputData = fromDom(sources, this.language);
+    // Get meta data from the wrapper rather than from the sources
+    inputData.objects.data.tagName = "code";
+    const [newContent, maxWidth, maxHeight] = toDom(inputData);
+    if (!this.content.parentElement) {
+      throw new Error();
+    }
+    this.content.parentElement.setAttribute(
+      "style",
+      `--max-width:${maxWidth}; --max-height:${maxHeight}`
+    );
+    this.content.parentElement.replaceChild(newContent, this.content);
+    this.content = newContent;
+    if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
+      this.index = this.computeFrame(this.getAttribute("frame"));
     }
   }
 
   public next(): void {
-    if (this.frame < this.frames - 1) {
-      this.frame = this.frame + 1;
+    if (this.index < this.size - 1) {
+      this.index = this.index + 1;
     } else {
-      this.frame = 0;
+      this.index = 0;
     }
   }
 
   public prev(): void {
-    if (this.frame > 0) {
-      this.frame = this.frame - 1;
+    if (this.index > 0) {
+      this.index = this.index - 1;
     } else {
-      this.frame = this.frames - 1;
+      this.index = this.size - 1;
     }
   }
 
-  get frame(): number {
+  get index(): number {
     return this.currentFrame;
   }
 
-  set frame(input: number) {
+  set index(input: number) {
     const value = this.computeFrame(input);
     this.content.classList.remove(`frame${this.currentFrame}`);
     this.content.classList.add(`frame${value}`);
-    this.updater(input + 1, this.frames);
+    this.updater(input + 1, this.size);
     this.currentFrame = value;
   }
 
-  get frames(): number {
+  get size(): number {
     return this.numFrames;
   }
 

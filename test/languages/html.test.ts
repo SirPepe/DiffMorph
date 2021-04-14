@@ -1,6 +1,5 @@
-import { languageDefinition } from "../../src/languages/html";
 import { type } from "../helpers";
-const html = type(languageDefinition);
+const html = type("html");
 
 describe("Basic HTML", () => {
   test("Simple element", () => {
@@ -134,12 +133,31 @@ describe("Basic HTML", () => {
 });
 
 describe("embedded languages", () => {
-  test.skip("Inline CSS", () => {
+  test("inline CSS", () => {
+    const tokens = html(`<div style="color: red;"></div>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "property",
+      "punctuation",
+      "token",
+      "punctuation",
+      "value",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test("embedded CSS", () => {
     const tokens = html(`<style>.foo { color: red }</style>`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "tag",
       "tag",
+      "value-selector",
       "value-selector",
       "punctuation-rule-start",
       "property",

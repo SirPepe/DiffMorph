@@ -2,7 +2,9 @@
 // a flag, which the XML language definition binds to true.
 
 import { isAdjacent, lookaheadText } from "../lib/util";
+import { languageDefinition as css } from "./css";
 import {
+  EmbeddedLanguageFunctionResult,
   LanguageDefinition,
   LanguageFunction,
   LanguageFunctionResult,
@@ -33,6 +35,45 @@ function defaultState(): State {
     tagState: false,
     doctypeState: false,
   };
+}
+
+function processInlineCss(
+  start: RawToken,
+  attributeEnd: string
+): EmbeddedLanguageFunctionResult {
+  const language = css.definitionFactory({ inline: true });
+  const types = [];
+  let current: any = start;
+  while (current && current.text !== attributeEnd) {
+    const results = language(current);
+    const resultTypes = Array.isArray(results) ? results : [results];
+    for (const type of resultTypes) {
+      types.push(type);
+      current = current.next;
+    }
+  }
+  return { language: "css", types };
+}
+
+function processEmbeddedCss(
+  start: RawToken | undefined
+): EmbeddedLanguageFunctionResult {
+  const language = css.definitionFactory({ inline: false });
+  const types = [];
+  let current: any = start;
+  while (current) {
+    if (current.text === "<" && lookaheadText(current, ["/", "style", ">"])) {
+      return { language: "css", types };
+    }
+    const results = language(current);
+    // console.log(current.text, results);
+    const resultTypes = Array.isArray(results) ? results : [results];
+    for (const type of resultTypes) {
+      types.push(type);
+      current = current.next;
+    }
+  }
+  return { language: "css", types };
 }
 
 function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
@@ -118,6 +159,13 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     // exit tag state
     if (state.tagState && token.text === ">") {
       state.tagState = false;
+      if (
+        token?.prev?.text === "style" &&
+        token.prev.type === "tag" &&
+        token?.prev?.prev?.text !== "/" // don't switch to CSS after </style>
+      ) {
+        return ["tag", processEmbeddedCss(token.next)];
+      }
       return "tag";
     }
     // handle tag contents
@@ -139,6 +187,13 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       // enter attribute value state
       if (QUOTES.includes(token.text) && state.attrValueState === false) {
         state.attrValueState = token.text;
+        if (
+          token.next &&
+          token?.prev?.prev?.type === "attribute" &&
+          token?.prev?.prev?.text === "style"
+        ) {
+          return ["value", processInlineCss(token.next, token.text)];
+        }
         return "value";
       }
 

@@ -1,8 +1,7 @@
 import { diff } from "../../src/lib/diff";
-import { languageDefinition } from "../../src/languages/json";
 import { toRenderData } from "../../src/lib/render";
 import { lang } from "../helpers";
-const json = lang(languageDefinition);
+const json = lang("json");
 
 describe("rendering", () => {
   test("It turns some JSON into render data", () => {
@@ -14,8 +13,8 @@ describe("rendering", () => {
       language: "json",
       content: {
         text: new Map([
-          ["emolrh0", { id: "emolrh0", text: "{", type: expect.any(String) }],
-          ["4ie1970", { id: "4ie1970", text: "}", type: expect.any(String) }],
+          ["10igw9m0", { id: "10igw9m0", text: "{", type: expect.any(String) }],
+          ["1mj04u80", { id: "1mj04u80", text: "}", type: expect.any(String) }],
         ]),
         decorations: new Map(),
         boxes: new Map(),
@@ -31,9 +30,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "emolrh0",
+            "10igw9m0",
             {
-              id: "emolrh0",
+              id: "10igw9m0",
               x: 0,
               y: 0,
               width: 1,
@@ -42,9 +41,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "4ie1970",
+            "1mj04u80",
             {
-              id: "4ie1970",
+              id: "1mj04u80",
               x: 1,
               y: 0,
               width: 1,
@@ -67,9 +66,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "emolrh0",
+            "10igw9m0",
             {
-              id: "emolrh0",
+              id: "10igw9m0",
               x: 2,
               y: 0,
               width: 1,
@@ -78,9 +77,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "4ie1970",
+            "1mj04u80",
             {
-              id: "4ie1970",
+              id: "1mj04u80",
               x: 3,
               y: 0,
               width: 1,
@@ -103,9 +102,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "emolrh0",
+            "10igw9m0",
             {
-              id: "emolrh0",
+              id: "10igw9m0",
               x: 4,
               y: 0,
               width: 1,
@@ -114,9 +113,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "4ie1970",
+            "1mj04u80",
             {
-              id: "4ie1970",
+              id: "1mj04u80",
               x: 0,
               y: 1,
               width: 1,
@@ -143,8 +142,8 @@ describe("rendering", () => {
       language: "json",
       content: {
         text: new Map([
-          ["emolrh0", { id: "emolrh0", text: "{", type: expect.any(String) }],
-          ["4ie1970", { id: "4ie1970", text: "}", type: expect.any(String) }],
+          ["10igw9m0", { id: "10igw9m0", text: "{", type: expect.any(String) }],
+          ["1mj04u80", { id: "1mj04u80", text: "}", type: expect.any(String) }],
         ]),
         decorations: new Map(),
         boxes: new Map(),
@@ -160,9 +159,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "emolrh0",
+            "10igw9m0",
             {
-              id: "emolrh0",
+              id: "10igw9m0",
               x: 0,
               y: 0,
               width: 1,
@@ -171,9 +170,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "4ie1970",
+            "1mj04u80",
             {
-              id: "4ie1970",
+              id: "1mj04u80",
               x: 1,
               y: 0,
               width: 1,
@@ -197,9 +196,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "emolrh0",
+            "10igw9m0",
             {
-              id: "emolrh0",
+              id: "10igw9m0",
               x: 2,
               y: 0,
               width: 1,
@@ -208,9 +207,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "4ie1970",
+            "1mj04u80",
             {
-              id: "4ie1970",
+              id: "1mj04u80",
               x: 3,
               y: 0,
               width: 1,
