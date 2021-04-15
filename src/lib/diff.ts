@@ -21,6 +21,12 @@ export type NOP<T> = {
   item: T;
 };
 
+// BAD = "before add"
+export type BAD<T> = {
+  readonly kind: "BAD";
+  item: T;
+};
+
 export type ADD<T> = {
   readonly kind: "ADD";
   item: T;
@@ -40,7 +46,7 @@ export type MOV<T> = {
   from: T; // reference to the item on it's previous position
 };
 
-export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
+export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T> | BAD<T>;
 
 // Models a box in the diff result
 export type DiffTree<T, D> = {

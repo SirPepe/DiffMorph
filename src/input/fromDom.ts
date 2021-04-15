@@ -12,7 +12,7 @@ import {
 import { tokenize } from "../lib/tokenizer";
 import { createIdGenerator, getLanguage, hash } from "../lib/util";
 import { toRenderData } from "../lib/render";
-import { optimize } from "../lib/optimize";
+import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
 
@@ -98,5 +98,5 @@ export function fromDom(
     }
     return applyLanguage(tokenized);
   });
-  return toRenderData(optimize(diff(typed)));
+  return toRenderData(optimizeDiffs(diff(typed)));
 }

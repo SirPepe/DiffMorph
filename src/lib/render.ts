@@ -22,7 +22,7 @@ import {
 // but rather immutable copies with modified x/y values.
 class TokenPool<
   Input extends Token & { kind: string },
-  Output extends { id: string }
+  Output extends { id: string; isVisible: boolean }
 > {
   private nextId = createIdGenerator();
 
@@ -37,7 +37,13 @@ class TokenPool<
   private inUse = new Map<string, Output>();
 
   // Customize how an input token turns into an output token
-  constructor(private toOutput: (input: Input, newId: string) => Output) {}
+  constructor(
+    private toOutput: (
+      input: Input,
+      newId: string,
+      isVisible: boolean
+    ) => Output
+  ) {}
 
   // Probably should be using a real hashing algorithm
   private hashInput(token: Input): string {
@@ -45,8 +51,8 @@ class TokenPool<
     return `${kind}/${hash}/${x}/${y}/${width}/${height}`;
   }
 
-  // For ADD: get the next best available token or create a new one
-  public require(token: Input): Output {
+  // For ADD and BAD: get the next best available token or create a new one
+  public require(token: Input, isVisible: boolean): Output {
     let list = this.reserved.get(token.hash);
     if (list && list.length > 0) {
       const outputToken = list.shift() as Output;
@@ -59,7 +65,8 @@ class TokenPool<
       }
       const outputToken = this.toOutput(
         token,
-        this.nextId(token.kind, token.hash)
+        this.nextId(token.kind, token.hash),
+        isVisible
       );
       this.inUse.set(this.hashInput(token), outputToken);
       return outputToken;
@@ -67,14 +74,14 @@ class TokenPool<
   }
 
   // For MOV: get the render token that was last used for a specific typed token
-  public reuse(source: Input, target: Input): Output {
+  public reuse(source: Input, target: Input, isVisible: boolean): Output {
     let outputToken = this.inUse.get(this.hashInput(source));
     // Wrap-around at the end of a keyframe list may require us to require a
     // new token because for a MOV in the first frame there's nothing to re-use.
     if (!outputToken) {
-      return { ...this.require(target), x: target.x, y: target.y };
+      return { ...this.require(target, true), x: target.x, y: target.y };
     } else {
-      outputToken = { ...outputToken, x: target.x, y: target.y };
+      outputToken = { ...outputToken, x: target.x, y: target.y, isVisible };
       // update who's re-using the render token for next keyframe
       this.inUse.delete(this.hashInput(source));
       this.inUse.set(this.hashInput(target), outputToken);
@@ -100,9 +107,10 @@ class TokenPool<
 
 function toRenderPosition(
   { x, y, width, height }: TypedToken | Decoration<any>,
-  id: string
+  id: string,
+  isVisible: boolean
 ): TextPosition {
-  return { id, x, y, width, height, isVisible: true };
+  return { id, x, y, width, height, isVisible };
 }
 
 type RenderTokenPool = TokenPool<TypedToken, TextPosition>;
@@ -161,7 +169,7 @@ function toBoxPosition(
         assertIs(previousBox, "Prev box should be defined for NOP!");
         frame.boxes.set(id, toBoxPosition(op, previousBox, pools, root));
       } else {
-        if (op.root.kind === "ADD") {
+        if (op.root.kind === "ADD" || op.root.kind === "BAD") {
           assertIsNot(previousBox, "Prev box should not be defined for ADD!");
           frame.boxes.set(id, toBoxPosition(op, undefined, pools, root));
         } else if (op.root.kind === "DEL") {
@@ -173,8 +181,9 @@ function toBoxPosition(
         }
       }
     } else {
-      if (op.kind === "ADD") {
-        const token = renderTokenPool.require(op.item);
+      if (op.kind === "ADD" || op.kind === "BAD") {
+        const isVisible = op.kind === "ADD";
+        const token = renderTokenPool.require(op.item, isVisible);
         frame.text.set(token.id, token);
         content.text.set(token.id, {
           id: token.id,
@@ -185,14 +194,15 @@ function toBoxPosition(
         const id = renderTokenPool.free(op.item);
         frame.text.delete(id);
       } else if (op.kind === "MOV") {
-        const token = renderTokenPool.reuse(op.from, op.item);
+        const token = renderTokenPool.reuse(op.from, op.item, true);
         frame.text.set(token.id, token);
       }
     }
   }
   for (const op of diff.decorations) {
-    if (op.kind === "ADD") {
-      const token = renderDecorationPool.require(op.item);
+    if (op.kind === "ADD" || op.kind === "BAD") {
+      const isVisible = op.kind === "ADD";
+      const token = renderDecorationPool.require(op.item, isVisible);
       frame.decorations.set(token.id, token);
       content.decorations.set(token.id, {
         id: token.id,
@@ -202,7 +212,7 @@ function toBoxPosition(
       const id = renderDecorationPool.free(op.item);
       frame.decorations.delete(id);
     } else if (op.kind === "MOV") {
-      const token = renderDecorationPool.reuse(op.from, op.item);
+      const token = renderDecorationPool.reuse(op.from, op.item, true);
       frame.decorations.set(token.id, token);
     }
   }

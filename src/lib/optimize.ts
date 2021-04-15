@@ -10,7 +10,7 @@ export type Optimizable = Token & {
   parent: Box<any, any>;
 };
 
-export function optimize<T extends Optimizable, D extends Optimizable>(
+export function optimizeDiffs<T extends Optimizable, D extends Optimizable>(
   diffs: DiffTree<T, D>[]
 ): DiffTree<T, D>[] {
   return diffs.map(optimizeDiff);

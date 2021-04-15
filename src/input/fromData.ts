@@ -13,7 +13,7 @@ import {
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
 import { toRenderData } from "../lib/render";
-import { optimize } from "../lib/optimize";
+import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { createIdGenerator } from "../lib/util";
 
@@ -65,5 +65,5 @@ export function fromData(
     }
     return applyLanguage(tokenized);
   });
-  return toRenderData(optimize(diff(typed)));
+  return toRenderData(optimizeDiffs(diff(typed)));
 }
