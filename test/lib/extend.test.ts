@@ -1,6 +1,7 @@
 import { diff } from "../../src/lib/diff";
 import { extendDiffs } from "../../src/lib/extend";
 import { optimizeDiffs } from "../../src/lib/optimize";
+import { Box } from "../../src/types";
 import { lang } from "../helpers";
 const tokenize = lang("none");
 
@@ -68,5 +69,55 @@ describe("Extender", () => {
     expect(after[0].content.map((o) => o.kind)).toEqual(["ADD", "ADD", "BAD"]);
     expect(after[1].content.map((o) => o.kind)).toEqual(["MOV", "MOV"]);
     expect(after[2].content.map((o) => o.kind)).toEqual(["DEL", "MOV"]);
+  });
+});
+
+describe("Extender on decorations", () => {
+  test("extending ADD on decorations", () => {
+    const a: Box<any, any> = {
+      kind: "BOX",
+      x: 0,
+      y: 0,
+      hash: "root",
+      width: 0,
+      height: 0,
+      id: "root0",
+      data: {},
+      language: "none",
+      content: [],
+      decorations: [],
+      parent: undefined,
+    };
+    const b: Box<any, any> = {
+      kind: "BOX",
+      x: 0,
+      y: 0,
+      hash: "root",
+      width: 0,
+      height: 0,
+      id: "root0",
+      data: {},
+      language: "none",
+      content: [],
+      decorations: [],
+      parent: undefined,
+    };
+    b.decorations.push({
+      kind: "DECO",
+      data: {},
+      parent: b,
+    });
+    const before = optimizeDiffs(diff([a, b]));
+    expect(before.length).toBe(2);
+    expect(before[0].content).toEqual([]);
+    expect(before[1].content).toEqual([]);
+    expect(before[0].decorations.map((op) => op.kind)).toEqual([]);
+    expect(before[1].decorations.map((op) => op.kind)).toEqual(["ADD"]);
+    const after = extendDiffs(before);
+    expect(after.length).toBe(2);
+    expect(after[0].content).toEqual([]);
+    expect(after[1].content).toEqual([]);
+    expect(after[0].decorations.map((op) => op.kind)).toEqual(["BAD"]);
+    expect(after[1].decorations.map((op) => op.kind)).toEqual(["MOV"]);
   });
 });

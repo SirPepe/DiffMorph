@@ -6,9 +6,7 @@ import { Box, Token } from "../types";
 import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
 import { findMaxValue, findMin } from "./util";
 
-export type Optimizable = Token & {
-  parent: Box<any, any>;
-};
+export type Optimizable = Token & { parent: Box<any, any> };
 
 export function optimizeDiffs<T extends Optimizable, D extends Optimizable>(
   diffs: DiffTree<T, D>[]
@@ -19,9 +17,26 @@ export function optimizeDiffs<T extends Optimizable, D extends Optimizable>(
 function optimizeDiff<T extends Optimizable, D extends Optimizable>(
   diff: DiffTree<T, D>
 ): DiffTree<T, D> {
+  const result: DiffTree<T, D> = {
+    ...diff,
+    content: optimizeOperations(diff.content),
+    decorations: optimizeOperations(diff.decorations),
+  };
+  return result;
+}
+
+function optimizeOperations<T extends Optimizable>(
+  operations: DiffOp<T>[]
+): DiffOp<T>[];
+function optimizeOperations<T extends Optimizable, D extends Optimizable>(
+  operations: (DiffTree<T, D> | DiffOp<T>)[]
+): (DiffTree<T, D> | DiffOp<T>)[];
+function optimizeOperations<T extends Optimizable, D extends Optimizable>(
+  operations: (DiffTree<T, D> | DiffOp<T>)[]
+): (DiffTree<T, D> | DiffOp<T>)[] {
   const trees: DiffTree<T, D>[] = [];
   const byHash: Record<string, [Set<MOV<T>>, Set<ADD<T>>, Set<DEL<T>>]> = {};
-  for (const operation of diff.content) {
+  for (const operation of operations) {
     if (operation.kind === "TREE") {
       trees.push(optimizeDiff(operation));
     } else {
@@ -37,15 +52,15 @@ function optimizeDiff<T extends Optimizable, D extends Optimizable>(
       }
     }
   }
-  const result: DiffTree<T, D> = { ...diff, content: [] };
+  const result = [];
   for (const [MOV, ADD, DEL] of Object.values(byHash)) {
     if (ADD.size === 0 || DEL.size === 0) {
-      result.content.push(...MOV, ...ADD, ...DEL);
+      result.push(...MOV, ...ADD, ...DEL);
     } else {
-      result.content.push(...MOV, ...resolveOptimizations(ADD, DEL));
+      result.push(...MOV, ...resolveOptimizations(ADD, DEL));
     }
   }
-  result.content.push(...trees);
+  result.push(...trees);
   return result;
 }
 
