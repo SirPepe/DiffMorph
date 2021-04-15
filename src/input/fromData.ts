@@ -16,6 +16,7 @@ import { toRenderData } from "../lib/render";
 import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { createIdGenerator } from "../lib/util";
+import { extendDiffs } from "../lib/extend";
 
 type Input = string | InputContainer;
 
@@ -65,5 +66,5 @@ export function fromData(
     }
     return applyLanguage(tokenized);
   });
-  return toRenderData(optimizeDiffs(diff(typed)));
+  return toRenderData(extendDiffs(optimizeDiffs(diff(typed))));
 }

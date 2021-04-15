@@ -15,6 +15,7 @@ import { toRenderData } from "../lib/render";
 import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
+import { extendDiffs } from "../lib/extend";
 
 function isHTMLElement(arg: any): arg is HTMLElement {
   if (!arg) {
@@ -98,5 +99,5 @@ export function fromDom(
     }
     return applyLanguage(tokenized);
   });
-  return toRenderData(optimizeDiffs(diff(typed)));
+  return toRenderData(extendDiffs(optimizeDiffs(diff(typed))));
 }
