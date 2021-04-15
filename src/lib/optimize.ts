@@ -49,7 +49,8 @@ function optimizeDiff<T extends Optimizable, D extends Optimizable>(
   return result;
 }
 
-// Note that additions and deletions get both mutated by this function
+// Note that the input sets "additions" and "deletions" get both mutated by this
+// function
 function resolveOptimizations<T extends Optimizable>(
   additions: Set<ADD<T>>,
   deletions: Set<DEL<T>>

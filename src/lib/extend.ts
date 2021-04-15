@@ -1,5 +1,7 @@
 import { DiffTree } from "./diff";
 
+type Extendable = { hash: string };
+
 // Extends the already-optimized diff trees in-place in the following manner:
 // * where possible, ADD ops are replaced with a MOV in the current and a BAD in
 //   the previous frame; this places tokens in the places where they become
@@ -8,7 +10,9 @@ import { DiffTree } from "./diff";
 // * where possible, DEL ops are moves one frame forward and get replaced by a
 //   ADE op; this allows the token to fade out without also moving to the top
 //   left (which is every token's default position).
-export function extendDiffs<T, D>(diffs: DiffTree<T, D>[]): DiffTree<T, D>[] {
+export function extendDiffs<T extends Extendable, D extends Extendable>(
+  diffs: DiffTree<T, D>[]
+): DiffTree<T, D>[] {
   if (diffs.length < 2) {
     return diffs;
   }
@@ -27,13 +31,27 @@ export function extendDiffs<T, D>(diffs: DiffTree<T, D>[]): DiffTree<T, D>[] {
           trees.push(operation);
         }
         if (operation.root.kind == "ADD" && i !== 0) {
-          prev.content.push({
+          const newPrevOp = {
             ...operation,
             root: {
-              kind: "BAD",
+              kind: "BAD" as const,
               item: operation.root.item,
             },
+          };
+          // Index of the DEL operation to replace with BAD in prev, if any
+          const replaceIdx = prev.content.findIndex((op) => {
+            return (
+              op.kind === "TREE" &&
+              op.root.kind === "DEL" &&
+              op.root.item.id === operation.root.item.id
+            );
           });
+          if (replaceIdx === -1) {
+            prev.content.push(newPrevOp);
+          } else {
+            prev.content.splice(replaceIdx, 1, newPrevOp);
+          }
+          prev.content.push();
           curr.content.splice(j, 1, {
             ...operation,
             root: {
@@ -46,7 +64,16 @@ export function extendDiffs<T, D>(diffs: DiffTree<T, D>[]): DiffTree<T, D>[] {
         // TODO: DEL
       } else {
         if (operation.kind == "ADD" && i !== 0) {
-          prev.content.push({ kind: "BAD", item: operation.item });
+          const newPrevOp = { kind: "BAD" as const, item: operation.item };
+          // Index of the DEL operation to replace with BAD in prev, if any
+          const replaceIdx = prev.content.findIndex((op) => {
+            return op.kind === "DEL" && op.item.hash === operation.item.hash;
+          });
+          if (replaceIdx === -1) {
+            prev.content.push(newPrevOp);
+          } else {
+            prev.content.splice(replaceIdx, 1, newPrevOp);
+          }
           curr.content.splice(j, 1, {
             kind: "MOV",
             item: operation.item,

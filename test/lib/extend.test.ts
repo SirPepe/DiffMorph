@@ -40,18 +40,33 @@ describe("Extender", () => {
     expect(after[2].content.map((op) => op.kind)).toEqual(["DEL"]);
   });
 
-  test.skip("turning an ADD in the first frame into a BAD + MOV in three frames", () => {
+  test("replace a DEL with a BAD", () => {
     const before = optimizeDiffs(
-      diff([tokenize("."), tokenize(""), tokenize("")])
+      diff([tokenize("."), tokenize(""), tokenize(".")])
     );
     expect(before.length).toBe(3);
     expect(before[0].content.map((op) => op.kind)).toEqual(["ADD"]);
     expect(before[1].content.map((op) => op.kind)).toEqual(["DEL"]);
-    expect(before[2].content.map((op) => op.kind)).toEqual([]);
+    expect(before[2].content.map((op) => op.kind)).toEqual(["ADD"]);
     const after = extendDiffs(before);
     expect(after.length).toBe(3);
-    expect(after[0].content.map((op) => op.kind)).toEqual(["MOV"]);
-    expect(after[1].content.map((op) => op.kind)).toEqual(["DEL"]);
-    expect(after[2].content.map((op) => op.kind)).toEqual(["BAD"]);
+    expect(after[0].content.map((op) => op.kind)).toEqual(["ADD"]);
+    expect(after[1].content.map((op) => op.kind)).toEqual(["BAD"]);
+    expect(after[2].content.map((op) => op.kind)).toEqual(["MOV"]);
+  });
+
+  test("leave ADD in first frame unchanged", () => {
+    const before = optimizeDiffs(
+      diff([tokenize(".."), tokenize(".:."), tokenize("..")])
+    );
+    expect(before.length).toBe(3);
+    expect(before[0].content.map((o) => o.kind)).toEqual(["ADD", "ADD"]);
+    expect(before[1].content.map((o) => o.kind)).toEqual(["MOV", "ADD"]);
+    expect(before[2].content.map((o) => o.kind)).toEqual(["DEL", "MOV"]);
+    const after = extendDiffs(before);
+    expect(after.length).toBe(3);
+    expect(after[0].content.map((o) => o.kind)).toEqual(["ADD", "ADD", "BAD"]);
+    expect(after[1].content.map((o) => o.kind)).toEqual(["MOV", "MOV"]);
+    expect(after[2].content.map((o) => o.kind)).toEqual(["DEL", "MOV"]);
   });
 });
