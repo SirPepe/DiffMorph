@@ -1,7 +1,7 @@
 // Implements support for both JSON and JSONC. Comments (a feature of JSONC
 // only) can be enabled by a flag, which the JSONC definition binds to true.
 
-import { isAdjacent } from "../lib/util";
+import { isAdjacent, isNewLine } from "../lib/util";
 import { LanguageDefinition, RawToken, TypedToken } from "../types";
 
 type Flags = {
@@ -14,7 +14,7 @@ const NUMBER_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
 function defaultState() {
   return {
     key: false,
-    stringValue: false,
+    string: false,
     lineComment: false,
     blockComment: false,
     arrayDepth: 0,
@@ -39,7 +39,7 @@ function defineJSON(
       if (
         state.blockComment === true &&
         state.key === false &&
-        state.stringValue === false &&
+        state.string === false &&
         token.text === "/" &&
         token?.prev?.text === "*"
       ) {
@@ -51,7 +51,7 @@ function defineJSON(
       if (
         state.blockComment === false &&
         state.key === false &&
-        state.stringValue === false &&
+        state.string === false &&
         token.text === "/" &&
         token?.next?.text === "*"
       ) {
@@ -67,7 +67,7 @@ function defineJSON(
       // enter line comment state
       if (
         state.lineComment === false &&
-        state.stringValue === false &&
+        state.string === false &&
         state.key === false &&
         token.text === "/" &&
         token?.next?.text === "/"
@@ -83,19 +83,19 @@ function defineJSON(
     }
 
     // handle entering and exiting strings (keys and values)
-    if (token.text === '"' && (!token.prev || token.prev.text !== "\\")) {
-      // exit string states
-      if (state.stringValue) {
-        state.stringValue = false;
+    if (token.text === '"' && token?.prev?.text !== "\\") {
+      // exit string state
+      if (state.string) {
+        state.string = false;
         return "value";
       }
       if (state.key) {
         state.key = false;
         return "string";
       }
-      // enter string states
+      // enter string state
       if (token?.prev?.text === ":") {
-        state.stringValue = true;
+        state.string = true;
         return "value";
       } else {
         state.key = true;
@@ -103,13 +103,21 @@ function defineJSON(
       }
     }
 
-    // are we in key state?
-    if (state.stringValue === true) {
+    // are we in value state?
+    if (state.string === true) {
+      // exit state on new line to better handle broken json
+      if (token.next && isNewLine(token.next)) {
+        state.string = false;
+      }
       return "value";
     }
 
     // are we in string state?
     if (state.key === true) {
+      // exit state on new line to better handle broken json
+      if (token.next && isNewLine(token.next)) {
+        state.string = false;
+      }
       return "string";
     }
 

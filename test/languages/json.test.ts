@@ -91,6 +91,18 @@ describe("Basic JSON", () => {
     ]);
   });
 
+  test("Key and multiline string", () => {
+    const tokens = json(`{ "foo": "bar\\nbaz" }`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "punctuation-object-start-0",
+      "string",
+      "punctuation",
+      "value",
+      "punctuation-object-end-0",
+    ]);
+  });
+
   test("Key and integer value", () => {
     const tokens = json(`{ "foo": 42 }`);
     const types = tokens.map((token) => token.type);
@@ -240,6 +252,27 @@ describe("Boxes", () => {
       "number", // 42
       "punctuation-object-end-0", // }
     ]);
+  });
+});
+
+describe("broken JSON", () => {
+  test("continues on new line after unterminated string", () => {
+    const tokens = json(`{
+  "a": "b,
+  "c": "d"
+}`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "punctuation-object-start-0",
+      "string",
+      "punctuation",
+      "value",
+      "string",
+      "punctuation",
+      "value",
+      "punctuation-object-end-0",
+    ]);
+
   });
 });
 
