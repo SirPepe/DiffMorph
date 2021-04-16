@@ -45,6 +45,21 @@ describe("Basic statements", () => {
     ]);
   });
 
+  test("Variable initialization with object", () => {
+    const tokens = javascript(`var foo = { new: 42 }`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "keyword",
+      "token",
+      "operator-assignment",
+      "punctuation-object-start-0",
+      "token",
+      "punctuation",
+      "number",
+      "punctuation-object-end-0",
+    ]);
+  });
+
   test("Array destructuring", () => {
     const tokens = javascript(`var [foo, bar = 42] = source;`);
     const types = tokens.map((token) => token.type);

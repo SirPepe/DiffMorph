@@ -276,6 +276,10 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         const { before } = state.curlyStack.push("destruct");
         return `punctuation-destruct-start-${before}`;
       }
+      if (token?.prev?.type === "operator-assignment") {
+        const { before } = state.curlyStack.push("object");
+        return `punctuation-object-start-${before}`;
+      }
       const { before } = state.curlyStack.push("curly");
       return `punctuation-curly-start-${before}`;
     }
