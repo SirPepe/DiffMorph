@@ -138,3 +138,12 @@ describe("Optimizer on decorations", () => {
     });
   });
 });
+
+describe("Regressions", () => {
+  test("do not explode when all non-same-line candidates are used up", () => {
+    const res = optimizeDiffs(diff([tokenize("..."), tokenize("\n.")]));
+    expect(res.length).toBe(2);
+    expect(res[0].content.map((op) => op.kind)).toEqual(["ADD", "ADD", "ADD"]);
+    expect(res[1].content.map((op) => op.kind)).toEqual(["DEL", "DEL", "MOV"]);
+  });
+});

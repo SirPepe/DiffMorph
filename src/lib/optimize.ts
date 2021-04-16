@@ -148,17 +148,21 @@ function pickAlternative<T extends Optimizable>(
       return candidate;
     }
   }
-  // Try to find an alternative that's the closest on the same line
+  // Try to find an alternative that's the closest on the same line (if there is
+  // anything left)
   if (sameLineCandidates.size > 0) {
     const [closest] = findMin(sameLineCandidates, ([, candidateOffset]) => {
       return Math.abs(candidateOffset.left - deletionOffset.left);
     });
     return closest;
   }
-  // Last attempt: take whatever is closest
-  return findMin(allCandidates, ([, candidateOffset]) => {
-    const deltaX = Math.abs(candidateOffset.left - deletionOffset.left);
-    const deltaY = Math.abs(candidateOffset.top - deletionOffset.top);
-    return deltaX + deltaY;
-  })[0];
+  // Last attempt: take whatever is closest (if there is anything left)
+  if (allCandidates.size > 0) {
+    return findMin(allCandidates, ([, candidateOffset]) => {
+      const deltaX = Math.abs(candidateOffset.left - deletionOffset.left);
+      const deltaY = Math.abs(candidateOffset.top - deletionOffset.top);
+      return deltaX + deltaY;
+    })[0];
+  }
+  return null;
 }
