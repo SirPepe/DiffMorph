@@ -1,7 +1,20 @@
-import fnv1a from "@sindresorhus/fnv1a";
 import { Box, Decoration } from "../types";
 
-export const hash = (input: string): string => fnv1a(input).toString(36);
+export function hash(input: string): string {
+  let hash = 2166136261;
+  let nonAscii = false;
+  for (let i = 0; i < input.length; i++) {
+    let characterCode = input.charCodeAt(i);
+    if (characterCode > 0x7F && !nonAscii) {
+      input = unescape(encodeURIComponent(input));
+      characterCode = input.charCodeAt(i);
+      nonAscii = true;
+    }
+    hash ^= characterCode;
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return (hash >>> 0).toString(36);
+}
 
 export function assertIs<T>(
   x: T | undefined | null,
