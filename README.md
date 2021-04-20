@@ -21,7 +21,7 @@ Example:
 ### Custom Properties
 
 * **`--dm-transition-time`** controls the transition duration for animations.
-  Defaults to `400ms`
+  Defaults to `500ms`
 
 ## Language support
 

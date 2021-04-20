@@ -12,7 +12,7 @@ const nextId = createIdGenerator();
 
 const DEFAULT_STYLES = `
 .dm-code {
-  transition: transform var(--dm-transition-time, 400ms);
+  transition: transform var(--dm-transition-time, 500ms);
   position: relative;
   --line-height: var(--dm-line-height, 2.5ch);
   --string: var(--dm-string, hsl(340, 95%, 38%));
@@ -37,8 +37,8 @@ const DEFAULT_STYLES = `
   z-index: 0;
 }
 .dm-token, .dm-decoration {
-  transition: transform var(--dm-transition-time, 400ms),
-              opacity var(--dm-transition-time, 400ms);
+  transition: transform var(--dm-transition-time, 500ms),
+              opacity var(--dm-transition-time, 500ms);
 }
 /* JSON and JSONC */
 .dm-box.language-json .dm-token.number,
@@ -79,6 +79,7 @@ const DEFAULT_STYLES = `
 }
 .dm-box.language-toml .dm-token[class*="literal-"] {
   color: var(--literal);
+  font-weight: bold;
 }
 .dm-box.language-toml .dm-token[class*="punctuation"] {
   color: var(--punctuation);
