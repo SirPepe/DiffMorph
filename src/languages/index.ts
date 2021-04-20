@@ -5,6 +5,7 @@ import { languageDefinition as javascript } from "./javascript";
 import { languageDefinition as json } from "./json";
 import { languageDefinition as jsonc } from "./jsonc";
 import { languageDefinition as none } from "./none";
+import { languageDefinition as toml } from "./toml";
 import { languageDefinition as typescript } from "./typescript";
 import { languageDefinition as xml } from "./xml";
 
@@ -15,6 +16,7 @@ export const languages: Record<string, LanguageDefinition<any>> = {
   json,
   jsonc,
   none,
+  toml,
   typescript,
   xml,
 };
