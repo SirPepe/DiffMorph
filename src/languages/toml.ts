@@ -10,7 +10,8 @@ type State = {
   key: boolean;
   string: false | "s" | "l" | "ms" | "ml";
   arrayDepth: number;
-  objectDepth: number;
+  tableDepth: number;
+  stack: ("a" | "t")[]; // a = array, t = table
 }
 
 function defaultState(): State {
@@ -20,7 +21,8 @@ function defaultState(): State {
     key: false,
     string: false,
     arrayDepth: 0,
-    objectDepth: 0,
+    tableDepth: 0,
+    stack: [],
   };
 }
 
@@ -43,10 +45,12 @@ function defineTOML(): (token: RawToken) => string | string[] {
       return "comment";
     }
 
-    // exit key state on incoming equals sign. Don't check for existing key
-    // state as the current token may be a one-token key
+    // exit header state
     if (state.header && token.text === "]") {
       state.header = false;
+      if (token?.next?.text === "]") { // array table header
+        return ["literal-header", "literal-header"];
+      }
       return "literal-header";
     }
     // enter header state
@@ -66,14 +70,25 @@ function defineTOML(): (token: RawToken) => string | string[] {
       return "string-key";
     }
     // enter key state
-    if (
-      !state.key &&
-      !token.prev ||
-      token?.prev?.y !== token.y ||
-      token.prev.text === "{"
-    ) {
-      state.key = true;
-      return "string-key";
+    if (!state.key) {
+      // first key ever
+      if (!token.prev) {
+        state.key = true;
+        return "string-key";
+      }
+      // key on a new line outside an array or table
+      if (token.prev.y !== token.y && state.stack.length === 0) {
+        state.key = true;
+        return "string-key";
+      }
+      // Key inside an inline table
+      if (
+        state.stack[state.stack.length - 1] === "t" &&
+        (token.prev.text === "{" ||  token.prev.text === ",")
+      ) {
+        state.key = true;
+        return "string-key";
+      }
     }
     // in key state?
     if (state.key) {
@@ -121,17 +136,6 @@ function defineTOML(): (token: RawToken) => string | string[] {
       return "value";
     }
 
-    // is token a number?
-    if (token.text.match(NUMBER_RE)) {
-      return "number";
-    }
-    if (
-      (["+", "-", "."].includes(token.text) && token?.next?.text.match(NUMBER_RE)) ||
-      (["e", "E", "."].includes(token.text) && token.prev.type === "number")
-    ) {
-      return ["number", "number"];
-    }
-
     // is token a keyword?
     if (KEYWORDS.includes(token.text)) {
       return `keyword-${token.text.toLowerCase()}`;
@@ -139,20 +143,53 @@ function defineTOML(): (token: RawToken) => string | string[] {
 
     // Objects and arrays
     if (token.text === "{") {
-      return `punctuation-object-start-${state.objectDepth++}`;
+      state.stack.push("t");
+      return `punctuation-table-start-${state.tableDepth++}`;
     }
     if (token.text === "[") {
+      state.stack.push("a");
       return `punctuation-array-start-${state.arrayDepth++}`;
     }
     if (token.text === "]") {
+      state.stack.pop();
       return `punctuation-array-end-${--state.arrayDepth}`;
     }
     if (token.text === "}") {
-      return `punctuation-object-end-${--state.objectDepth}`;
+      state.stack.pop();
+      return `punctuation-table-end-${--state.tableDepth}`;
     }
 
     if (token.text === "," || token.text === ":") {
       return "punctuation";
+    }
+
+    // Date and time
+    if (
+      token.text.match(NUMBER_RE) &&
+      (token?.next?.text === ":" || token?.next?.text === "-")
+    ) {
+      return ["token-datetime", "token-datetime"];
+    }
+    if (
+      token?.prev?.type === "token-datetime" &&
+      isAdjacent(token, token.prev)
+    ) {
+      return "token-datetime";
+    }
+
+    // is token a number?
+    if (token.text.match(NUMBER_RE)) {
+      return "number";
+    }
+    if (
+      (
+        ["+", "-", "."].includes(token.text) &&
+        token?.next?.text.match(NUMBER_RE)
+      ) || (
+        ["e", "E", "."].includes(token.text) &&
+        token?.prev?.type === "number")
+    ) {
+      return ["number", "number"];
     }
 
     if (token.text === "=") {
@@ -165,8 +202,22 @@ function defineTOML(): (token: RawToken) => string | string[] {
 }
 
 function postprocessTOML(token: TypedToken): boolean {
-  if (token.type.startsWith("comment") || token.type === "number") {
+  if (token.type === "comment" || token.type === "number") {
     return isAdjacent(token, token.prev);
+  }
+  if (
+    token.type === "string"
+    && ["'", '"'].includes(token.text)
+    && token.text === token?.prev?.text
+  ) {
+    return isAdjacent(token, token.prev);
+  }
+  if (
+    token.type === "literal-header"
+    && ["[", "]"].includes(token.text)
+    && token.text === token?.prev?.text
+  ) {
+    return true;
   }
   return false;
 }

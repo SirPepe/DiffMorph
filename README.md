@@ -32,7 +32,8 @@ can possibly deliver:
 
 * **JSON:** regular old JSON
 * **JSONC:** JSON with optional line and block comments
-* **HTML:** any flavour of HTML except XHTML (use XML for XHTML)
+* **HTML:** any flavour of HTML (except XHTML; use XML for XHTML) with support
+  for embedded CSS and JavaScript
 * **XML:** XML (with namespaces, CDATA sections, xml declarations and more)
 
 ### Tier 2
@@ -40,5 +41,7 @@ can possibly deliver:
 Languages in Tier 2 are somewhat supported by DiffMorph and should work well
 enough for most use cases. This list includes several "languages" that are
 themselves not very well defined (eg. CLI syntax)
+
+* **TOML:** [Tom's Obvious Minimal Language](https://toml.io/en/) v.1.0.0
 
 ### Tier 3
