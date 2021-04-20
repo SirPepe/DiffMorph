@@ -14,6 +14,7 @@ const DEFAULT_STYLES = `
 .dm-code {
   transition: transform var(--dm-transition-time, 400ms);
   position: relative;
+  --line-height: var(--dm-line-height, 2.5ch);
   --string: var(--dm-string, hsl(340, 95%, 38%));
   --number: var(--dm-number, hsl(170, 100%, 25%));
   --comment: var(--dm-comment, hsl(0, 0%, 50%));
@@ -98,7 +99,7 @@ function generateTextCss(
 ): string[] {
   const styles = [];
   const selector = `${rootSelector}.frame${frameIdx} .dm-token.dm-${id}`;
-  const rules = [`transform:translate(${x}ch,${y * 100}%)`];
+  const rules = [`transform:translate(${x}ch, calc(${y} * var(--line-height)))`];
   if (isVisible) {
     rules.push(`opacity:1`);
   }
@@ -114,9 +115,9 @@ function generateDecorationCss(
   const styles = [];
   const selector = `${rootSelector}.frame${frameIdx} .dm-decoration.dm-${id}`;
   const rules = [
-    `transform:translate(${x}ch,${y * 100}%)`,
+    `transform:translate(${x}ch,calc(${y} * var(--line-height)))`,
     `width:${width}ch`,
-    `height:${height * 2}ch`,
+    `height:calc(${height} * var(--line-height))`,
   ];
   if (isVisible) {
     rules.push(`opacity:1`);
@@ -133,9 +134,9 @@ function generateBoxCss(
   const styles = [];
   const selector = `${rootSelector}.frame${frameIdx} .dm-box.dm-${id}`;
   const rules = [
-    `transform:translate(${x}ch,${y * 100}%)`,
+    `transform:translate(${x}ch,calc(${y} * var(--line-height)))`,
     `width:${width}ch`,
-    `height:${height * 2}ch`,
+    `height:calc(${height} * var(--line-height))`,
   ];
   if (isVisible) {
     rules.push(`opacity:1`);
