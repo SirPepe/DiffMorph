@@ -21,7 +21,8 @@ export type NOP<T> = {
   item: T;
 };
 
-// BAD = "before add"
+// BAD = "before add", essentially an invisible "add". Inserted into diff trees
+// by the extender module only
 export type BAD<T> = {
   readonly kind: "BAD";
   item: T;
@@ -37,6 +38,14 @@ export type DEL<T> = {
   item: T;
 };
 
+// BDE = "before del", essentially an invisible "mov". Inserted into diff trees
+// by the extender module only
+export type BDE<T> = {
+  readonly kind: "BDE";
+  item: T;
+  from: T; // reference to the item on it's previous position
+};
+
 // MOV is also responsible for changes in dimensions. In many cases MOV
 // operations are created in the optimizer by compensating for ADD operations
 // with DEL operations for equivalent tokens.
@@ -46,7 +55,7 @@ export type MOV<T> = {
   from: T; // reference to the item on it's previous position
 };
 
-export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T> | BAD<T>;
+export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T> | BAD<T> | BDE<T>;
 
 // Models a box in the diff result
 export type DiffTree<T, D> = {

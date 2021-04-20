@@ -16,19 +16,24 @@ export function extendDiffs<T extends Extendable, D extends Extendable>(
   if (diffs.length < 2) {
     return diffs;
   }
-  extendOps(diffs.map(({ content }) => content));
-  extendOps(diffs.map(({ decorations }) => decorations));
+  const contentFrames = diffs.map(({ content }) => content);
+  extendAdditions(contentFrames);
+  extendDeletions(contentFrames);
+  const decorationFrames = diffs.map(({ decorations }) => decorations);
+  extendAdditions(decorationFrames);
+  extendDeletions(decorationFrames);
   return diffs;
 }
 
-function extendOps<T extends Extendable, D extends Extendable>(
+// Also extends nested trees. This is a step that extendDeletions() must not
+// repeat.
+function extendAdditions<T extends Extendable, D extends Extendable>(
   frames: (DiffTree<T, D> | DiffOp<T>)[][]
 ): void {
   const treesById = new Map<string, DiffTree<T, D>[]>();
   for (let i = 0; i < frames.length; i++) {
     const curr = frames[i];
     const prev = i === 0 ? frames[frames.length - 1] : frames[i - 1];
-    // const next = i === diffs.length - 1 ? diffs[0] : diffs[i + 1];
     for (let j = 0; j < curr.length; j++) {
       const operation = curr[j];
       if (operation.kind === "TREE") {
@@ -38,6 +43,7 @@ function extendOps<T extends Extendable, D extends Extendable>(
         } else {
           trees.push(operation);
         }
+        // Add BAD to ADD (trees)
         if (operation.root.kind == "ADD" && i !== 0) {
           const newPrevOp = {
             ...operation,
@@ -69,8 +75,8 @@ function extendOps<T extends Extendable, D extends Extendable>(
             },
           });
         }
-        // TODO: DEL
       } else {
+        // Add BAD to ADD (tokens)
         if (operation.kind == "ADD" && i !== 0) {
           const newPrevOp = { kind: "BAD" as const, item: operation.item };
           // Index of the DEL operation to replace with BAD in prev, if any
@@ -88,11 +94,49 @@ function extendOps<T extends Extendable, D extends Extendable>(
             from: operation.item,
           });
         }
-        // TODO: DEL
       }
     }
   }
   for (const trees of treesById.values()) {
     extendDiffs(trees);
+  }
+}
+
+// Does nothing to the contents of nested trees, as extendAdditions has already
+// taken care of that.
+function extendDeletions<T extends Extendable, D extends Extendable>(
+  frames: (DiffTree<T, D> | DiffOp<T>)[][]
+): void {
+  for (let i = 0; i < frames.length; i++) {
+    const curr = frames[i];
+    const next = i === frames.length - 1 ? frames[0] : frames[i + 1];
+    for (let j = 0; j < curr.length; j++) {
+      const operation = curr[j];
+      if (operation.kind === "TREE") {
+        // TODO: Add ADE to DEL (trees)
+      } else {
+        // Add BDE before DEL (tokens)
+        if (operation.kind == "DEL") {
+          // Index of an ADD/BAD operation that may clash
+          const existingIndex = next.findIndex((op) => {
+            return (
+              (op.kind === "ADD" || op.kind === "BAD") &&
+              op.item.hash === operation.item.hash
+            );
+          });
+          curr.splice(j, 1, {
+            kind: "BDE" as const,
+            item: operation.item,
+            from: operation.item
+          });
+          if (existingIndex === -1) {
+            next.push({
+              kind: "DEL" as const,
+              item: operation.item,
+            });
+          }
+        }
+      }
+    }
   }
 }

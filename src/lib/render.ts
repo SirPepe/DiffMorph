@@ -73,7 +73,8 @@ class TokenPool<
     }
   }
 
-  // For MOV: get the render token that was last used for a specific typed token
+  // For MOV and BDE: get the render token that was last used for a specific
+  // typed token
   public reuse(source: Input, target: Input, isVisible: boolean): Output {
     let outputToken = this.inUse.get(this.hashInput(source));
     // Wrap-around at the end of a keyframe list may require us to require a
@@ -90,10 +91,12 @@ class TokenPool<
   }
 
   // For DEL: free used token
-  public free(token: Input): string {
+  public free(token: Input): string | undefined {
     const freed = this.inUse.get(this.hashInput(token));
     if (!freed) {
-      throw new Error(`Can't free unused ${token.kind} @ ${token.hash}!`);
+      // This can happen for DEL ops in the first frame, which in turn may be
+      // inserted there by the extender.
+      return undefined;
     }
     const list = this.reserved.get(token.hash);
     if (!list) {
@@ -192,10 +195,15 @@ function toBoxPosition(
         });
       } else if (op.kind === "DEL") {
         const id = renderTokenPool.free(op.item);
-        frame.text.delete(id);
-      } else if (op.kind === "MOV") {
-        const token = renderTokenPool.reuse(op.from, op.item, true);
+        if (id) {
+          frame.text.delete(id);
+        }
+      } else if (op.kind === "MOV" || op.kind === "BDE") {
+        const isVisible = op.kind === "MOV";
+        const token = renderTokenPool.reuse(op.from, op.item, isVisible);
         frame.text.set(token.id, token);
+      } else {
+        throw new Error(`Unexpected token opcode ${(op as any).kind}`);
       }
     }
   }
@@ -210,10 +218,15 @@ function toBoxPosition(
       });
     } else if (op.kind === "DEL") {
       const id = renderDecorationPool.free(op.item);
-      frame.decorations.delete(id);
-    } else if (op.kind === "MOV") {
-      const token = renderDecorationPool.reuse(op.from, op.item, true);
+      if (id) {
+        frame.decorations.delete(id);
+      }
+    } else if (op.kind === "MOV" || op.kind === "BDE") {
+      const isVisible = op.kind === "MOV";
+      const token = renderDecorationPool.reuse(op.from, op.item, isVisible);
       frame.decorations.set(token.id, token);
+    } else {
+      throw new Error(`Unexpected decoration opcode ${(op as any).kind}`);
     }
   }
   return { id, x, y, width, height, frame, isVisible: true };

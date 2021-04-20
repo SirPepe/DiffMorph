@@ -302,6 +302,7 @@ describe("rendering", () => {
     ]));
     expect(frames[2].frame.text).toEqual(new Map([
       ["170gm040", { id: "170gm040", x: 0, y: 0, width: 1, height: 1, isVisible: true }],
+      ["1q1s17w0", { id: "1q1s17w0", x: 1, y: 0, width: 4, height: 1, isVisible: false }],
       ["uiulmp0", { id: "uiulmp0", x: 1, y: 0, width: 1, height: 1, isVisible: true }],
     ]));
     /* eslint-enable */

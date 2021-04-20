@@ -26,7 +26,17 @@ describe("Extender", () => {
     expect(after[1].content.map((op) => op.kind)).toEqual(["MOV"]);
   });
 
-  test("turning an ADD into a BAD + MOV in three frames", () => {
+  test("replace a DEL with a BDE in two frames", () => {
+    const before = optimizeDiffs(diff([tokenize("."), tokenize("")]));
+    expect(before.length).toBe(2);
+    expect(before[0].content.map((op) => op.kind)).toEqual(["ADD"]);
+    expect(before[1].content.map((op) => op.kind)).toEqual(["DEL"]);
+    const after = extendDiffs(before);
+    expect(after[0].content.map((op) => op.kind)).toEqual(["ADD"]);
+    expect(after[1].content.map((op) => op.kind)).toEqual(["BDE"]);
+  });
+
+  test("optimizing an ADD/DEL pair in three frames", () => {
     const before = optimizeDiffs(
       diff([tokenize(""), tokenize("."), tokenize("")])
     );
@@ -36,9 +46,9 @@ describe("Extender", () => {
     expect(before[2].content.map((op) => op.kind)).toEqual(["DEL"]);
     const after = extendDiffs(before);
     expect(after.length).toBe(3);
-    expect(after[0].content.map((op) => op.kind)).toEqual(["BAD"]);
-    expect(after[1].content.map((op) => op.kind)).toEqual(["MOV"]);
-    expect(after[2].content.map((op) => op.kind)).toEqual(["DEL"]);
+    expect(after[0].content.map((op) => op.kind)).toEqual(["BAD"]); // Move to new position, stay invisible
+    expect(after[1].content.map((op) => op.kind)).toEqual(["MOV"]); // become visible
+    expect(after[2].content.map((op) => op.kind)).toEqual(["BDE"]); // become invisible
   });
 
   test("replace a DEL with a BAD", () => {
@@ -68,7 +78,7 @@ describe("Extender", () => {
     expect(after.length).toBe(3);
     expect(after[0].content.map((o) => o.kind)).toEqual(["ADD", "ADD", "BAD"]);
     expect(after[1].content.map((o) => o.kind)).toEqual(["MOV", "MOV"]);
-    expect(after[2].content.map((o) => o.kind)).toEqual(["DEL", "MOV"]);
+    expect(after[2].content.map((o) => o.kind)).toEqual(["BDE", "MOV"]);
   });
 });
 
