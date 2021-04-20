@@ -168,7 +168,7 @@ function toBoxPosition(
   for (const op of diff.content) {
     if (op.kind === "TREE") {
       const previousBox = frame.boxes.get(id);
-      if (op.root.kind === "NOP") {
+      if (op.root.kind === "BOX") {
         assertIs(previousBox, "Prev box should be defined for NOP!");
         frame.boxes.set(id, toBoxPosition(op, previousBox, pools, root));
       } else {
