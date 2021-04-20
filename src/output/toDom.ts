@@ -65,6 +65,30 @@ const DEFAULT_STYLES = `
   color: var(--comment);
   font-style: italic;
 }
+/* TOML */
+.dm-box.language-toml .dm-token.number,
+.dm-box.language-toml .dm-token.keyword {
+  color: var(--number);
+}
+.dm-box.language-toml .dm-token.string-key {
+  color: var(--string);
+}
+.dm-box.language-toml .dm-token.value {
+  color: var(--value);
+}
+.dm-box.language-toml .dm-token[class*="literal-"] {
+  color: var(--literal);
+}
+.dm-box.language-toml .dm-token[class*="punctuation"] {
+  color: var(--punctuation);
+}
+.dm-box.language-toml .dm-token[class*="operator"] {
+  color: var(--type);
+}
+.dm-box.language-toml .dm-token.comment {
+  color: var(--comment);
+  font-style: italic;
+}
 `;
 
 function generateTextCss(
