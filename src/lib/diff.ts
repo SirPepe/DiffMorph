@@ -248,8 +248,7 @@ function partitionTokens<T extends Token, D extends Token>(
   return [boxes, textTokens, source.decorations];
 }
 
-// Only exported for unit tests
-export function diffBoxes<T extends Token, D extends Token>(
+function diffBoxes<T extends Token, D extends Token>(
   from: Box<T, D> | undefined,
   to: Box<T, D> | undefined
 ): DiffTree<T, D> {
