@@ -235,6 +235,158 @@ describe("rendering", () => {
     expect(maxWidth).toBe(4);
   });
 
+  test.skip("It works with boxes", () => {
+    const { objects, frames, maxWidth, maxHeight } = toRenderData(
+      process("json")(
+        ["{}"],
+        [
+          "{",
+          {
+            id: "box",
+            hash: "asdf",
+            language: undefined,
+            data: {},
+            isDecoration: false,
+            content: ["null"],
+          },
+          "}",
+        ],
+        ["{}"],
+      )
+    );
+    expect(objects).toEqual({
+      id: "root",
+      data: {},
+      language: "json",
+      content: {
+        text: new Map([
+          ["10igw9m0", { id: "10igw9m0", text: "{", type: expect.any(String) }],
+          ["1mj04u80", { id: "1mj04u80", text: "}", type: expect.any(String) }],
+        ]),
+        decorations: new Map(),
+        boxes: new Map(),
+      },
+    });
+    expect(frames.length).toBe(3);
+    expect(frames[0]).toEqual({
+      id: "root",
+      x: 0,
+      y: 0,
+      width: 2,
+      height: 1,
+      frame: {
+        text: new Map([
+          [
+            "10igw9m0",
+            {
+              id: "10igw9m0",
+              x: 0,
+              y: 0,
+              width: 1,
+              height: 1,
+              isVisible: true,
+            },
+          ],
+          [
+            "1mj04u80",
+            {
+              id: "1mj04u80",
+              x: 1,
+              y: 0,
+              width: 1,
+              height: 1,
+              isVisible: true,
+            },
+          ],
+        ]),
+        boxes: new Map(),
+        decorations: new Map(),
+      },
+      isVisible: true,
+    });
+    expect(frames[1]).toEqual({
+      id: "root",
+      x: 0,
+      y: 0,
+      width: 6,
+      height: 1,
+      frame: {
+        text: new Map([
+          [
+            "10igw9m0",
+            {
+              id: "10igw9m0",
+              x: 0,
+              y: 0,
+              width: 1,
+              height: 1,
+              isVisible: true,
+            },
+          ],
+          [
+            "1mj04u80",
+            {
+              id: "1mj04u80",
+              x: 5,
+              y: 0,
+              width: 1,
+              height: 1,
+              isVisible: true,
+            },
+          ],
+        ]),
+        boxes: new Map(),
+        decorations: new Map(),
+      },
+      isVisible: true,
+    });
+    expect(frames[2]).toEqual({
+      id: "root",
+      x: 0,
+      y: 0,
+      width: 2,
+      height: 1,
+      frame: {
+        text: new Map([
+          [
+            "10igw9m0",
+            {
+              id: "10igw9m0",
+              x: 0,
+              y: 0,
+              width: 1,
+              height: 1,
+              isVisible: true,
+            },
+          ],
+          [
+            "1mj04u80",
+            {
+              id: "1mj04u80",
+              x: 1,
+              y: 0,
+              width: 1,
+              height: 1,
+              isVisible: true,
+            },
+          ],
+        ]),
+        boxes: new Map(),
+        decorations: new Map(),
+      },
+      isVisible: true,
+    });
+    expect(maxHeight).toBe(1);
+    expect(maxWidth).toBe(6);
+  });
+
+  test("handles multiple objects of the same hash", () => {
+    const { objects } = toRenderData(
+      process("json")(["null, null"])
+    );
+    expect(objects.content.text.size).toBe(3)
+  });
+
   test("deals with a single frame", () => {
     const { objects, frames, maxWidth, maxHeight } = toRenderData(
       process("json")(["{}"])

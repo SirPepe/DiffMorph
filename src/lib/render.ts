@@ -46,12 +46,11 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
       return [output, position];
     } else {
       if (!list) {
-        list = [];
-        this.available.set(item.hash, list);
+        // New list remains empty as the output token goes into use right away
+        this.available.set(item.hash, []);
       }
       const output = this.toOutput(item, this.nextId(kind, item.hash));
       const position = toRenderPosition(item, output.id, isVisible);
-      list.push(output);
       this.inUse.set(holder, [output, position]);
       return [output, position];
     }
@@ -155,7 +154,7 @@ function toRenderDecoration(
 }
 
 function renderFrames(
-  lifecycle: BoxLifecycle<TypedToken, Decoration<any>>
+  lifecycle: BoxLifecycle<TypedToken, Decoration<any>>,
 ): [RenderPositions[], Iterable<RenderText>, Iterable<RenderDecoration>] {
   const positions: RenderPositions[] = [];
   const frames: Frame[] = Array.from({ length: lifecycle.self.size }, () => ({
@@ -194,6 +193,10 @@ function renderFrames(
         frames[i].decorations.set(result[1].id, result[1]);
       }
     }
+    //
+    // for (const boxLifecycle of lifecycle.boxes) {
+    //   console.log(boxLifecycle)
+    // }
   }
   return [positions, textTokens, decoTokens];
 }
