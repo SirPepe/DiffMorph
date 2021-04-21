@@ -1,4 +1,8 @@
+import { diff } from "../src/lib/diff";
+import { extendDiffs } from "../src/lib/extend";
 import { applyLanguage } from "../src/lib/language";
+import { toLifecycle } from "../src/lib/lifecycle";
+import { optimizeDiffs } from "../src/lib/optimize";
 import { tokenize } from "../src/lib/tokenizer";
 import { flattenTokens, getFirstTextToken } from "../src/lib/util";
 import { Box, Code, Decoration, TypedToken } from "../src/types";
@@ -80,3 +84,6 @@ export const lang = (language: string) => (
 export const type = (language: string) => (...input: Code[]): TypedToken[] => {
   return flattenTokens(getFirstTextToken([lang(language)(...input)]));
 };
+
+export const process = (language: string) => (...input: Code[][]) =>
+  toLifecycle(extendDiffs(optimizeDiffs(diff(input.map((code) => lang(language)(...code))))))

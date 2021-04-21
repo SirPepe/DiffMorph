@@ -1,26 +1,33 @@
 import { Box, Token } from "../types";
 import { BOX, DiffOp, DiffTree } from "./diff";
 
-type Lifecycle<T> = Map<number, DiffOp<T>>;
+export type Lifecycle<T> = Map<number, DiffOp<T>>;
 
-type BoxLifecycle<T, D> = {
+export type BoxLifecycle<T, D> = {
   readonly kind: "BOX";
+  base: Box<T, D>;
   self: Map<number, DiffOp<Box<T, D>> | BOX<Box<T, D>>>;
-  content: (Lifecycle<T> | BoxLifecycle<T, D>)[];
+  text: Lifecycle<T>[];
   decorations: Lifecycle<D>[];
+  boxes: BoxLifecycle<T, D>[];
 }
 
 export function toLifecycle<T extends Token, D extends Token>(
   diffs: DiffTree<T, D>[]
-): BoxLifecycle<T, D> {
+): BoxLifecycle<T, D> | null {
+  if (diffs.length === 0) {
+    return null;
+  }
   const self = new Map(diffs.map((diff, idx) => [idx, diff.root]));
-  const content = toTokenLifecycles(diffs.map(({ content }) => content));
-  const decorations = toTokenLifecycles(diffs.map(({ decorations }) => decorations));
+  const [text, boxes] = toTokenLifecycles(diffs.map(({ content }) => content));
+  const [decorations] = toTokenLifecycles(diffs.map(({ decorations }) => decorations));
   return {
     kind: "BOX",
+    base: diffs[0].root.item,
     self,
-    content,
+    text,
     decorations,
+    boxes,
   };
 }
 
@@ -30,13 +37,13 @@ function toPosition({x, y, width, height}: Token): string {
 
 function toTokenLifecycles<T extends Token>(
   frames: DiffOp<T>[][]
-): Lifecycle<T>[];
+): [Lifecycle<T>[], never];
 function toTokenLifecycles<T extends Token, D extends Token>(
   frames: (DiffTree<T, D> | DiffOp<T>)[][]
-): (Lifecycle<T> | BoxLifecycle<T, D>)[];
+): [Lifecycle<T>[], BoxLifecycle<T, D>[]];
 function toTokenLifecycles<T extends Token, D extends Token>(
   frames: (DiffTree<T, D> | DiffOp<T>)[][]
-): (Lifecycle<T> | BoxLifecycle<T, D>)[] {
+): [Lifecycle<T>[], BoxLifecycle<T, D>[]] {
   // Last token position -> lifecycle
   const lifecycles = new Map<string, Lifecycle<T>>();
   const finished: Lifecycle<T>[] = [];
@@ -99,9 +106,14 @@ function toTokenLifecycles<T extends Token, D extends Token>(
       }
     }
   }
-  for (const trees of treesById.values()) {
-    toLifecycle(trees);
-  }
 
-  return [...finished, ...lifecycles.values()];
+  const tokenLifecycles = [...finished, ...lifecycles.values()];
+  const treeLifecycles = Array.from(treesById.values()).flatMap((trees) => {
+    const lifecycle = toLifecycle(trees);
+    if (lifecycle) {
+      return [lifecycle];
+    }
+    return [];
+  });
+  return [tokenLifecycles, treeLifecycles];
 }
