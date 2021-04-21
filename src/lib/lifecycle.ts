@@ -61,7 +61,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
         } else {
           trees.push(operation);
         }
-      } if (operation.kind === "DEL") {
+      } else if (operation.kind === "DEL") {
         const oldPosition = toPosition(operation.item);
         const currentLifecycle = lifecycles.get(oldPosition);
         if (!currentLifecycle) {

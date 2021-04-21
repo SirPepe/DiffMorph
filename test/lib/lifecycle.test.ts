@@ -24,6 +24,46 @@ describe("Lifecycles", () => {
     });
   });
 
+  test("it works with boxes", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize(".."),
+      tokenize(".", {
+        id: "box",
+        hash: "asdf",
+        language: undefined,
+        data: {},
+        isDecoration: false,
+        content: ["test"],
+      }, "."),
+      tokenize(".."),
+    ]));
+    const res = toLifecycle(diffs);
+    expect(res?.self).toEqual(
+      new Map([ [0, diffs[0].root], [1, diffs[1].root], [2, diffs[2].root]])
+    );
+    expect(res?.text).toEqual([
+      new Map([[0, diffs[0].content[0]]]),
+      new Map([[0, diffs[0].content[1]], [1, diffs[1].content[0]], [2, diffs[2].content[0]]]),
+    ]);
+    expect(res?.boxes[0]).toEqual({
+      kind: "BOX",
+      base: (diffs[1].content[1] as any).root.item,
+      self: new Map([
+        [0, (diffs[1].content[1] as any).root],
+        [1, (diffs[2].content[1] as any).root],
+      ]),
+      text: [
+        new Map([
+          [0, (diffs[1].content[1] as any).content[0]],
+          [1, (diffs[2].content[1] as any).content[0]],
+        ]),
+      ],
+      decorations: [],
+      boxes: [],
+    });
+    expect(res?.decorations).toEqual([]);
+  });
+
   test("single frame", () => {
     const res = toLifecycle(optimizeDiffs(diff([tokenize(".")])));
     expect(res).toEqual({
