@@ -1,5 +1,4 @@
 import { diff } from "../src/lib/diff";
-import { extendDiffs } from "../src/lib/extend";
 import { applyLanguage } from "../src/lib/language";
 import { toLifecycle } from "../src/lib/lifecycle";
 import { optimizeDiffs } from "../src/lib/optimize";
@@ -86,4 +85,4 @@ export const type = (language: string) => (...input: Code[]): TypedToken[] => {
 };
 
 export const process = (language: string) => (...input: Code[][]) =>
-  toLifecycle(extendDiffs(optimizeDiffs(diff(input.map((code) => lang(language)(...code))))))
+  toLifecycle(optimizeDiffs(diff(input.map((code) => lang(language)(...code)))))

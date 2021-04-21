@@ -15,7 +15,6 @@ import { toRenderData } from "../lib/render";
 import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
-import { extendDiffs } from "../lib/extend";
 import { toLifecycle } from "../lib/lifecycle";
 
 function isHTMLElement(arg: any): arg is HTMLElement {
@@ -100,6 +99,6 @@ export function fromDom(
     }
     return applyLanguage(tokenized);
   });
-  const diffs = extendDiffs(optimizeDiffs(diff(typed)));
+  const diffs = optimizeDiffs(diff(typed));
   return toRenderData(toLifecycle(diffs));
 }

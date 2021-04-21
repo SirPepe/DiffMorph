@@ -1,12 +1,12 @@
 import { Box, Token } from "../types";
-import { BOX, DiffOp, DiffTree } from "./diff";
+import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "./diff";
 
-export type Lifecycle<T> = Map<number, DiffOp<T>>;
+export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
 
 export type BoxLifecycle<T, D> = {
   readonly kind: "BOX";
   base: Box<T, D>;
-  self: Map<number, DiffOp<Box<T, D>> | BOX<Box<T, D>>>;
+  self: Map<number, ExtendedDiffOp<Box<T, D>> | BOX<Box<T, D>>>;
   text: Lifecycle<T>[];
   decorations: Lifecycle<D>[];
   boxes: BoxLifecycle<T, D>[];
@@ -70,7 +70,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
         currentLifecycle.set(i, operation);
         finished.push(currentLifecycle);
         lifecycles.delete(oldPosition);
-      } else if (operation.kind === "MOV" || operation.kind === "BDE") {
+      } else if (operation.kind === "MOV") {
         const oldPosition = toPosition(operation.from);
         const currentLifecycle = lifecycles.get(oldPosition);
         if (!currentLifecycle) {
@@ -89,7 +89,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
     }
     // Second pass: place additions
     for (const operation of frames[i]) {
-      if (operation.kind === "ADD" || operation.kind === "BAD") {
+      if (operation.kind === "ADD") {
         const key = toPosition(operation.item);
         if (lifecycles.has(key)) {
           throw new Error();
