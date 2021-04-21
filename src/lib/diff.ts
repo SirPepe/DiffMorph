@@ -232,15 +232,15 @@ function diffBox<T, D>(
 
 function partitionTokens<T extends Token, D extends Token>(
   source: Box<T, D> | undefined
-): [Box<T, D>[], T[], D[]] {
-  const boxes: Box<T, D>[] = [];
+): [Map<string, Box<T, D>>, T[], D[]] {
+  const boxes = new Map();
   const textTokens: T[] = [];
   if (!source) {
-    return [[], [], []];
+    return [new Map(), [], []];
   }
   for (const item of source.content) {
     if (isBox(item)) {
-      boxes.push(item);
+      boxes.set(item.id, item);
     } else {
       textTokens.push(item);
     }
@@ -259,14 +259,12 @@ function diffBoxes<T extends Token, D extends Token>(
   const textOps: DiffOp<T>[] = [];
   const decoOps: DiffOp<D>[] = [];
   const boxOps: DiffTree<T, D>[] = [];
-  const [fromBoxes, fromTokens, fromDecorations] = partitionTokens(from);
-  const [toBoxes, toTokens, toDecorations] = partitionTokens(to);
+  const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
+  const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
   const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
   textOps.push(...lineDiff.result);
   textOps.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
   decoOps.push(...diffDecorations(fromDecorations, toDecorations));
-  const fromBoxesById = mapBy(fromBoxes, "id");
-  const toBoxesById = mapBy(toBoxes, "id");
   const boxIds = new Set([...fromBoxesById.keys(), ...toBoxesById.keys()]);
   for (const id of boxIds) {
     const fromBox = fromBoxesById.get(id);
