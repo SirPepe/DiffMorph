@@ -1,15 +1,18 @@
-import { DiffOp, DiffTree } from "./diff";
-
-type Extendable = { hash: string };
-
-// Extends the already-optimized diff trees in-place in the following manner:
+// This module extends already-optimized diff trees in-place to make them ready
+// for rendering. The following operations are applied to both tokens and
+// declarations:
 // * where possible, ADD ops are replaced with a MOV in the current and a BAD in
 //   the previous frame; this places tokens in the places where they become
 //   visible in the frame just before. This prevent every token from flying in
 //   from the top left (which is every token's default position).
-// * where possible, DEL ops are moves one frame forward and get replaced by a
+// * where possible, DEL ops are moves one frame ahead and get replaced by a
 //   ADE op; this allows the token to fade out without also moving to the top
 //   left (which is every token's default position).
+
+import { DiffOp, DiffTree } from "./diff";
+
+type Extendable = { hash: string };
+
 export function extendDiffs<T extends Extendable, D extends Extendable>(
   diffs: DiffTree<T, D>[]
 ): DiffTree<T, D>[] {
@@ -25,8 +28,8 @@ export function extendDiffs<T extends Extendable, D extends Extendable>(
   return diffs;
 }
 
-// Also extends nested trees. This is a step that extendDeletions() must not
-// repeat.
+// This function also extends nested trees. This is a step that
+// extendDeletions() must not repeat.
 function extendAdditions<T extends Extendable, D extends Extendable>(
   frames: (DiffTree<T, D> | DiffOp<T>)[][]
 ): void {
