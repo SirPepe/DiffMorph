@@ -28,6 +28,43 @@ export function extendDiffs<T extends Extendable, D extends Extendable>(
   return diffs;
 }
 
+// Replace ADD with MOV for content that was in a tree that got BAD inserted in
+// front of it (where the original ADD was cloned into)
+function shiftForwards<T extends Extendable>(
+  operations: DiffOp<T>[]
+): DiffOp<T>[];
+function shiftForwards<T extends Extendable, D extends Extendable>(
+  operations: (DiffTree<T, D> | DiffOp<T>)[]
+): (DiffTree<T, D> | DiffOp<T>)[];
+function shiftForwards<T extends Extendable, D extends Extendable>(
+  operations: (DiffTree<T, D> | DiffOp<T>)[]
+): (DiffTree<T, D> | DiffOp<T>)[] {
+  const newOperations: (DiffTree<T, D> | DiffOp<T>)[] = [];
+  for (const operation of operations) {
+    if (operation.kind === "TREE") {
+      if (operation.root.kind === "ADD") {
+        newOperations.push({
+          ...operation,
+          root: {
+            kind: "MOV",
+            item: operation.root.item,
+            from: operation.root.item,
+          },
+        });
+      }
+    } else if (operation.kind === "ADD") {
+      newOperations.push({
+        kind: "MOV",
+        item: operation.item,
+        from: operation.item,
+      });
+    } else {
+      newOperations.push(operation);
+    }
+  }
+  return newOperations;
+}
+
 // This function also extends nested trees. This is a step that
 // extendDeletions() must not repeat.
 function extendAdditions<T extends Extendable, D extends Extendable>(
@@ -71,6 +108,8 @@ function extendAdditions<T extends Extendable, D extends Extendable>(
           prev.push();
           curr.splice(j, 1, {
             ...operation,
+            content: shiftForwards(operation.content),
+            decorations: shiftForwards(operation.decorations),
             root: {
               kind: "MOV",
               item: operation.root.item,

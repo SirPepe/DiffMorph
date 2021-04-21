@@ -131,3 +131,45 @@ describe("Extender on decorations", () => {
     expect(after[1].decorations.map((op) => op.kind)).toEqual(["MOV"]);
   });
 });
+
+describe("Extender on boxes", () => {
+  test("extend box content forwards and backwards", () => {
+    const before = optimizeDiffs(
+      diff([
+        tokenize(".."),
+        tokenize(
+          ".",
+          {
+            id: "box",
+            hash: "asdf",
+            language: undefined,
+            data: {},
+            isDecoration: false,
+            content: [":"],
+          },
+          "."
+        ),
+        tokenize(".."),
+        tokenize("  ..")
+      ])
+    );
+    expect(before.length).toBe(4);
+    expect(before[0].content.map((o) => o.kind)).toEqual(["ADD", "ADD"]);
+    expect(before[1].content.map((o) => o.kind)).toEqual(["MOV", "TREE"]);
+    expect((before[1].content[1] as any).root.kind).toEqual("ADD");
+    expect((before[1].content[1] as any).content.map((o: any) => o.kind)).toEqual(["ADD"]);
+    expect(before[2].content.map((o) => o.kind)).toEqual(["MOV", "TREE"]);
+    expect((before[2].content[1] as any).root.kind).toEqual("DEL");
+    expect((before[2].content[1] as any).content.map((o: any) => o.kind)).toEqual(["DEL"]);
+    expect(before[3].content.map((o) => o.kind)).toEqual(["MOV", "MOV"]);
+    const after = extendDiffs(before);
+    expect(after[0].content.map((o) => o.kind)).toEqual(["ADD", "ADD", "TREE"]);
+    expect((after[0].content[2] as any).root.kind).toEqual("BAD"); // new
+    expect((after[0].content[2] as any).content.map((o: any) => o.kind)).toEqual(["ADD"]);
+    expect(after[1].content.map((o) => o.kind)).toEqual(["MOV", "TREE"]);
+    expect((after[1].content[1] as any).content.map((o: any) => o.kind)).toEqual(["MOV"]); // shifted
+    expect(after[2].content.map((o) => o.kind)).toEqual(["MOV", "TREE"]);
+    expect((after[2].content[1] as any).root.kind).toEqual("DEL");
+    expect(after[3].content.map((o) => o.kind)).toEqual(["MOV", "MOV"]);
+  });
+});
