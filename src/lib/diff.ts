@@ -10,7 +10,7 @@
 //    DEL operations. The optimizer stage can again turn ADD and DEL into MOV.
 
 import { diffArrays } from "diff";
-import { groupBy, mapBy } from "@sirpepe/shed";
+import { groupBy } from "@sirpepe/shed";
 import { Box, Token } from "../types";
 import { createIdGenerator, isBox } from "./util";
 
@@ -18,21 +18,26 @@ import { createIdGenerator, isBox } from "./util";
 // contents or decorations.
 export type BOX<T> = {
   readonly kind: "BOX";
-  item: T;
+  item: T; // reference to the previous box
 };
 
 // BAD = "before add", essentially an invisible "add". Inserted into diff trees
-// by the extender module only
+// by the extender module only. Does not need a "from" field because it is
+// always an initial addition.
 export type BAD<T> = {
   readonly kind: "BAD";
   item: T;
 };
 
+// ADD does not need a "from" field because it is by definition an initial
+// addition. It may get translated to a BAD + MOV pair, but there then BAD is
+// the initial addition and MOV has a "from" field anyway.
 export type ADD<T> = {
   readonly kind: "ADD";
   item: T;
 };
 
+// DEL does not need a "from" field because "item" in this case IS the "from"
 export type DEL<T> = {
   readonly kind: "DEL";
   item: T;
