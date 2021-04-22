@@ -14,21 +14,6 @@ import { groupBy } from "@sirpepe/shed";
 import { Box, Token } from "../types";
 import { createIdGenerator, isBox } from "./util";
 
-// Represents boxes that did not change themselves, but that may have changed
-// contents or decorations.
-export type BOX<T> = {
-  readonly kind: "BOX";
-  item: T; // reference to the previous box
-};
-
-// BAD = "before add", essentially an invisible "add". Inserted into diff trees
-// by the extender module only. Does not need a "from" field because it is
-// always an initial addition.
-export type BAD<T> = {
-  readonly kind: "BAD";
-  item: T;
-};
-
 // ADD does not need a "from" field because it is by definition an initial
 // addition. It may get translated to a BAD + MOV pair, but there then BAD is
 // the initial addition and MOV has a "from" field anyway.
@@ -43,14 +28,6 @@ export type DEL<T> = {
   item: T;
 };
 
-// BDE = "before del", essentially an invisible "mov". Inserted into diff trees
-// by the extender module only
-export type BDE<T> = {
-  readonly kind: "BDE";
-  item: T;
-  from: T; // reference to the item on it's previous position
-};
-
 // MOV is also responsible for changes in dimensions. In many cases MOV
 // operations are created in the optimizer by compensating for ADD operations
 // with DEL operations for equivalent tokens.
@@ -60,8 +37,35 @@ export type MOV<T> = {
   from: T; // reference to the item on it's previous position
 };
 
+// All regular operations that the diff and optimizer module deal with
 export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
+
+// BAD = "before add", essentially an invisible "add". Inserted into diff trees
+// by the extender module only. Does not need a "from" field because it is
+// always an initial addition.
+export type BAD<T> = {
+  readonly kind: "BAD";
+  item: T;
+};
+
+// BDE = "before del", essentially an invisible "mov". Inserted into diff trees
+// by the extender module only
+export type BDE<T> = {
+  readonly kind: "BDE";
+  item: T;
+  from: T; // reference to the item on it's previous position
+};
+
+// Regular plus extra ops that only become relevant once (expanded) lifecycles
+// come into play
 export type ExtendedDiffOp<T> = ADD<T> | DEL<T> | MOV<T> | BAD<T> | BDE<T>;
+
+// Represents boxes that did not change themselves, but that may have changed
+// contents or decorations.
+export type BOX<T> = {
+  readonly kind: "BOX";
+  item: T; // reference to the previous box
+};
 
 // Models a box in the diff result
 export type DiffTree<T, D> = {
