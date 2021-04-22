@@ -17,30 +17,35 @@ function toPosition({x, y, width, height}: Token): string {
 }
 
 function toTokenLifecycles<T extends Token>(
-  frames: DiffOp<T>[][]
+  frames: DiffOp<T>[][],
+  startIdx: number,
 ): [Lifecycle<T>[], never];
 function toTokenLifecycles<T extends Token, D extends Token>(
-  frames: (DiffTree<T, D> | DiffOp<T>)[][]
+  frames: (DiffTree<T, D> | DiffOp<T>)[][],
+  startIdx: number,
 ): [Lifecycle<T>[], BoxLifecycle<T, D>[]];
 function toTokenLifecycles<T extends Token, D extends Token>(
-  frames: (DiffTree<T, D> | DiffOp<T>)[][]
+  frames: (DiffTree<T, D> | DiffOp<T>)[][],
+  startIdx: number,
 ): [Lifecycle<T>[], BoxLifecycle<T, D>[]] {
   // Last token position -> lifecycle
   const lifecycles = new Map<string, Lifecycle<T>>();
   const finished: Lifecycle<T>[] = [];
-
-  const treesById = new Map<string, DiffTree<T, D>[]>();
+  // id -> [first index, trees[]]
+  const trees = new Map<string, [number, DiffTree<T, D>[]]>();
   for (let i = 0; i < frames.length; i++) {
+    //
+    const frameIdx = i + startIdx;
     // First pass: free positions and collect trees
     const remaining: [string, Lifecycle<T>][] = [];
     for (const operation of frames[i]) {
       if (operation.kind === "TREE") {
         //
-        const trees = treesById.get(operation.root.item.id);
-        if (!trees) {
-          treesById.set(operation.root.item.id, [operation]);
+        const treeData = trees.get(operation.root.item.id);
+        if (!treeData) {
+          trees.set(operation.root.item.id, [frameIdx, [operation]]);
         } else {
-          trees.push(operation);
+          treeData[1].push(operation);
         }
       } else if (operation.kind === "DEL") {
         const oldPosition = toPosition(operation.item);
@@ -48,7 +53,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
         if (!currentLifecycle) {
           throw new Error();
         }
-        currentLifecycle.set(i, operation);
+        currentLifecycle.set(frameIdx, operation);
         finished.push(currentLifecycle);
         lifecycles.delete(oldPosition);
       } else if (operation.kind === "MOV") {
@@ -57,7 +62,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
         if (!currentLifecycle) {
           throw new Error();
         }
-        currentLifecycle.set(i, operation);
+        currentLifecycle.set(frameIdx, operation);
         lifecycles.delete(oldPosition);
         const newPosition = toPosition(operation.item);
         if (lifecycles.has(newPosition)) {
@@ -70,12 +75,13 @@ function toTokenLifecycles<T extends Token, D extends Token>(
     }
     // Second pass: place additions
     for (const operation of frames[i]) {
+      const frameIdx = i + startIdx;
       if (operation.kind === "ADD") {
         const key = toPosition(operation.item);
         if (lifecycles.has(key)) {
           throw new Error();
         }
-        lifecycles.set(key, new Map([[ i, operation ]]));
+        lifecycles.set(key, new Map([[ i + startIdx, operation ]]));
       }
     }
     // Third pass: place remaining items
@@ -89,8 +95,8 @@ function toTokenLifecycles<T extends Token, D extends Token>(
   }
 
   const tokenLifecycles = [...finished, ...lifecycles.values()];
-  const treeLifecycles = Array.from(treesById.values()).flatMap((trees) => {
-    const lifecycle = toBoxLifecycle(trees);
+  const treeLifecycles = Array.from(trees.values()).flatMap(([index, list]) => {
+    const lifecycle = toBoxLifecycle(list, index);
     if (lifecycle) {
       return [lifecycle];
     }
@@ -101,11 +107,16 @@ function toTokenLifecycles<T extends Token, D extends Token>(
 
 function toBoxLifecycle<T extends Token, D extends Token>(
   diffs: DiffTree<T, D>[],
+  startIdx: number,
 ): BoxLifecycle<T, D> {
-  const self = new Map(diffs.map((diff, idx) => [idx, diff.root]));
-  const [text, boxes] = toTokenLifecycles(diffs.map(({ content }) => content));
+  const self = new Map(diffs.map((diff, idx) => [idx + startIdx, diff.root]));
+  const [text, boxes] = toTokenLifecycles(
+    diffs.map(({ content }) => content),
+    startIdx
+  );
   const [decorations] = toTokenLifecycles(
-    diffs.map(({ decorations }) => decorations)
+    diffs.map(({ decorations }) => decorations),
+    startIdx
   );
   return {
     kind: "BOX",
@@ -123,5 +134,5 @@ export function toLifecycle<T extends Token, D extends Token>(
   if (diffs.length === 0) {
     return null;
   }
-  return toBoxLifecycle(diffs);
+  return toBoxLifecycle(diffs, 0);
 }

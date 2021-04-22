@@ -49,13 +49,13 @@ describe("Lifecycles", () => {
       kind: "BOX",
       base: (diffs[1].content[1] as any).root.item,
       self: new Map([
-        [0, (diffs[1].content[1] as any).root],
-        [1, (diffs[2].content[1] as any).root],
+        [1, (diffs[1].content[1] as any).root],
+        [2, (diffs[2].content[1] as any).root],
       ]),
       text: [
         new Map([
-          [0, (diffs[1].content[1] as any).content[0]],
-          [1, (diffs[2].content[1] as any).content[0]],
+          [1, (diffs[1].content[1] as any).content[0]],
+          [2, (diffs[2].content[1] as any).content[0]],
         ]),
       ],
       decorations: [],
