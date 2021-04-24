@@ -1,5 +1,6 @@
 import { Box, Token } from "../types";
 import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "./diff";
+import { minmax } from "./util";
 
 export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
 
@@ -107,16 +108,16 @@ function toTokenLifecycles<T extends Token, D extends Token>(
 
 function toBoxLifecycle<T extends Token, D extends Token>(
   diffs: DiffTree<T, D>[],
-  startIdx: number,
+  frameOffset: number,
 ): BoxLifecycle<T, D> {
-  const self = new Map(diffs.map((diff, idx) => [idx + startIdx, diff.root]));
+  const self = new Map(diffs.map((diff, i) => [i + frameOffset, diff.root]));
   const [text, boxes] = toTokenLifecycles(
     diffs.map(({ content }) => content),
-    startIdx
+    frameOffset
   );
   const [decorations] = toTokenLifecycles(
     diffs.map(({ decorations }) => decorations),
-    startIdx
+    frameOffset
   );
   return {
     kind: "BOX",
@@ -128,11 +129,115 @@ function toBoxLifecycle<T extends Token, D extends Token>(
   };
 }
 
+function getNextFrame<T>(
+  source: Map<number, T>,
+  from: number,
+  parentMin: number,
+  parentMax: number
+): [number, T | undefined] {
+  if (from + 1 > parentMax) { // wrap around
+    return [parentMin, source.get(parentMin)];
+  }
+  return [from + 1, source.get(from + 1)];
+}
+
+function getPrevFrame<T>(
+  source: Map<number, T>,
+  from: number,
+  parentMin: number,
+  parentMax: number
+): [number, T | undefined] {
+  if (from - 1 < parentMin) { // wrap around
+    return [parentMax, source.get(parentMax)];
+  }
+  return [from - 1, source.get(from - 1)];
+}
+
+// Rules for extending lifecycles are as follows:
+// * do nothing for lifecycles with less than two frames
+// * for each DEL
+//   - if the frame after the DEL is free, shift DEL one frame forwards and
+//     insert BDE in the previous position of DEL
+//   - if the frame after the DEL is taken up by ADD, only replace the DEL with
+//     BDE, where BDE's "item" position corresponds to ADD's item position.
+// * for each ADD
+//   - if the frame before the ADD is free, insert BAD before ADD
+//   - if the frame before the ADD is taken up by a BDE, update the BDE's "item"
+//     position with the ADD's "item" position
+//   - if the frame before the ADD is taken up by a DEL, replace the DEL with a
+//     BDE with its "from" pointing to the DEL's "item" and it's "item" pointing
+//     to the ADD's item. This essentially lets the BDE serve as both DEL and
+//     BAD
+function expandLifecycle(
+  lifecycle: Map<number, ExtendedDiffOp<unknown> | BOX<unknown>>,
+  parentMin: number,
+  parentMax: number
+): void {
+  if (lifecycle.size < 2) {
+    return;
+  }
+  for (const [frame, op] of lifecycle) {
+    if (op.kind === "DEL") {
+      const [nextFrame, nextOp] = getNextFrame(
+        lifecycle,
+        frame,
+        parentMin,
+        parentMax
+      );
+      if (!nextOp) {
+        lifecycle.set(frame, { kind: "BDE", from: op.item, item: op.item });
+        lifecycle.set(nextFrame, op);
+        break; // must not continue, else we visit "op" a second time
+      } else if (nextOp.kind === "ADD") {
+        lifecycle.set(frame, { kind: "BDE", from: op.item, item: nextOp.item });
+      }
+    }
+  }
+  for (const [frame, op] of lifecycle) {
+    if (op.kind === "ADD") {
+      const [prevFrame, prevOp] = getPrevFrame(
+        lifecycle,
+        frame,
+        parentMin,
+        parentMax
+      );
+      if (!prevOp) {
+        lifecycle.set(prevFrame, { kind: "BAD", item: op.item });
+      } else if (prevOp.kind === "BDE") {
+        prevOp.item = op.item;
+      } else if (prevOp.kind === "DEL") {
+        lifecycle.set(prevFrame, { kind: "BAD", item: op.item });
+      }
+    }
+  }
+}
+
+function expandBoxLifecycles<T extends Token, D extends Token>(
+  lifecycle: BoxLifecycle<T, D>,
+): void {
+  const [minFrame, maxFrame] = minmax(lifecycle.self.keys());
+  for (const box of lifecycle.boxes) {
+    expandLifecycle(box.self, minFrame, maxFrame);
+    expandBoxLifecycles(box);
+  }
+  for (const text of lifecycle.text) {
+    expandLifecycle(text, minFrame, maxFrame);
+  }
+  for (const decoration of lifecycle.decorations) {
+    expandLifecycle(decoration, minFrame, maxFrame);
+  }
+}
+
 export function toLifecycle<T extends Token, D extends Token>(
   diffs: DiffTree<T, D>[],
+  expand: boolean
 ): BoxLifecycle<T, D> | null {
   if (diffs.length === 0) {
     return null;
   }
-  return toBoxLifecycle(diffs, 0);
+  const root = toBoxLifecycle(diffs, 0);
+  if (expand) {
+    expandBoxLifecycles(root);
+  }
+  return root;
 }

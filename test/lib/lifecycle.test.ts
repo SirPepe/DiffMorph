@@ -7,7 +7,7 @@ const tokenize = lang("none");
 describe("Lifecycles", () => {
   test("it works", () => {
     const diffs = optimizeDiffs(diff([tokenize(".."), tokenize(". .")]));
-    const res = toLifecycle(diffs);
+    const res = toLifecycle(diffs, false);
     expect(res).toEqual({
       kind: "BOX",
       base: diffs[0].root.item,
@@ -37,7 +37,7 @@ describe("Lifecycles", () => {
       }, "."),
       tokenize(".."),
     ]));
-    const res = toLifecycle(diffs);
+    const res = toLifecycle(diffs, false);
     expect(res?.self).toEqual(
       new Map([ [0, diffs[0].root], [1, diffs[1].root], [2, diffs[2].root]])
     );
@@ -65,7 +65,7 @@ describe("Lifecycles", () => {
   });
 
   test("single frame", () => {
-    const res = toLifecycle(optimizeDiffs(diff([tokenize(".")])));
+    const res = toLifecycle(optimizeDiffs(diff([tokenize(".")])), false);
     expect(res).toEqual({
       kind: "BOX",
       base: expect.any(Object),
@@ -79,7 +79,100 @@ describe("Lifecycles", () => {
   });
 
   test("zero frames", () => {
-    const res = toLifecycle([]);
+    const res = toLifecycle([], false);
     expect(res).toEqual(null);
   });
+});
+
+describe("Expanded lifecycles", () => {
+  test("replaces DEL with BDE", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize({
+        id: "box",
+        hash: "asdf",
+        language: undefined,
+        data: {},
+        isDecoration: false,
+        content: ["test"],
+      }),
+      tokenize(""),
+    ]));
+    // without extension: ADD, DEL
+    // with extension: ADD, BDE
+    const res = toLifecycle(diffs, true);
+    if (!res) {
+      throw new Error("result is null");
+    }
+    expect(Array.from(res.self.values(), ({ kind }) => kind)).toEqual(["ADD", "MOV"]);
+    expect(res.boxes[0].self).toEqual(
+      new Map([
+        [0, (diffs[0].content[0] as any).root], // ADD
+        [1, { kind: "BDE", from: (diffs[1].content[0] as any).root.item, item: (diffs[0].content[0] as any).root.item }],
+      ]),
+    );
+  });
+
+  test("adds a BDE/BAD when a free frame at the end is available", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize({
+        id: "box",
+        hash: "asdf",
+        language: undefined,
+        data: {},
+        isDecoration: false,
+        content: ["test"],
+      }),
+      tokenize(""),
+      tokenize(""),
+    ]));
+    // without extension: ADD, DEL, nil
+    // with extension: ADD, BDE, BAD
+    const res = toLifecycle(diffs, true);
+    if (!res) {
+      throw new Error("result is null");
+    }
+    expect(Array.from(res.self.values(), ({ kind }) => kind)).toEqual(["ADD", "MOV", "BOX"]);
+    expect(res.boxes[0].self).toEqual(
+      new Map([
+        [0, (diffs[0].content[0] as any).root], // ADD
+        [1, { kind: "BDE", from: (diffs[1].content[0] as any).root.item, item: (diffs[1].content[0] as any).root.item }],
+        [2, { kind: "BAD", item: (diffs[0].content[0] as any).root.item }],
+      ]),
+    );
+  });
+
+  test("it adds BAD and BDE to boxes with enough space", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize(""),
+      tokenize(""),
+      tokenize({
+        id: "box",
+        hash: "asdf",
+        language: undefined,
+        data: {},
+        isDecoration: false,
+        content: ["test"],
+      }),
+      tokenize(""),
+      tokenize(""),
+    ]));
+    // TODO: ensure that root did not change
+    // without extension: nil, nil, ADD, DEL, nil
+    // with extension: nil, BAD, ADD, DEL, BDE
+    const res = toLifecycle(diffs, true);
+    if (!res) {
+      throw new Error("result is null");
+    }
+    expect(Array.from(res.self.values(), ({ kind }) => kind)).toEqual(["ADD", "BOX", "MOV", "MOV", "BOX"]);
+    expect(res.boxes[0].self).toEqual(
+      new Map([
+        [2, (diffs[2].content[0] as any).root], // ADD
+        [3, { kind: "BDE", item: (diffs[3].content[0] as any).root.item, from: (diffs[2].content[0] as any).root.item }],
+        [1, { kind: "BAD", item: (diffs[2].content[0] as any).root.item }],
+        [4, (diffs[3].content[0] as any).root], // DEL
+      ]),
+    );
+  });
+
+
 });

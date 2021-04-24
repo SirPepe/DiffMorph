@@ -67,5 +67,5 @@ export function fromData(
     return applyLanguage(tokenized);
   });
   const diffs = optimizeDiffs(diff(typed));
-  return toRenderData(toLifecycle(diffs));
+  return toRenderData(toLifecycle(diffs, true));
 }

@@ -85,4 +85,7 @@ export const type = (language: string) => (...input: Code[]): TypedToken[] => {
 };
 
 export const process = (language: string) => (...input: Code[][]) =>
-  toLifecycle(optimizeDiffs(diff(input.map((code) => lang(language)(...code)))))
+  toLifecycle(
+    optimizeDiffs(diff(input.map((code) => lang(language)(...code)))),
+    true
+  );

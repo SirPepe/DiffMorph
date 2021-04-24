@@ -52,8 +52,8 @@ export type BAD<T> = {
 // by the extender module only
 export type BDE<T> = {
   readonly kind: "BDE";
-  item: T;
-  from: T; // reference to the item on it's previous position
+  item: T; // position when fading out ends
+  from: T; // reference to the item when fading out starts
 };
 
 // Regular plus extra ops that only become relevant once (expanded) lifecycles
