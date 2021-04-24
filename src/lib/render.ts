@@ -1,8 +1,7 @@
-import { mapBy } from "@sirpepe/shed";
-import { Decoration, DecorationPosition, Frame, RenderData, RenderDecoration, RenderPositions, RenderRoot, RenderText, TextPosition, Token, TypedToken } from "../types";
+import { Decoration, DecorationPosition, RenderData, RenderDecoration, RenderPositions, RenderRoot, RenderText, TextPosition, Token, TypedToken } from "../types";
 import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
-import { createIdGenerator, minmax } from "./util";
+import { createIdGenerator } from "./util";
 
 type OutputToken = { id: string; };
 
@@ -162,26 +161,20 @@ function renderFrames(
   const decoTokens = new Map<string, RenderDecoration>();
   const textPool = new TokenPool(toRenderText);
   const decoPool = new TokenPool(toRenderDecoration);
-  const [minFrame, maxFrame] = minmax(lifecycle.self.keys());
-  for (let i = minFrame; i <= maxFrame; i++) {
-    //
-    const self = lifecycle.self.get(i);
-    if (!self) {
-      continue;
-    }
+  for (let [frameIdx, self] of lifecycle.self) {
     const frame = {
       text: new Map<string, TextPosition>(),
       decorations: new Map<string, DecorationPosition>(),
       boxes: new Map<string, RenderPositions>(),
     };
     const isVisible = ["ADD", "MOV", "BOX"].includes(self.kind);
-    frames.set(i, {
+    frames.set(frameIdx, {
       ...toRenderPosition(self.item, lifecycle.base.id, isVisible),
       frame,
     });
     //
     for (const textLifecycle of lifecycle.text) {
-      const result = renderToken(textLifecycle, i, textPool);
+      const result = renderToken(textLifecycle, frameIdx, textPool);
       if (result) {
         textTokens.set(result[0].id, result[0]);
         frame.text.set(result[1].id, result[1]);
@@ -189,7 +182,7 @@ function renderFrames(
     }
     //
     for (const decoLifecycle of lifecycle.decorations) {
-      const result = renderToken(decoLifecycle, i, decoPool);
+      const result = renderToken(decoLifecycle, frameIdx, decoPool);
       if (result) {
         decoTokens.set(result[0].id, result[0]);
         frame.decorations.set(result[1].id, result[1]);
