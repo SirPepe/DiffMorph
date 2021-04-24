@@ -23,8 +23,8 @@ describe("rendering", () => {
         boxes: new Map(),
       },
     });
-    expect(frames.length).toBe(3);
-    expect(frames[0]).toEqual({
+    expect(frames.size).toBe(3);
+    expect(frames.get(0)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -60,7 +60,7 @@ describe("rendering", () => {
       },
       isVisible: true,
     });
-    expect(frames[1]).toEqual({
+    expect(frames.get(1)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -96,7 +96,7 @@ describe("rendering", () => {
       },
       isVisible: true,
     });
-    expect(frames[2]).toEqual({
+    expect(frames.get(2)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -157,8 +157,8 @@ describe("rendering", () => {
         boxes: new Map(),
       },
     });
-    expect(frames.length).toBe(3);
-    expect(frames[0]).toEqual({
+    expect(frames.size).toBe(3);
+    expect(frames.get(0)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -194,8 +194,8 @@ describe("rendering", () => {
       },
       isVisible: true,
     });
-    expect(frames[0]).toEqual(frames[1]);
-    expect(frames[2]).toEqual({
+    expect(frames.get(0)).toEqual(frames.get(1));
+    expect(frames.get(2)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -285,8 +285,8 @@ describe("rendering", () => {
         ]),
       },
     });
-    expect(frames.length).toBe(3);
-    expect(frames[0]).toEqual({
+    expect(frames.size).toBe(3);
+    expect(frames.get(0)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -322,7 +322,7 @@ describe("rendering", () => {
       },
       isVisible: true,
     });
-    expect(frames[1]).toEqual({
+    expect(frames.get(1)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -358,7 +358,7 @@ describe("rendering", () => {
       },
       isVisible: true,
     });
-    expect(frames[2]).toEqual({
+    expect(frames.get(2)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -422,8 +422,8 @@ describe("rendering", () => {
         boxes: new Map(),
       },
     });
-    expect(frames.length).toBe(1);
-    expect(frames[0]).toEqual({
+    expect(frames.size).toBe(1);
+    expect(frames.get(0)).toEqual({
       id: "root",
       x: 0,
       y: 0,
@@ -477,19 +477,26 @@ describe("rendering", () => {
         boxes: new Map(),
       },
     });
-    expect(frames).toEqual([{
-      frame: {
-        boxes: new Map(),
-        decorations: new Map(),
-        text: new Map(),
-      },
-      height: 1,
-      id: "root",
-      isVisible: true,
-      width: 0,
-      x: 0,
-      y: 0,
-    }]);
+    expect(frames).toEqual(
+      new Map([
+        [
+          0,
+          {
+            frame: {
+              boxes: new Map(),
+              decorations: new Map(),
+              text: new Map(),
+            },
+            height: 1,
+            id: "root",
+            isVisible: true,
+            width: 0,
+            x: 0,
+            y: 0,
+          },
+        ]
+      ]
+    ));
     expect(maxHeight).toBe(1);
     expect(maxWidth).toBe(0);
   });
@@ -508,7 +515,7 @@ describe("rendering", () => {
         boxes: new Map(),
       },
     });
-    expect(frames.length).toBe(0);
+    expect(frames.size).toBe(0);
     expect(maxHeight).toBe(0);
     expect(maxWidth).toBe(0);
   });

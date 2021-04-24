@@ -2,7 +2,7 @@ import { mapBy } from "@sirpepe/shed";
 import { Decoration, DecorationPosition, Frame, RenderData, RenderDecoration, RenderPositions, RenderRoot, RenderText, TextPosition, Token, TypedToken } from "../types";
 import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
-import { createIdGenerator } from "./util";
+import { createIdGenerator, minmax } from "./util";
 
 type OutputToken = { id: string; };
 
@@ -155,35 +155,36 @@ function toRenderDecoration(
 
 function renderFrames(
   lifecycle: BoxLifecycle<TypedToken, Decoration<any>>,
-): [ RenderRoot, RenderPositions[] ] {
-  const positions: RenderPositions[] = [];
-  const frames: Frame[] = Array.from({ length: lifecycle.self.size }, () => ({
-    text: new Map<string, TextPosition>(),
-    decorations: new Map<string, DecorationPosition>(),
-    boxes: new Map<string, RenderPositions>(),
-  }));
+): [ RenderRoot, Map<number, RenderPositions> ] {
+  const frames = new Map();
   const boxLifecycles = new Set<BoxLifecycle<TypedToken, Decoration<any>>>();
   const textTokens = new Map<string, RenderText>();
   const decoTokens = new Map<string, RenderDecoration>();
   const textPool = new TokenPool(toRenderText);
   const decoPool = new TokenPool(toRenderDecoration);
-  for (let i = 0; i < lifecycle.self.size; i++) {
+  const [minFrame, maxFrame] = minmax(lifecycle.self.keys());
+  for (let i = minFrame; i <= maxFrame; i++) {
     //
     const self = lifecycle.self.get(i);
     if (!self) {
       continue;
     }
+    const frame = {
+      text: new Map<string, TextPosition>(),
+      decorations: new Map<string, DecorationPosition>(),
+      boxes: new Map<string, RenderPositions>(),
+    };
     const isVisible = ["ADD", "MOV", "BOX"].includes(self.kind);
-    positions.push({
+    frames.set(i, {
       ...toRenderPosition(self.item, lifecycle.base.id, isVisible),
-      frame: frames[i],
+      frame,
     });
     //
     for (const textLifecycle of lifecycle.text) {
       const result = renderToken(textLifecycle, i, textPool);
       if (result) {
         textTokens.set(result[0].id, result[0]);
-        frames[i].text.set(result[1].id, result[1]);
+        frame.text.set(result[1].id, result[1]);
       }
     }
     //
@@ -191,7 +192,7 @@ function renderFrames(
       const result = renderToken(decoLifecycle, i, decoPool);
       if (result) {
         decoTokens.set(result[0].id, result[0]);
-        frames[i].decorations.set(result[1].id, result[1]);
+        frame.decorations.set(result[1].id, result[1]);
       }
     }
     // Collect the entire lifecycles in a set, as each lifecycle only has to
@@ -217,7 +218,7 @@ function renderFrames(
         boxes: boxTokens,
       }
     },
-    positions,
+    frames,
   ];
 }
 
@@ -236,13 +237,17 @@ export function toRenderData(
           boxes: new Map(),
         }
       },
-      frames: [],
+      frames: new Map(),
       maxWidth: 0,
       maxHeight: 0,
     };
   }
   const [objects, frames] = renderFrames(rootLifecycle);
-  const maxWidth = Math.max(...frames.map(({ width }) => width))
-  const maxHeight = Math.max(...frames.map(({ height }) => height));
+  const maxWidth = Math.max(
+    ...Array.from(frames.values()).map(({ width }) => width)
+  );
+  const maxHeight = Math.max(
+    ...Array.from(frames.values()).map(({ height }) => height)
+  );
   return { objects, frames, maxWidth, maxHeight };
 }
