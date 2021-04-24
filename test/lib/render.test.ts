@@ -235,7 +235,7 @@ describe("rendering", () => {
     expect(maxWidth).toBe(4);
   });
 
-  test.skip("It works with boxes", () => {
+  test("It works with boxes", () => {
     const { objects, frames, maxWidth, maxHeight } = toRenderData(
       process("json")(
         ["{}"],
