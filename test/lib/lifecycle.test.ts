@@ -156,7 +156,6 @@ describe("Expanded lifecycles", () => {
       tokenize(""),
       tokenize(""),
     ]));
-    // TODO: ensure that root did not change
     // without extension: nil, nil, ADD, DEL, nil
     // with extension: nil, BAD, ADD, DEL, BDE
     const res = toLifecycle(diffs, true);
@@ -174,5 +173,37 @@ describe("Expanded lifecycles", () => {
     );
   });
 
-
+  test("it adds BAD and BDE to boxes with more than enough space", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize(""),
+      tokenize(""),
+      tokenize(""),
+      tokenize({
+        id: "box",
+        hash: "asdf",
+        language: undefined,
+        data: {},
+        isDecoration: false,
+        content: ["test"],
+      }),
+      tokenize(""),
+      tokenize(""),
+      tokenize(""),
+    ]));
+    // without extension: nil, nil, nil, ADD, DEL, nil, nil
+    // with extension: nil, nil, BAD, ADD, DEL, BDE, nil
+    const res = toLifecycle(diffs, true);
+    if (!res) {
+      throw new Error("result is null");
+    }
+    expect(Array.from(res.self.values(), ({ kind }) => kind)).toEqual(["ADD", "BOX", "BOX", "MOV", "MOV", "BOX", "BOX"]);
+    expect(res.boxes[0].self).toEqual(
+      new Map([
+        [3, (diffs[3].content[0] as any).root], // ADD
+        [4, { kind: "BDE", item: (diffs[4].content[0] as any).root.item, from: (diffs[3].content[0] as any).root.item }],
+        [2, { kind: "BAD", item: (diffs[3].content[0] as any).root.item }],
+        [5, (diffs[4].content[0] as any).root], // DEL
+      ]),
+    );
+  });
 });
