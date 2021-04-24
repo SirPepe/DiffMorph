@@ -264,7 +264,25 @@ describe("rendering", () => {
           ["1mj04u80", { id: "1mj04u80", text: "}", type: expect.any(String) }],
         ]),
         decorations: new Map(),
-        boxes: new Map(),
+        boxes: new Map([
+          [
+            "box", {
+              id: "box",
+              data: {},
+              language: "json",
+              content: {
+                text: new Map([
+                  [
+                    "1q1s17w0",
+                    { id: "1q1s17w0", text: "null", type: "keyword-null" },
+                  ],
+                ]),
+                decorations: new Map(),
+                boxes: new Map(),
+              }
+            }
+          ]
+        ]),
       },
     });
     expect(frames.length).toBe(3);

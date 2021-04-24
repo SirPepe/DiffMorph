@@ -160,7 +160,7 @@ function renderFrames(
   const frames: Frame[] = Array.from({ length: lifecycle.self.size }, () => ({
     text: new Map<string, TextPosition>(),
     decorations: new Map<string, DecorationPosition>(),
-    boxes: new Map(),
+    boxes: new Map<string, RenderPositions>(),
   }));
   const boxLifecycles = new Set<BoxLifecycle<TypedToken, Decoration<any>>>();
   const textTokens = new Map<string, RenderText>();
@@ -203,9 +203,9 @@ function renderFrames(
   //
   const boxTokens = new Map<string, RenderRoot>();
   for (const boxLifecycle of boxLifecycles) {
-    renderFrames(boxLifecycle);
+    const [root, frames] = renderFrames(boxLifecycle);
+    boxTokens.set(root.id, root);
   }
-  console.log(boxLifecycles)
   return [
     {
       id: lifecycle.base.id,
