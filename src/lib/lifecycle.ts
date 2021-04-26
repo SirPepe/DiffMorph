@@ -157,7 +157,11 @@ function getPrevFrame<T>(
 //   - if the frame after the DEL is taken up by ADD, only replace the DEL with
 //     BDE, where BDE's "item" position corresponds to ADD's item position.
 // * for each ADD
-//   - if the frame before the ADD is free, insert BAD before ADD
+//   - if the frame before the ADD is free and the current frame is not the
+//     first frame in the lifecycle, insert a BAD in the previous frame. Skip
+//     this for the first frame to ensure that we don't add a BAD (an invisible
+//     frame) for tokens that are supposed to be visible for the parent's entire
+//     lifetime (eg. there's an ADD in the first frame and then no other op)
 //   - if the frame before the ADD is taken up by a BDE, update the BDE's "item"
 //     position with the ADD's "item" position
 //   - if the frame before the ADD is taken up by a DEL, replace the DEL with a
@@ -198,7 +202,9 @@ function expandLifecycle(
         parentMax
       );
       if (!prevOp) {
-        lifecycle.set(prevFrame, { kind: "BAD", item: op.item });
+        if (frame !== parentMin) {
+          lifecycle.set(prevFrame, { kind: "BAD", item: op.item });
+        }
       } else if (prevOp.kind === "BDE") {
         prevOp.item = op.item;
       } else if (prevOp.kind === "DEL") {
