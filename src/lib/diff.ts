@@ -1,9 +1,18 @@
 // This module's main diff() function turns frames of tokens and decorations
 // into diffing operations. It roughly works as follows:
-// 1. diff boxes with equivalent IDs, returning ADD, DEL or MOV operations
+// 1. diff boxes with equivalent IDs, returning ADD, DEL, MOV or BOX operations.
+//    MOV also covers boxes resizing without moving, BOX handles cases where the
+//    boxes positions and dimensions stay the same, but contents may have
+//    changed.
 // 2. diff typed tokens by
-//    a. organizing them in lines and diffing the lines by a hash chain
-//    b. diffing the remaining lines one-by one, returning only ADD and DEL
+//    a. organizing them in lines and diffing the lines by a hash chain. Lines
+//       that changed get translated into MOV operations for their constituent
+//       typed tokens, which are thus removed from the diffing problem. This
+//       could some day be optimized even further by diffing comment and
+//       non-comment tokens as lines in two passes, which would prevent changes
+//       in comments from breaking up entire lines and leading to confusing
+//       diffs.
+//    b. diffing the remaining tokens individually, returning only ADD and DEL
 //       operations. The optimizer stage is responsible for turning an ADD and a
 //       DEL on equivalent tokens into a MOV operation
 // 3. diff decorations by hash, position and dimensions, returning only ADD and
@@ -28,9 +37,9 @@ export type DEL<T> = {
   item: T;
 };
 
-// MOV is also responsible for changes in dimensions. In many cases MOV
-// operations are created in the optimizer by compensating for ADD operations
-// with DEL operations for equivalent tokens.
+// MOV is also responsible for changes in box or decoration dimensions. In many
+// cases MOV operations are created in the optimizer by compensating for ADD
+// operations with DEL operations for equivalent tokens.
 export type MOV<T> = {
   readonly kind: "MOV";
   item: T;
@@ -41,22 +50,22 @@ export type MOV<T> = {
 export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
 
 // BAD = "before add", essentially an invisible "add". Inserted into diff trees
-// by the extender module only. Does not need a "from" field because it is
-// always an initial addition.
+// by the lifecycle extension mechanism. Does not need a "from" field because it
+// is always an initial addition.
 export type BAD<T> = {
   readonly kind: "BAD";
   item: T;
 };
 
 // BDE = "before del", essentially an invisible "mov". Inserted into diff trees
-// by the extender module only
+// by the lifecycle extension mechanism.
 export type BDE<T> = {
   readonly kind: "BDE";
   item: T; // position when fading out ends
   from: T; // reference to the item when fading out starts
 };
 
-// Regular plus extra ops that only become relevant once (expanded) lifecycles
+// Regular plus extra ops that only become relevant once (extended) lifecycles
 // come into play
 export type ExtendedDiffOp<T> = ADD<T> | DEL<T> | MOV<T> | BAD<T> | BDE<T>;
 

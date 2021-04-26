@@ -1,4 +1,15 @@
-import { Decoration, DecorationPosition, RenderData, RenderDecoration, RenderPositions, RenderRoot, RenderText, TextPosition, Token, TypedToken } from "../types";
+import {
+  Decoration,
+  DecorationPosition,
+  RenderData,
+  RenderDecoration,
+  RenderPositions,
+  RenderRoot,
+  RenderText,
+  TextPosition,
+  Token,
+  TypedToken,
+} from "../types";
 import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
 import { assertIs, createIdGenerator } from "./util";
@@ -172,7 +183,6 @@ function renderFrames(
       ...toRenderPosition(self.item, lifecycle.base.id, isVisible),
       frame,
     });
-    //
     for (const textLifecycle of lifecycle.text) {
       const result = renderToken(textLifecycle, frameIdx, textPool);
       if (result) {
@@ -180,7 +190,6 @@ function renderFrames(
         frame.text.set(result[1].id, result[1]);
       }
     }
-    //
     for (const decoLifecycle of lifecycle.decorations) {
       const result = renderToken(decoLifecycle, frameIdx, decoPool);
       if (result) {
@@ -189,12 +198,12 @@ function renderFrames(
       }
     }
     // Collect the entire lifecycles in a set, as each lifecycle only has to
-    // be processed once.
+    // be processed once. Ideally, every box lifecycle should appear only once
+    // overall, but well...
     for (const boxLifecycle of lifecycle.boxes) {
       boxLifecycles.add(boxLifecycle);
     }
   }
-  //
   const boxTokens = new Map<string, RenderRoot>();
   for (const boxLifecycle of boxLifecycles) {
     const [boxToken, boxFrames] = renderFrames(boxLifecycle);

@@ -1,6 +1,6 @@
 // This module attempts to make morphs nicer by turning addition/removal pairs
-// into movements. There is no real high-level concept to this - it's just a
-// bunch of heuristics applied in a brute-force manner.
+// of equivalent tokens into movements. There is no real high-level concept to
+// this - it's just a bunch of heuristics applied in a brute-force manner.
 
 import { Box, Token } from "../types";
 import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";

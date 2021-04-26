@@ -1,9 +1,9 @@
 // This module's applyLanguage() function calls language definitions on frames
 // of untyped tokens and thereby transforms bits of context-free text into typed
 // tokens that can then be diffed, highlighted and rendered. This is one big
-// mess of mucking around with doubly-linked lists in-place. Beware of
-// applyLanguage() in particular as it WILL modify its input with extreme
-// prejudice.
+// mess of mucking around with doubly-linked lists in-place, which explains all
+// the "any" in the following lines. Beware of applyLanguage() in particular as
+// it WILL modify its input with extreme prejudice.
 
 import {
   createIdGenerator,
