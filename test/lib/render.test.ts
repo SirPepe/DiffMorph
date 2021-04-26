@@ -317,7 +317,36 @@ describe("rendering", () => {
             },
           ],
         ]),
-        boxes: new Map(),
+        boxes: new Map([
+          [
+            "box",
+            {
+              height: 1,
+              id: "box",
+              isVisible: false,
+              width: 4,
+              x: 1,
+              y: 0,
+              frame: {
+                boxes: new Map(),
+                decorations: new Map(),
+                text: new Map([
+                  [
+                    "1q1s17w0",
+                    {
+                      height: 1,
+                      id: "1q1s17w0",
+                      isVisible: false,
+                      width: 4,
+                      x: 1,
+                      y: 0,
+                    }
+                  ],
+                ]),
+              },
+             },
+          ]
+        ]),
         decorations: new Map(),
       },
       isVisible: true,
@@ -353,7 +382,36 @@ describe("rendering", () => {
             },
           ],
         ]),
-        boxes: new Map(),
+        boxes: new Map([
+          [
+            "box",
+            {
+              height: 1,
+              id: "box",
+              isVisible: true,
+              width: 4,
+              x: 1,
+              y: 0,
+              frame: {
+                boxes: new Map(),
+                decorations: new Map(),
+                text: new Map([
+                  [
+                    "1q1s17w0",
+                    {
+                      height: 1,
+                      id: "1q1s17w0",
+                      isVisible: true,
+                      width: 4,
+                      x: 1,
+                      y: 0,
+                    }
+                  ],
+                ]),
+              },
+             },
+          ]
+        ]),
         decorations: new Map(),
       },
       isVisible: true,
@@ -389,7 +447,36 @@ describe("rendering", () => {
             },
           ],
         ]),
-        boxes: new Map(),
+        boxes: new Map([
+          [
+            "box",
+            {
+              height: 1,
+              id: "box",
+              isVisible: false,
+              width: 4,
+              x: 1,
+              y: 0,
+              frame: {
+                boxes: new Map(),
+                decorations: new Map(),
+                text: new Map([
+                  [
+                    "1q1s17w0",
+                    {
+                      height: 1,
+                      id: "1q1s17w0",
+                      isVisible: false,
+                      width: 4,
+                      x: 1,
+                      y: 0,
+                    }
+                  ],
+                ]),
+              },
+             },
+          ]
+        ]),
         decorations: new Map(),
       },
       isVisible: true,

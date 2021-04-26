@@ -1,7 +1,7 @@
 import { Decoration, DecorationPosition, RenderData, RenderDecoration, RenderPositions, RenderRoot, RenderText, TextPosition, Token, TypedToken } from "../types";
 import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
-import { createIdGenerator } from "./util";
+import { assertIs, createIdGenerator } from "./util";
 
 type OutputToken = { id: string; };
 
@@ -155,7 +155,7 @@ function toRenderDecoration(
 function renderFrames(
   lifecycle: BoxLifecycle<TypedToken, Decoration<any>>,
 ): [ RenderRoot, Map<number, RenderPositions> ] {
-  const frames = new Map();
+  const frames = new Map<number, RenderPositions>();
   const boxLifecycles = new Set<BoxLifecycle<TypedToken, Decoration<any>>>();
   const textTokens = new Map<string, RenderText>();
   const decoTokens = new Map<string, RenderDecoration>();
@@ -197,8 +197,13 @@ function renderFrames(
   //
   const boxTokens = new Map<string, RenderRoot>();
   for (const boxLifecycle of boxLifecycles) {
-    const [root, frames] = renderFrames(boxLifecycle);
-    boxTokens.set(root.id, root);
+    const [boxToken, boxFrames] = renderFrames(boxLifecycle);
+    boxTokens.set(boxToken.id, boxToken);
+    for (const [boxFrame, boxPositions] of boxFrames) {
+      const frameRoot = frames.get(boxFrame);
+      assertIs(frameRoot, "frameRoot");
+      frameRoot.frame.boxes.set(boxToken.id, boxPositions);
+    }
   }
   return [
     {
