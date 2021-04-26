@@ -148,6 +148,14 @@ function pickAlternative<T extends Optimizable>(
       return candidate;
     }
   }
+  // Try to find something the the same offset from the right somewhere. This
+  // helps to keep commas, brackets and curly braces in line when something gets
+  // inserted in the middle of a dictionary-like structure
+  for (const [candidate, { bottom, right }] of allCandidates) {
+    if (deletionOffset.right === right && deletionOffset.bottom === bottom) {
+      return candidate;
+    }
+  }
   // Try to find an alternative that's the closest on the same line (if there is
   // anything left)
   if (sameLineCandidates.size > 0) {

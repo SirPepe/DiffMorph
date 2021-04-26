@@ -3,6 +3,7 @@ import { optimizeDiffs } from "../../src/lib/optimize";
 import { Box, Decoration } from "../../src/types";
 import { lang } from "../helpers";
 const tokenize = lang("none");
+const tokenizeJSON = lang("json");
 
 describe("Optimizer", () => {
   test("It turns a single addition/deletion into a movement", () => {
@@ -71,6 +72,25 @@ describe("Optimizer", () => {
     expect(res[1].content[2]).toMatchObject({
       kind: "ADD",
       item: { x: 0, y: 1 },
+    });
+  });
+
+  test("Keep JSON commas at their respective curly", () => {
+    const res = optimizeDiffs(
+      diff([
+        tokenizeJSON("{},"),
+        tokenizeJSON(`{
+  "a": 1,
+},`)
+      ])
+    );
+    expect(res.length).toBe(2);
+    expect(res[0].content.map((op) => op.kind)).toEqual(["ADD", "ADD", "ADD"]);
+    // Stay with the closing curly brace
+    expect(res[1].content[2]).toMatchObject({
+      kind: "MOV",
+      item: { x: 1, y: 2, text: ","  },
+      from: { x: 2, y: 0 },
     });
   });
 });
