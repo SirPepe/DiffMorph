@@ -12,7 +12,7 @@ import {
 } from "../types";
 import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
-import { assertIs, createIdGenerator } from "./util";
+import { assertIs, createIdGenerator, minmax } from "./util";
 
 type OutputToken = { id: string; };
 
@@ -167,9 +167,9 @@ function renderFrames(
   lifecycle: BoxLifecycle<TypedToken, Decoration<any>>,
 ): [ RenderRoot, Map<number, RenderPositions> ] {
   const frames = new Map<number, RenderPositions>();
-  const boxLifecycles = new Set<BoxLifecycle<TypedToken, Decoration<any>>>();
   const textTokens = new Map<string, RenderText>();
   const decoTokens = new Map<string, RenderDecoration>();
+  const boxTokens = new Map<string, RenderRoot>();
   const textPool = new TokenPool(toRenderText);
   const decoPool = new TokenPool(toRenderDecoration);
   for (let [frameIdx, self] of lifecycle.self) {
@@ -183,35 +183,37 @@ function renderFrames(
       ...toRenderPosition(self.item, lifecycle.base.id, isVisible),
       frame,
     });
-    for (const textLifecycle of lifecycle.text) {
+  }
+  const [minIdx, maxIdx] = minmax(lifecycle.self.keys());
+  for (const textLifecycle of lifecycle.text) {
+    for (let frameIdx = minIdx; frameIdx <= maxIdx; frameIdx++) {
+      const root = frames.get(frameIdx);
+      assertIs(root, "root");
       const result = renderToken(textLifecycle, frameIdx, textPool);
       if (result) {
         textTokens.set(result[0].id, result[0]);
-        frame.text.set(result[1].id, result[1]);
+        root.frame.text.set(result[1].id, result[1]);
       }
-    }
-    for (const decoLifecycle of lifecycle.decorations) {
-      const result = renderToken(decoLifecycle, frameIdx, decoPool);
-      if (result) {
-        decoTokens.set(result[0].id, result[0]);
-        frame.decorations.set(result[1].id, result[1]);
-      }
-    }
-    // Collect the entire lifecycles in a set, as each lifecycle only has to
-    // be processed once. Ideally, every box lifecycle should appear only once
-    // overall, but well...
-    for (const boxLifecycle of lifecycle.boxes) {
-      boxLifecycles.add(boxLifecycle);
     }
   }
-  const boxTokens = new Map<string, RenderRoot>();
-  for (const boxLifecycle of boxLifecycles) {
+  for (const decorationLifecycle of lifecycle.decorations) {
+    for (let frameIdx = minIdx; frameIdx <= maxIdx; frameIdx++) {
+      const root = frames.get(frameIdx);
+      assertIs(root, "root");
+      const result = renderToken(decorationLifecycle, frameIdx, decoPool);
+      if (result) {
+        decoTokens.set(result[0].id, result[0]);
+        root.frame.decorations.set(result[1].id, result[1]);
+      }
+    }
+  }
+  for (const boxLifecycle of lifecycle.boxes) {
     const [boxToken, boxFrames] = renderFrames(boxLifecycle);
     boxTokens.set(boxToken.id, boxToken);
     for (const [boxFrame, boxPositions] of boxFrames) {
-      const frameRoot = frames.get(boxFrame);
-      assertIs(frameRoot, "frameRoot");
-      frameRoot.frame.boxes.set(boxToken.id, boxPositions);
+      const root = frames.get(boxFrame);
+      assertIs(root, "frameRoot");
+      root.frame.boxes.set(boxToken.id, boxPositions);
     }
   }
   return [

@@ -35,13 +35,11 @@ function toTokenLifecycles<T extends Token, D extends Token>(
   // id -> [first index, trees[]]
   const trees = new Map<string, [number, DiffTree<T, D>[]]>();
   for (let i = 0; i < frames.length; i++) {
-    //
     const frameIdx = i + startIdx;
     // First pass: free positions and collect trees
     const remaining: [string, Lifecycle<T>][] = [];
     for (const operation of frames[i]) {
       if (operation.kind === "TREE") {
-        //
         const treeData = trees.get(operation.root.item.id);
         if (!treeData) {
           trees.set(operation.root.item.id, [frameIdx, [operation]]);
@@ -76,7 +74,6 @@ function toTokenLifecycles<T extends Token, D extends Token>(
     }
     // Second pass: place additions
     for (const operation of frames[i]) {
-      const frameIdx = i + startIdx;
       if (operation.kind === "ADD") {
         const key = toPosition(operation.item);
         if (lifecycles.has(key)) {
@@ -94,7 +91,6 @@ function toTokenLifecycles<T extends Token, D extends Token>(
       }
     }
   }
-
   const tokenLifecycles = [...finished, ...lifecycles.values()];
   const treeLifecycles = Array.from(trees.values()).flatMap(([index, list]) => {
     const lifecycle = toBoxLifecycle(list, index);
