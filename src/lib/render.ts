@@ -183,28 +183,21 @@ function renderFrames(
       ...toRenderPosition(self.item, lifecycle.base.id, isVisible),
       frame,
     });
-  }
-  const [minIdx, maxIdx] = minmax(lifecycle.self.keys());
-  for (const textLifecycle of lifecycle.text) {
-    for (let frameIdx = minIdx; frameIdx <= maxIdx; frameIdx++) {
-      const root = frames.get(frameIdx);
-      assertIs(root, "root");
+    // Render and free text tokens on a per-frame basis
+    for (const textLifecycle of lifecycle.text) {
       const result = renderToken(textLifecycle, frameIdx, textPool);
       if (result) {
         textTokens.set(result[0].id, result[0]);
-        root.frame.text.set(result[1].id, result[1]);
+        frame.text.set(result[1].id, result[1]);
       }
     }
-  }
-  for (const decorationLifecycle of lifecycle.decorations) {
-    for (let frameIdx = minIdx; frameIdx <= maxIdx; frameIdx++) {
-      const root = frames.get(frameIdx);
-      assertIs(root, "root");
-      const result = renderToken(decorationLifecycle, frameIdx, decoPool);
-      if (result) {
-        decoTokens.set(result[0].id, result[0]);
-        root.frame.decorations.set(result[1].id, result[1]);
-      }
+    // Render and free decoration tokens on a per-frame basis
+    for (const decorationLifecycle of lifecycle.decorations) {
+        const result = renderToken(decorationLifecycle, frameIdx, decoPool);
+        if (result) {
+          decoTokens.set(result[0].id, result[0]);
+          frame.decorations.set(result[1].id, result[1]);
+        }
     }
   }
   for (const boxLifecycle of lifecycle.boxes) {
