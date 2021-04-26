@@ -69,8 +69,9 @@ function defineTOML(): (token: RawToken) => string | string[] {
       state.key = false;
       return "string-key";
     }
+
     // enter key state
-    if (!state.key) {
+    if (!state.key && !state.string) {
       // first key ever
       if (!token.prev) {
         state.key = true;

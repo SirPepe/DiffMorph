@@ -8,6 +8,24 @@ describe("Basic TOML", () => {
     expect(types).toEqual(["string-key", "operator", "value", "value", "value"]);
   });
 
+  test("multi-line string value", () => {
+    const tokens = toml(`foo = """
+Hello
+"""`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "string-key",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "value",
+      "value",
+      "value",
+      "value"
+    ]);
+  });
+
   test("quoted key and value", () => {
     const tokens = toml(`'foo' = "bar"`);
     const types = tokens.map((token) => token.type);
