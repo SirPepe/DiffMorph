@@ -1,7 +1,7 @@
 {
   "name": "DiffMorph",
   "version": "0.0.0",
-  "description": "",
+  "description": "Highlight and animate code with ease!",
   "main": "index.js",
   "directories": {
     "test": "test"
