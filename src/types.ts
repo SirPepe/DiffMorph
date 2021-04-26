@@ -148,7 +148,7 @@ export type Frame = {
 // where to render them (frame)
 export type RenderData = {
   objects: RenderRoot;
-  frames: RenderPositions[]; // root boxes
+  frames: Map<number, RenderPositions>; // root frames
   maxWidth: number;
   maxHeight: number;
 };

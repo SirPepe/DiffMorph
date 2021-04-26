@@ -18,19 +18,21 @@ export function hash(input: string): string {
 
 export function assertIs<T>(
   x: T | undefined | null,
-  msg = `Expected value to be defined, but found ${x}`
+  name = "value"
 ): asserts x is T {
   if (!x) {
-    throw new Error(msg);
+    throw new Error(`Expected ${name} to be defined, but found ${x}`);
   }
 }
 
 export function assertIsNot<T>(
   x: T | undefined | null,
-  msg = `Expected value to be null or undefined, but found ${typeof x}`
+  name = "value"
 ): asserts x is undefined | null {
   if (x) {
-    throw new Error(msg);
+    throw new Error(
+      `Expected ${name} to be null or undefined, but found ${typeof x}
+    `);
   }
 }
 
@@ -187,6 +189,11 @@ export function isNewLine(token: {
   prev: { y: number } | undefined;
 }): boolean {
   return Boolean(token.prev && token.y > token.prev.y);
+}
+
+export function minmax(numbers: Iterable<number>): [number, number] {
+  numbers = [...numbers]; // lest the iterable be consumed
+  return [Math.min(...numbers), Math.max(...numbers)]
 }
 
 export function findMax<T>(

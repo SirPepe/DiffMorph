@@ -1,308 +1,262 @@
-// Turns diffing operations into rendering information.
-
-import { DiffTree } from "./diff";
-import { assertIs, assertIsNot, createIdGenerator } from "./util";
 import {
-  Box,
-  RenderPositions,
   Decoration,
   DecorationPosition,
-  Frame,
-  RenderRoot,
   RenderData,
+  RenderDecoration,
+  RenderPositions,
+  RenderRoot,
+  RenderText,
   TextPosition,
   Token,
   TypedToken,
 } from "../types";
+import { ADD, BAD, BDE, DEL, MOV } from "./diff";
+import { BoxLifecycle, Lifecycle } from "./lifecycle";
+import { assertIs, createIdGenerator, minmax } from "./util";
 
-// Manages the available render tokens. The goal is to use as few render tokens
-// as possible, so this class keeps track of which render token is in use by
-// which value token. The render tokens that the classes various methods return
-// are never the actual render tokens that it uses internally to track usage,
-// but rather immutable copies with modified x/y values.
-class TokenPool<
-  Input extends Token & { kind: string },
-  Output extends { id: string; isVisible: boolean }
-> {
-  private nextId = createIdGenerator();
+type OutputToken = { id: string; };
 
-  // token hash -> token[]
-  private reserved = new Map<string, Output[]>();
-
-  // hash(token + coords) -> token[]
-  // We can't use the typed token themselves as keys as we can't be sure that
-  // they are always reference equal. They usually are, but not when they did
-  // not change between frames. So this hash over the token's hash and its
-  // position is the best way to use them as keys.
-  private inUse = new Map<string, Output>();
-
-  // Customize how an input token turns into an output token
-  constructor(
-    private toOutput: (
-      input: Input,
-      newId: string,
-      isVisible: boolean
-    ) => Output
-  ) {}
-
-  // Probably should be using a real hashing algorithm
-  private hashInput(token: Input): string {
-    const { kind, hash, x, y, width, height } = token;
-    return `${kind}/${hash}/${x}/${y}/${width}/${height}`;
-  }
-
-  // For ADD and BAD: get the next best available token or create a new one
-  public require(token: Input, isVisible: boolean): Output {
-    let list = this.reserved.get(token.hash);
-    if (list && list.length > 0) {
-      const outputToken = list.shift() as Output;
-      this.inUse.set(this.hashInput(token), outputToken);
-      return { ...outputToken, x: token.x, y: token.y };
-    } else {
-      if (!list) {
-        list = [];
-        this.reserved.set(token.hash, []);
-      }
-      const outputToken = this.toOutput(
-        token,
-        this.nextId(token.kind, token.hash),
-        isVisible
-      );
-      this.inUse.set(this.hashInput(token), outputToken);
-      return outputToken;
-    }
-  }
-
-  // For MOV and BDE: get the render token that was last used for a specific
-  // typed token
-  public reuse(source: Input, target: Input, isVisible: boolean): Output {
-    let outputToken = this.inUse.get(this.hashInput(source));
-    // Wrap-around at the end of a keyframe list may require us to require a
-    // new token because for a MOV in the first frame there's nothing to re-use.
-    if (!outputToken) {
-      return { ...this.require(target, true), x: target.x, y: target.y };
-    } else {
-      outputToken = { ...outputToken, x: target.x, y: target.y, isVisible };
-      // update who's re-using the render token for next keyframe
-      this.inUse.delete(this.hashInput(source));
-      this.inUse.set(this.hashInput(target), outputToken);
-      return outputToken;
-    }
-  }
-
-  // For DEL: free used token
-  public free(token: Input): string | undefined {
-    const freed = this.inUse.get(this.hashInput(token));
-    if (!freed) {
-      // This can happen for DEL ops in the first frame, which in turn may be
-      // inserted there by the extender.
-      return undefined;
-    }
-    const list = this.reserved.get(token.hash);
-    if (!list) {
-      throw new Error("List for hash not in reserved map!");
-    }
-    list.push(freed);
-    this.inUse.delete(this.hashInput(token));
-    return freed.id;
-  }
-}
-
-function toRenderPosition(
-  { x, y, width, height }: TypedToken | Decoration<any>,
+function toRenderPosition<Input extends Token>(
+  { x, y, width, height }: Input,
   id: string,
   isVisible: boolean
 ): TextPosition {
   return { id, x, y, width, height, isVisible };
 }
 
-type RenderTokenPool = TokenPool<TypedToken, TextPosition>;
-type RenderDecorationPool = TokenPool<Decoration<any>, DecorationPosition>;
-type TokenPools = Map<string, [RenderTokenPool, RenderDecorationPool]>;
+class TokenPool<Input extends Token, Output extends OutputToken> {
+  private nextId = createIdGenerator();
 
-// Box IDs are guaranteed to be unique within a parent box, but not globally.
-// This fingerprint should remedy this particular problem.
-function fingerprintBox(input: Box<any, any>): string {
-  let fingerprint = input.id;
-  while (input.parent) {
-    fingerprint += "__" + input.parent.id;
-    input = input.parent;
-  }
-  return fingerprint;
-}
+  // hash -> list of currently not used output token
+  private available = new Map<string, Output[]>();
 
-function getPools(
-  pools: TokenPools,
-  box: Box<any, any>
-): [RenderTokenPool, RenderDecorationPool] {
-  const id = fingerprintBox(box);
-  const existing = pools.get(id);
-  if (existing) {
-    return existing;
-  }
-  const renderTokenPool = new TokenPool(toRenderPosition);
-  const renderDecorationPool = new TokenPool(toRenderPosition);
-  pools.set(id, [renderTokenPool, renderDecorationPool]);
-  return [renderTokenPool, renderDecorationPool];
-}
+  // holder -> [output, last position]
+  private inUse = new Map<Lifecycle<Input>, [Output, TextPosition]>();
 
-function toBoxPosition(
-  diff: DiffTree<TypedToken, Decoration<TypedToken>>,
-  prev: RenderPositions | undefined,
-  pools: TokenPools,
-  root: RenderRoot
-): RenderPositions {
-  const { id, x, y, width, height } = diff.root.item;
-  // Start out with clones of what was there in the previous frame and then add,
-  // remove and replace items where needed.
-  const frame: Frame = {
-    text: new Map(prev?.frame.text || []),
-    boxes: new Map(prev?.frame.boxes || []),
-    decorations: new Map(prev?.frame.decorations || []),
-  };
-  const content = getBoxReference(diff.root.item, root).content;
-  const [renderTokenPool, renderDecorationPool] = getPools(
-    pools,
-    diff.root.item
-  );
-  for (const op of diff.content) {
-    if (op.kind === "TREE") {
-      const previousBox = frame.boxes.get(id);
-      if (op.root.kind === "BOX") {
-        assertIs(previousBox, "Prev box should be defined for NOP!");
-        frame.boxes.set(id, toBoxPosition(op, previousBox, pools, root));
-      } else {
-        if (op.root.kind === "ADD" || op.root.kind === "BAD") {
-          assertIsNot(previousBox, "Prev box should not be defined for ADD!");
-          frame.boxes.set(id, toBoxPosition(op, undefined, pools, root));
-        } else if (op.root.kind === "DEL") {
-          assertIs(previousBox, "Prev box should be defined for DEL!");
-          frame.boxes.delete(id);
-        } else {
-          assertIs(previousBox, "Prev box should be defined for MOV!");
-          frame.boxes.set(id, toBoxPosition(op, previousBox, pools, root));
-        }
-      }
+  // Customize how an input token turns into an output token
+  constructor(
+    private toOutput: (
+      item: Input,
+      newId: string
+    ) => Output
+  ) {}
+
+  // require() actually works and has to work with MOV and BDE in addition to
+  // ADD and BAD, but the public interface should only accept the latter two
+  private baseRequire(
+    holder: Lifecycle<Input>,
+    { kind, item }: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
+  ): [Output, TextPosition] {
+    const isVisible = kind === "ADD" || kind === "MOV";
+    let list = this.available.get(item.hash);
+    if (list && list.length > 0) {
+      const output = list.shift() as Output;
+      const position = toRenderPosition(item, output.id, isVisible);
+      this.inUse.set(holder, [output, position]);
+      return [output, position];
     } else {
-      if (op.kind === "ADD" || op.kind === "BAD") {
-        const isVisible = op.kind === "ADD";
-        const token = renderTokenPool.require(op.item, isVisible);
-        frame.text.set(token.id, token);
-        content.text.set(token.id, {
-          id: token.id,
-          text: op.item.text,
-          type: op.item.type,
-        });
-      } else if (op.kind === "DEL") {
-        const id = renderTokenPool.free(op.item);
-        if (id) {
-          frame.text.delete(id);
-        }
-      } else if (op.kind === "MOV" || op.kind === "BDE") {
-        const isVisible = op.kind === "MOV";
-        const token = renderTokenPool.reuse(op.from, op.item, isVisible);
-        frame.text.set(token.id, token);
-      } else {
-        throw new Error(`Unexpected token opcode ${(op as any).kind}`);
+      if (!list) {
+        // New list remains empty as the output token goes into use right away
+        this.available.set(item.hash, []);
       }
+      const output = this.toOutput(item, this.nextId(kind, item.hash));
+      const position = toRenderPosition(item, output.id, isVisible);
+      this.inUse.set(holder, [output, position]);
+      return [output, position];
     }
   }
-  for (const op of diff.decorations) {
-    if (op.kind === "ADD" || op.kind === "BAD") {
-      const isVisible = op.kind === "ADD";
-      const token = renderDecorationPool.require(op.item, isVisible);
-      frame.decorations.set(token.id, token);
-      content.decorations.set(token.id, {
-        id: token.id,
-        data: op.item.data,
-      });
-    } else if (op.kind === "DEL") {
-      const id = renderDecorationPool.free(op.item);
-      if (id) {
-        frame.decorations.delete(id);
-      }
-    } else if (op.kind === "MOV" || op.kind === "BDE") {
-      const isVisible = op.kind === "MOV";
-      const token = renderDecorationPool.reuse(op.from, op.item, isVisible);
-      frame.decorations.set(token.id, token);
-    } else {
-      throw new Error(`Unexpected decoration opcode ${(op as any).kind}`);
-    }
+
+  // For ADD and BAD: get the next best available token or create a new one
+  public require(
+    holder: Lifecycle<Input>,
+    operation: ADD<Input> | BAD<Input>
+  ): [Output, TextPosition] {
+    return this.baseRequire(holder, operation);
   }
-  return { id, x, y, width, height, frame, isVisible: true };
+
+  // For MOV and BDE: get the render token that was last used for a specific
+  // typed token
+  public reuse(
+    holder: Lifecycle<Input>,
+    operation: MOV<Input> | BDE<Input>
+  ): [Output, TextPosition] {
+    let previousOutput = this.inUse.get(holder);
+    // Wrap-around at the end of a keyframe list may require us to require a
+    // new token because for a MOV in the first frame there's nothing to re-use.
+    if (!previousOutput) {
+      return this.baseRequire(holder, operation);
+    }
+    const isVisible = operation.kind === "MOV";
+    const newPosition = toRenderPosition(
+      operation.item,
+      previousOutput[0].id,
+      isVisible
+    );
+    previousOutput[1] = newPosition; // update the last position
+    return [previousOutput[0], newPosition];
+  }
+
+  // For DEL: free used token
+  public free(
+    holder: Lifecycle<Input>,
+    operation: DEL<Input>
+  ): undefined {
+    const freed = this.inUse.get(holder);
+    if (!freed) {
+      // This can happen for DEL ops in the first frame, which in turn may be
+      // inserted there by the extender.
+      return;
+    }
+    const list = this.available.get(operation.item.hash);
+    if (!list) {
+      throw new Error("List for hash not in reserved map!");
+    }
+    list.push(freed[0]);
+    this.inUse.delete(holder);
+  }
+
+  // In case there is no current operation, see if the holder holds onto
+  // something and re-use the existing information
+  public getLast(holder: Lifecycle<Input>): [Output, TextPosition] | undefined {
+    return this.inUse.get(holder);
+  }
 }
 
-// For a given box object return the matching render box from the object graph
-function getBoxReference(box: Box<any, any>, root: RenderRoot): RenderRoot {
-  if (!box.parent) {
-    return root;
-  } else {
-    let newRoot = root.content.boxes.get(box.id);
-    if (!newRoot) {
-      newRoot = {
-        id: box.id,
-        data: box.data,
-        language: box.language,
-        content: {
-          text: new Map(),
-          decorations: new Map(),
-          boxes: new Map(),
-        },
-      };
-      root.content.boxes.set(box.id, newRoot);
-    }
-    return getBoxReference(box.parent, newRoot);
+function renderToken<Input extends Token, Output extends OutputToken>(
+  lifecycle: Lifecycle<Input>,
+  frame: number,
+  pool: TokenPool<Input, Output>
+): [Output, TextPosition] | undefined {
+  const operation = lifecycle.get(frame);
+  // If there's no current operation, see if the lifecycle holds onto something
+  // in the pool and just recycle that.
+  if (!operation) {
+    return pool.getLast(lifecycle);
   }
+  // If there is a current operation, pull render info from the pool
+  switch (operation.kind) {
+    case "ADD":
+    case "BAD": {
+      return pool.require(lifecycle, operation);
+    }
+    case "MOV":
+    case "BDE": {
+      return pool.reuse(lifecycle, operation);
+    }
+    case "DEL": {
+      return pool.free(lifecycle, operation);
+    }
+  }
+}
+
+function toRenderText(
+  { type, text }: TypedToken,
+  id: string
+): RenderText {
+  return { type, text, id };
+}
+
+function toRenderDecoration(
+  { data }: Decoration<any>,
+  id: string
+): RenderDecoration {
+  return { data, id };
+}
+
+function renderFrames(
+  lifecycle: BoxLifecycle<TypedToken, Decoration<any>>,
+): [ RenderRoot, Map<number, RenderPositions> ] {
+  const frames = new Map<number, RenderPositions>();
+  const textTokens = new Map<string, RenderText>();
+  const decoTokens = new Map<string, RenderDecoration>();
+  const boxTokens = new Map<string, RenderRoot>();
+  const textPool = new TokenPool(toRenderText);
+  const decoPool = new TokenPool(toRenderDecoration);
+  for (let [frameIdx, self] of lifecycle.self) {
+    const frame = {
+      text: new Map<string, TextPosition>(),
+      decorations: new Map<string, DecorationPosition>(),
+      boxes: new Map<string, RenderPositions>(),
+    };
+    const isVisible = ["ADD", "MOV", "BOX"].includes(self.kind);
+    frames.set(frameIdx, {
+      ...toRenderPosition(self.item, lifecycle.base.id, isVisible),
+      frame,
+    });
+  }
+  const [minIdx, maxIdx] = minmax(lifecycle.self.keys());
+  for (const textLifecycle of lifecycle.text) {
+    for (let frameIdx = minIdx; frameIdx <= maxIdx; frameIdx++) {
+      const root = frames.get(frameIdx);
+      assertIs(root, "root");
+      const result = renderToken(textLifecycle, frameIdx, textPool);
+      if (result) {
+        textTokens.set(result[0].id, result[0]);
+        root.frame.text.set(result[1].id, result[1]);
+      }
+    }
+  }
+  for (const decorationLifecycle of lifecycle.decorations) {
+    for (let frameIdx = minIdx; frameIdx <= maxIdx; frameIdx++) {
+      const root = frames.get(frameIdx);
+      assertIs(root, "root");
+      const result = renderToken(decorationLifecycle, frameIdx, decoPool);
+      if (result) {
+        decoTokens.set(result[0].id, result[0]);
+        root.frame.decorations.set(result[1].id, result[1]);
+      }
+    }
+  }
+  for (const boxLifecycle of lifecycle.boxes) {
+    const [boxToken, boxFrames] = renderFrames(boxLifecycle);
+    boxTokens.set(boxToken.id, boxToken);
+    for (const [boxFrame, boxPositions] of boxFrames) {
+      const root = frames.get(boxFrame);
+      assertIs(root, "frameRoot");
+      root.frame.boxes.set(boxToken.id, boxPositions);
+    }
+  }
+  return [
+    {
+      id: lifecycle.base.id,
+      data: lifecycle.base.data,
+      language: lifecycle.base.language,
+      content: {
+        text: textTokens,
+        decorations: decoTokens,
+        boxes: boxTokens,
+      }
+    },
+    frames,
+  ];
 }
 
 export function toRenderData(
-  diffs: DiffTree<TypedToken, Decoration<TypedToken>>[]
+  rootLifecycle: BoxLifecycle<TypedToken, Decoration<any>> | null
 ): RenderData {
-  if (diffs.length === 0) {
+  if (rootLifecycle === null) {
     return {
       objects: {
         id: "",
         data: {},
-        language: "none",
+        language: undefined,
         content: {
           text: new Map(),
           decorations: new Map(),
           boxes: new Map(),
-        },
+        }
       },
-      frames: [],
+      frames: new Map(),
       maxWidth: 0,
       maxHeight: 0,
     };
   }
-  const { id, data, language } = diffs[0].root.item;
-  // This object represents the actual object graph of everything that can ever
-  // become visible and gets mutated in-place while the frame data is generated.
-  const objects: RenderRoot = {
-    id,
-    data,
-    language,
-    content: {
-      text: new Map(),
-      decorations: new Map(),
-      boxes: new Map(),
-    },
-  };
-  // box fingerprint -> token pools that manage which token id gets assigned to
-  // render something at a given position
-  const tokenPools: TokenPools = new Map();
-  const frames: RenderPositions[] = [];
-  let maxWidth = 0;
-  let maxHeight = 0;
-  for (let i = 0; i < diffs.length; i++) {
-    const frame = toBoxPosition(diffs[i], frames[i - 1], tokenPools, objects);
-    if (frame.width > maxWidth) {
-      maxWidth = frame.width;
-    }
-    if (frame.height > maxHeight) {
-      maxHeight = frame.height;
-    }
-    frames.push(frame);
-  }
+  const [objects, frames] = renderFrames(rootLifecycle);
+  const maxWidth = Math.max(
+    ...Array.from(frames.values()).map(({ width }) => width)
+  );
+  const maxHeight = Math.max(
+    ...Array.from(frames.values()).map(({ height }) => height)
+  );
   return { objects, frames, maxWidth, maxHeight };
 }

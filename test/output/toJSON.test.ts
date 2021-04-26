@@ -1,13 +1,15 @@
-import { diff } from "../../src/lib/diff";
 import { toRenderData } from "../../src/lib/render";
 import { toJSON } from "../../src/output/toJSON";
-import { lang } from "../helpers";
-const json = lang("json");
+import { process } from "../helpers";
 
 describe("toJSON", () => {
   test("turns render data into JSON", () => {
     const renderData = toRenderData(
-      diff([json("{}"), json("  {}"), json("    {\n}")])
+      process("json")(
+        ["{}"],
+        ["  {}"],
+        ["    {\n}"],
+      )
     );
     const text = toJSON(renderData);
     expect(typeof text).toBe("string");
