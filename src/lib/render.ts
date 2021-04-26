@@ -41,52 +41,50 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
     ) => Output
   ) {}
 
-  // require() actually works and has to work with MOV and BDE in addition to
-  // ADD and BAD, but the public interface should only accept the latter two
-  private baseRequire(
+  private require(
     holder: Lifecycle<Input>,
     { kind, item }: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
   ): [Output, TextPosition] {
     const isVisible = kind === "ADD" || kind === "MOV";
-    let list = this.available.get(item.hash);
-    if (list && list.length > 0) {
-      const output = list.shift() as Output;
+    let available = this.available.get(item.hash);
+    if (available && available.length > 0) {
+      const output = available.shift() as Output;
       const position = toRenderPosition(item, output.id, isVisible);
       this.inUse.set(holder, [output, position]);
       return [output, position];
     } else {
-      if (!list) {
+      if (!available) {
         // New list remains empty as the output token goes into use right away
         this.available.set(item.hash, []);
       }
-      const output = this.toOutput(item, this.nextId(kind, item.hash));
+      const output = this.toOutput(item, this.nextId(null, item.hash));
       const position = toRenderPosition(item, output.id, isVisible);
       this.inUse.set(holder, [output, position]);
       return [output, position];
     }
   }
 
-  // For ADD and BAD: get the next best available token or create a new one
-  public require(
+  // Get the render token that was last used for a specific lifecycle or create
+  // a new one depending on the input operation. If there's no input operation,
+  // attempt to continue with the lifecycle without changes (as that's probably
+  // a case of a unchanged token between frames)
+  public use(
     holder: Lifecycle<Input>,
-    operation: ADD<Input> | BAD<Input>
-  ): [Output, TextPosition] {
-    return this.baseRequire(holder, operation);
-  }
-
-  // For MOV and BDE: get the render token that was last used for a specific
-  // typed token
-  public reuse(
-    holder: Lifecycle<Input>,
-    operation: MOV<Input> | BDE<Input>
-  ): [Output, TextPosition] {
+    operation?: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
+  ): [Output, TextPosition] | undefined {
     let previousOutput = this.inUse.get(holder);
-    // Wrap-around at the end of a keyframe list may require us to require a
-    // new token because for a MOV in the first frame there's nothing to re-use.
-    if (!previousOutput) {
-      return this.baseRequire(holder, operation);
+    // In case there is no current operation, see if the holder holds onto
+    // something and re-use the existing information
+    if (!operation) {
+      return previousOutput;
     }
-    const isVisible = operation.kind === "MOV";
+    // If there is a current operation, but the holder holds onto nothing,
+    // create a new token
+    if (!previousOutput) {
+      return this.require(holder, operation);
+    }
+    // Otherwise perform an update to tha last position
+    const isVisible = operation.kind === "MOV" || operation.kind === "ADD";
     const newPosition = toRenderPosition(
       operation.item,
       previousOutput[0].id,
@@ -104,7 +102,7 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
     const freed = this.inUse.get(holder);
     if (!freed) {
       // This can happen for DEL ops in the first frame, which in turn may be
-      // inserted there by the extender.
+      // inserted there by lifecycle extensions.
       return;
     }
     const list = this.available.get(operation.item.hash);
@@ -114,12 +112,6 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
     list.push(freed[0]);
     this.inUse.delete(holder);
   }
-
-  // In case there is no current operation, see if the holder holds onto
-  // something and re-use the existing information
-  public getLast(holder: Lifecycle<Input>): [Output, TextPosition] | undefined {
-    return this.inUse.get(holder);
-  }
 }
 
 function renderToken<Input extends Token, Output extends OutputToken>(
@@ -128,25 +120,10 @@ function renderToken<Input extends Token, Output extends OutputToken>(
   pool: TokenPool<Input, Output>
 ): [Output, TextPosition] | undefined {
   const operation = lifecycle.get(frame);
-  // If there's no current operation, see if the lifecycle holds onto something
-  // in the pool and just recycle that.
-  if (!operation) {
-    return pool.getLast(lifecycle);
+  if (operation && operation.kind === "DEL") {
+    return pool.free(lifecycle, operation);
   }
-  // If there is a current operation, pull render info from the pool
-  switch (operation.kind) {
-    case "ADD":
-    case "BAD": {
-      return pool.require(lifecycle, operation);
-    }
-    case "MOV":
-    case "BDE": {
-      return pool.reuse(lifecycle, operation);
-    }
-    case "DEL": {
-      return pool.free(lifecycle, operation);
-    }
-  }
+  return pool.use(lifecycle, operation);
 }
 
 function toRenderText(
