@@ -1,16 +1,14 @@
 // This module attempts to make morphs nicer by turning addition/removal pairs
-// into movements. There is no real high-level concept to this - it's just a
-// bunch of heuristics applied in a brute-force manner.
+// of equivalent tokens into movements. There is no real high-level concept to
+// this - it's just a bunch of heuristics applied in a brute-force manner.
 
 import { Box, Token } from "../types";
 import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
 import { findMaxValue, findMin } from "./util";
 
-export type Optimizable = Token & {
-  parent: Box<any, any>;
-};
+export type Optimizable = Token & { parent: Box<any, any> };
 
-export function optimize<T extends Optimizable, D extends Optimizable>(
+export function optimizeDiffs<T extends Optimizable, D extends Optimizable>(
   diffs: DiffTree<T, D>[]
 ): DiffTree<T, D>[] {
   return diffs.map(optimizeDiff);
@@ -19,9 +17,26 @@ export function optimize<T extends Optimizable, D extends Optimizable>(
 function optimizeDiff<T extends Optimizable, D extends Optimizable>(
   diff: DiffTree<T, D>
 ): DiffTree<T, D> {
+  const result: DiffTree<T, D> = {
+    ...diff,
+    content: optimizeOperations(diff.content),
+    decorations: optimizeOperations(diff.decorations),
+  };
+  return result;
+}
+
+function optimizeOperations<T extends Optimizable>(
+  operations: DiffOp<T>[]
+): DiffOp<T>[];
+function optimizeOperations<T extends Optimizable, D extends Optimizable>(
+  operations: (DiffTree<T, D> | DiffOp<T>)[]
+): (DiffTree<T, D> | DiffOp<T>)[];
+function optimizeOperations<T extends Optimizable, D extends Optimizable>(
+  operations: (DiffTree<T, D> | DiffOp<T>)[]
+): (DiffTree<T, D> | DiffOp<T>)[] {
   const trees: DiffTree<T, D>[] = [];
   const byHash: Record<string, [Set<MOV<T>>, Set<ADD<T>>, Set<DEL<T>>]> = {};
-  for (const operation of diff.content) {
+  for (const operation of operations) {
     if (operation.kind === "TREE") {
       trees.push(optimizeDiff(operation));
     } else {
@@ -37,19 +52,20 @@ function optimizeDiff<T extends Optimizable, D extends Optimizable>(
       }
     }
   }
-  const result: DiffTree<T, D> = { ...diff, content: [] };
+  const result = [];
   for (const [MOV, ADD, DEL] of Object.values(byHash)) {
     if (ADD.size === 0 || DEL.size === 0) {
-      result.content.push(...MOV, ...ADD, ...DEL);
+      result.push(...MOV, ...ADD, ...DEL);
     } else {
-      result.content.push(...MOV, ...resolveOptimizations(ADD, DEL));
+      result.push(...MOV, ...resolveOptimizations(ADD, DEL));
     }
   }
-  result.content.push(...trees);
+  result.push(...trees);
   return result;
 }
 
-// Note that additions and deletions get both mutated by this function
+// Note that the input sets "additions" and "deletions" get both mutated by this
+// function
 function resolveOptimizations<T extends Optimizable>(
   additions: Set<ADD<T>>,
   deletions: Set<DEL<T>>
@@ -132,17 +148,21 @@ function pickAlternative<T extends Optimizable>(
       return candidate;
     }
   }
-  // Try to find an alternative that's the closest on the same line
+  // Try to find an alternative that's the closest on the same line (if there is
+  // anything left)
   if (sameLineCandidates.size > 0) {
     const [closest] = findMin(sameLineCandidates, ([, candidateOffset]) => {
       return Math.abs(candidateOffset.left - deletionOffset.left);
     });
     return closest;
   }
-  // Last attempt: take whatever is closest
-  return findMin(allCandidates, ([, candidateOffset]) => {
-    const deltaX = Math.abs(candidateOffset.left - deletionOffset.left);
-    const deltaY = Math.abs(candidateOffset.top - deletionOffset.top);
-    return deltaX + deltaY;
-  })[0];
+  // Last attempt: take whatever is closest (if there is anything left)
+  if (allCandidates.size > 0) {
+    return findMin(allCandidates, ([, candidateOffset]) => {
+      const deltaX = Math.abs(candidateOffset.left - deletionOffset.left);
+      const deltaY = Math.abs(candidateOffset.top - deletionOffset.top);
+      return deltaX + deltaY;
+    })[0];
+  }
+  return null;
 }

@@ -1,51 +1,85 @@
 // This module's main diff() function turns frames of tokens and decorations
 // into diffing operations. It roughly works as follows:
-// 1. diff boxes with equivalent IDs, returning ADD, DEL or MOV operations
+// 1. diff boxes with equivalent IDs, returning ADD, DEL, MOV or BOX operations.
+//    MOV also covers boxes resizing without moving, BOX handles cases where the
+//    boxes positions and dimensions stay the same, but contents may have
+//    changed.
 // 2. diff typed tokens by
-//    a. organizing them in lines and diffing the lines by a hash chain
-//    b. diffing the remaining lines one-by one, returning only ADD and DEL
+//    a. organizing them in lines and diffing the lines by a hash chain. Lines
+//       that changed get translated into MOV operations for their constituent
+//       typed tokens, which are thus removed from the diffing problem. This
+//       could some day be optimized even further by diffing comment and
+//       non-comment tokens as lines in two passes, which would prevent changes
+//       in comments from breaking up entire lines and leading to confusing
+//       diffs.
+//    b. diffing the remaining tokens individually, returning only ADD and DEL
 //       operations. The optimizer stage is responsible for turning an ADD and a
 //       DEL on equivalent tokens into a MOV operation
 // 3. diff decorations by hash, position and dimensions, returning only ADD and
 //    DEL operations. The optimizer stage can again turn ADD and DEL into MOV.
 
 import { diffArrays } from "diff";
-import { groupBy, mapBy } from "@sirpepe/shed";
+import { groupBy } from "@sirpepe/shed";
 import { Box, Token } from "../types";
 import { createIdGenerator, isBox } from "./util";
 
-// Represents boxes that did not change themselves, but that may have changed
-// contents or decorations.
-export type NOP<T> = {
-  readonly kind: "NOP";
-  item: T;
-};
-
+// ADD does not need a "from" field because it is by definition an initial
+// addition. It may get translated to a BAD + MOV pair, but there then BAD is
+// the initial addition and MOV has a "from" field anyway.
 export type ADD<T> = {
   readonly kind: "ADD";
   item: T;
 };
 
+// DEL does not need a "from" field because "item" in this case IS the "from"
 export type DEL<T> = {
   readonly kind: "DEL";
   item: T;
 };
 
-// MOV is also responsible for changes in dimensions. In many cases MOV
-// operations are created in the optimizer by compensating for ADD operations
-// with DEL operations for equivalent tokens.
+// MOV is also responsible for changes in box or decoration dimensions. In many
+// cases MOV operations are created in the optimizer by compensating for ADD
+// operations with DEL operations for equivalent tokens.
 export type MOV<T> = {
   readonly kind: "MOV";
   item: T;
   from: T; // reference to the item on it's previous position
 };
 
+// All regular operations that the diff and optimizer module deal with
 export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
+
+// BAD = "before add", essentially an invisible "add". Inserted into diff trees
+// by the lifecycle extension mechanism. Does not need a "from" field because it
+// is always an initial addition.
+export type BAD<T> = {
+  readonly kind: "BAD";
+  item: T;
+};
+
+// BDE = "before del", essentially an invisible "mov". Inserted into diff trees
+// by the lifecycle extension mechanism.
+export type BDE<T> = {
+  readonly kind: "BDE";
+  item: T; // position when fading out ends
+  from: T; // reference to the item when fading out starts
+};
+
+// Regular plus extra ops that only become relevant once (extended) lifecycles
+// come into play
+export type ExtendedDiffOp<T> = ADD<T> | DEL<T> | MOV<T> | BAD<T> | BDE<T>;
+
+// Represents boxes that did not change themselves, but that may have changed
+// contents or decorations.
+export type BOX<T> = {
+  readonly kind: "BOX";
+  item: T; // reference to the previous box
+};
 
 // Models a box in the diff result
 export type DiffTree<T, D> = {
   readonly kind: "TREE";
-  root: DiffOp<Box<T, D>> | NOP<Box<T, D>>;
+  root: DiffOp<Box<T, D>> | BOX<Box<T, D>>;
   content: (DiffOp<T> | DiffTree<T, D>)[];
   decorations: DiffOp<D>[];
 };
@@ -185,7 +219,7 @@ function dimensionsEql(a: Token, b: Token): boolean {
 function diffBox<T, D>(
   from: Box<T, D> | undefined,
   to: Box<T, D> | undefined
-): DiffOp<Box<T, D>> | NOP<Box<T, D>> {
+): DiffOp<Box<T, D>> | BOX<Box<T, D>> {
   if (from && !to) {
     return {
       kind: "DEL",
@@ -201,7 +235,7 @@ function diffBox<T, D>(
   if (from && to) {
     if (dimensionsEql(from, to)) {
       return {
-        kind: "NOP",
+        kind: "BOX",
         item: to,
       };
     } else {
@@ -217,15 +251,15 @@ function diffBox<T, D>(
 
 function partitionTokens<T extends Token, D extends Token>(
   source: Box<T, D> | undefined
-): [Box<T, D>[], T[], D[]] {
-  const boxes: Box<T, D>[] = [];
+): [Map<string, Box<T, D>>, T[], D[]] {
+  const boxes = new Map();
   const textTokens: T[] = [];
   if (!source) {
-    return [[], [], []];
+    return [new Map(), [], []];
   }
   for (const item of source.content) {
     if (isBox(item)) {
-      boxes.push(item);
+      boxes.set(item.id, item);
     } else {
       textTokens.push(item);
     }
@@ -233,8 +267,7 @@ function partitionTokens<T extends Token, D extends Token>(
   return [boxes, textTokens, source.decorations];
 }
 
-// Only exported for unit tests
-export function diffBoxes<T extends Token, D extends Token>(
+function diffBoxes<T extends Token, D extends Token>(
   from: Box<T, D> | undefined,
   to: Box<T, D> | undefined
 ): DiffTree<T, D> {
@@ -245,14 +278,12 @@ export function diffBoxes<T extends Token, D extends Token>(
   const textOps: DiffOp<T>[] = [];
   const decoOps: DiffOp<D>[] = [];
   const boxOps: DiffTree<T, D>[] = [];
-  const [fromBoxes, fromTokens, fromDecorations] = partitionTokens(from);
-  const [toBoxes, toTokens, toDecorations] = partitionTokens(to);
+  const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
+  const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
   const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
   textOps.push(...lineDiff.result);
   textOps.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
   decoOps.push(...diffDecorations(fromDecorations, toDecorations));
-  const fromBoxesById = mapBy(fromBoxes, "id");
-  const toBoxesById = mapBy(toBoxes, "id");
   const boxIds = new Set([...fromBoxesById.keys(), ...toBoxesById.keys()]);
   for (const id of boxIds) {
     const fromBox = fromBoxesById.get(id);

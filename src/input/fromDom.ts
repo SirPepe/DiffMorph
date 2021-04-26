@@ -12,9 +12,10 @@ import {
 import { tokenize } from "../lib/tokenizer";
 import { createIdGenerator, getLanguage, hash } from "../lib/util";
 import { toRenderData } from "../lib/render";
-import { optimize } from "../lib/optimize";
+import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
+import { toLifecycle } from "../lib/lifecycle";
 
 function isHTMLElement(arg: any): arg is HTMLElement {
   if (!arg) {
@@ -98,5 +99,6 @@ export function fromDom(
     }
     return applyLanguage(tokenized);
   });
-  return toRenderData(optimize(diff(typed)));
+  const diffs = optimizeDiffs(diff(typed));
+  return toRenderData(toLifecycle(diffs, true));
 }

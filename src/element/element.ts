@@ -52,8 +52,9 @@ function createStyles(): HTMLStyleElement {
   }
   .dm {
     margin: 0;
-    line-height: 2ch;
-    height: calc(var(--max-height) * 2ch);
+    --line-height: var(--dm-line-height, 2.5ch);
+    line-height: var(--line-height);
+    height: calc(var(--max-height) * var(--line-height));
     width: calc(var(--max-width) * 1ch);
   }
 `;

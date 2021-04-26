@@ -12,8 +12,9 @@ const nextId = createIdGenerator();
 
 const DEFAULT_STYLES = `
 .dm-code {
-  transition: transform var(--dm-transition-time, 400ms);
+  transition: transform var(--dm-transition-time, 500ms);
   position: relative;
+  --line-height: var(--dm-line-height, 2.5ch);
   --string: var(--dm-string, hsl(340, 95%, 38%));
   --number: var(--dm-number, hsl(170, 100%, 25%));
   --comment: var(--dm-comment, hsl(0, 0%, 50%));
@@ -36,8 +37,8 @@ const DEFAULT_STYLES = `
   z-index: 0;
 }
 .dm-token, .dm-decoration {
-  transition: transform var(--dm-transition-time, 400ms),
-              opacity var(--dm-transition-time, 400ms);
+  transition: transform var(--dm-transition-time, 500ms),
+              opacity var(--dm-transition-time, 500ms);
 }
 /* JSON and JSONC */
 .dm-box.language-json .dm-token.number,
@@ -65,6 +66,31 @@ const DEFAULT_STYLES = `
   color: var(--comment);
   font-style: italic;
 }
+/* TOML */
+.dm-box.language-toml .dm-token.number,
+.dm-box.language-toml .dm-token.keyword {
+  color: var(--number);
+}
+.dm-box.language-toml .dm-token.string-key {
+  color: var(--string);
+}
+.dm-box.language-toml .dm-token.value {
+  color: var(--value);
+}
+.dm-box.language-toml .dm-token[class*="literal-"] {
+  color: var(--literal);
+  font-weight: bold;
+}
+.dm-box.language-toml .dm-token[class*="punctuation"] {
+  color: var(--punctuation);
+}
+.dm-box.language-toml .dm-token[class*="operator"] {
+  color: var(--type);
+}
+.dm-box.language-toml .dm-token.comment {
+  color: var(--comment);
+  font-style: italic;
+}
 `;
 
 function generateTextCss(
@@ -74,7 +100,7 @@ function generateTextCss(
 ): string[] {
   const styles = [];
   const selector = `${rootSelector}.frame${frameIdx} .dm-token.dm-${id}`;
-  const rules = [`transform:translate(${x}ch,${y * 100}%)`];
+  const rules = [`transform:translate(${x}ch, calc(${y} * var(--line-height)))`];
   if (isVisible) {
     rules.push(`opacity:1`);
   }
@@ -90,9 +116,9 @@ function generateDecorationCss(
   const styles = [];
   const selector = `${rootSelector}.frame${frameIdx} .dm-decoration.dm-${id}`;
   const rules = [
-    `transform:translate(${x}ch,${y * 100}%)`,
+    `transform:translate(${x}ch,calc(${y} * var(--line-height)))`,
     `width:${width}ch`,
-    `height:${height * 2}ch`,
+    `height:calc(${height} * var(--line-height))`,
   ];
   if (isVisible) {
     rules.push(`opacity:1`);
@@ -109,9 +135,9 @@ function generateBoxCss(
   const styles = [];
   const selector = `${rootSelector}.frame${frameIdx} .dm-box.dm-${id}`;
   const rules = [
-    `transform:translate(${x}ch,${y * 100}%)`,
+    `transform:translate(${x}ch,calc(${y} * var(--line-height)))`,
     `width:${width}ch`,
-    `height:${height * 2}ch`,
+    `height:calc(${height} * var(--line-height))`,
   ];
   if (isVisible) {
     rules.push(`opacity:1`);
@@ -130,20 +156,19 @@ function generateBoxCss(
 }
 
 function generateStyle(
-  rootFrames: RenderPositions[],
+  rootFrames: Map<number, RenderPositions>,
   classPrefix: string
 ): HTMLStyleElement {
   const styles = [];
-  for (let frameIdx = 0; frameIdx < rootFrames.length; frameIdx++) {
-    const { frame } = rootFrames[frameIdx];
-    styles.push(...generateBoxCss(rootFrames[frameIdx], classPrefix, frameIdx));
-    for (const position of frame.text.values()) {
+  for (const [frameIdx, rootFrame] of rootFrames) {
+    styles.push(...generateBoxCss(rootFrame, classPrefix, frameIdx));
+    for (const position of rootFrame.frame.text.values()) {
       styles.push(...generateTextCss(position, classPrefix, frameIdx));
     }
-    for (const position of frame.decorations.values()) {
+    for (const position of rootFrame.frame.decorations.values()) {
       styles.push(...generateDecorationCss(position, classPrefix, frameIdx));
     }
-    for (const position of frame.boxes.values()) {
+    for (const position of rootFrame.frame.boxes.values()) {
       styles.push(...generateBoxCss(position, classPrefix, frameIdx));
     }
   }

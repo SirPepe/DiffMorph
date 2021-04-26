@@ -3,30 +3,46 @@
 <head>
   <meta charset="utf-8">
   <title>Document</title>
-  <script src="dist/diff-morph.js"></script>
+  <script src="dist/min/element.js"></script>
 </head>
 <body>
 
-<diff-morph class="language-json" controls>
-  <dm-frame>{}</dm-frame>
-  <dm-frame>{ "hello": 42 }</dm-frame>
-  <dm-frame>{ "hello": 42, "world": 42 }</dm-frame>
-  <dm-frame>{ "hello": <mark>42</mark>, "world": 42 }</dm-frame>
-  <dm-frame>{ "hello": 42, "world": <mark>42</mark> }</dm-frame>
-  <dm-frame>{
+<diff-morph class="language-jsonc" controls>
+  <dm-frame>// JSONC
+{}</dm-frame>
+  <dm-frame>// JSONC
+{ "hello": 42 }</dm-frame>
+  <dm-frame>// JSONC
+{ "hello": 42, "world": 42 }</dm-frame>
+  <dm-frame>// JSONC
+{ "hello": <mark>42</mark>, "world": 42 }</dm-frame>
+  <dm-frame>// JSONC
+{ "hello": 42, "world": <mark>42</mark> }</dm-frame>
+  <dm-frame>// JSONC
+{
   "hello": 42,
   "world": 42
 }</dm-frame>
-  <dm-frame>{
+  <dm-frame>// JSONC
+{
   "hello": 42,
   "world": [42, 23]
 }</dm-frame>
-<dm-frame>{
+<dm-frame>// JSONC
+{
   "hello": 42,
   "world": {
     "wee": [42, 23]
   }
 }</dm-frame>
+</diff-morph>
+
+<diff-morph class="language-toml" controls>
+<dm-frame>a = 1
+b = 2</dm-frame>
+<dm-frame>
+a = 1
+b = 2</dm-frame>
 </diff-morph>
 
 </body>

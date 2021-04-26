@@ -1,23 +1,38 @@
-import fnv1a from "@sindresorhus/fnv1a";
 import { Box, Decoration } from "../types";
 
-export const hash = (input: string): string => fnv1a(input).toString(36);
+export function hash(input: string): string {
+  let hash = 2166136261;
+  let nonAscii = false;
+  for (let i = 0; i < input.length; i++) {
+    let characterCode = input.charCodeAt(i);
+    if (characterCode > 0x7F && !nonAscii) {
+      input = unescape(encodeURIComponent(input));
+      characterCode = input.charCodeAt(i);
+      nonAscii = true;
+    }
+    hash ^= characterCode;
+    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+  }
+  return (hash >>> 0).toString(36);
+}
 
 export function assertIs<T>(
   x: T | undefined | null,
-  msg = `Expected value to be defined, but found ${x}`
+  name = "value"
 ): asserts x is T {
   if (!x) {
-    throw new Error(msg);
+    throw new Error(`Expected ${name} to be defined, but found ${x}`);
   }
 }
 
 export function assertIsNot<T>(
   x: T | undefined | null,
-  msg = `Expected value to be null or undefined, but found ${typeof x}`
+  name = "value"
 ): asserts x is undefined | null {
   if (x) {
-    throw new Error(msg);
+    throw new Error(
+      `Expected ${name} to be null or undefined, but found ${typeof x}
+    `);
   }
 }
 
@@ -176,6 +191,11 @@ export function isNewLine(token: {
   return Boolean(token.prev && token.y > token.prev.y);
 }
 
+export function minmax(numbers: Iterable<number>): [number, number] {
+  numbers = [...numbers]; // lest the iterable be consumed
+  return [Math.min(...numbers), Math.max(...numbers)]
+}
+
 export function findMax<T>(
   items: Iterable<T>,
   computer: (item: T) => number
@@ -226,6 +246,21 @@ export const lookaheadText = <T extends { text: string; next: T | undefined }>(
       return false;
     } else {
       token = token.next;
+    }
+  }
+  return true;
+};
+
+export const lookbehindType = <T extends { type?: string; prev: T | undefined }>(
+  token: T,
+  expected: string[]
+): boolean => {
+  while (expected.length) {
+    const value = expected.pop();
+    if (!token.prev || token.prev.type !== value) {
+      return false;
+    } else {
+      token = token.prev;
     }
   }
   return true;

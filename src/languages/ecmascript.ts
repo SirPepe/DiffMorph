@@ -2,19 +2,19 @@
 // TS features are controlled by a flag, which the TypeScript language
 // definition binds to true.
 
-import { isNewLine } from "../lib/util";
+import { isNewLine, lookbehindType } from "../lib/util";
 import {
   LanguageDefinition,
   LanguageFunction,
   LanguageFunctionResult,
   RawToken,
+  TypedToken,
 } from "../types";
 
-type BlockType =
-  | "curlies"
+type CurlyType =
   | "object"
   | "type"
-  | "block"
+  | "destruct"
   | "class"
   | "interface"
   | "enum"
@@ -22,8 +22,15 @@ type BlockType =
   | "import"
   | "function"
   | "switch"
+  | "jsx-interpolation"
+  | "block"
+  | "curly";
+
+type BracketType =
   | "array"
-  | "jsx-interpolation";
+  | "type"
+  | "destruct"
+  | "bracket";
 
 type ParenType =
   | "parens"
@@ -42,6 +49,7 @@ const PUNCTUATION = [".", ":", ",", ";"];
 const STRINGS = ["'", '"', "`"];
 const NUMBER_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
 const RE_FLAGS_RE = /^[gimuy]+$/;
+const IDENT_RE = /^[$_a-z][$_a-z0-9]*$/i; // accepts REASONABLE identifiers
 
 const TYPE_KEYWORDS = ["type", "enum", "interface", "infer"];
 
@@ -125,82 +133,54 @@ type Flags = {
   types: boolean;
 };
 
+class Stack<T extends string> {
+  private data: T[] = [];
+  constructor(private defaultValue: T){}
+
+  push(value: T): { before: number, after: number } {
+    const before = this.data.filter((str) => str === value).length;
+    this.data.push(value);
+    return { before, after: before + 1 };
+  }
+
+  pop(): { before: number, after: number, value: T } {
+    const value = this.data[this.data.length - 1];
+    if (!value) {
+      return { before: 0, after: 0, value: this.defaultValue };
+    }
+    const before = this.data.filter((str) => str === value).length;
+    this.data.length = this.data.length - 1;
+    return { before, after: before - 1, value };
+  }
+
+  peek(): { current: number, value: T } {
+    const value = this.data[this.data.length - 1];
+    if (!value) {
+      return { current: 0, value: this.defaultValue };
+    }
+    const current = this.data.filter((str) => str === value).length;
+    return { current, value };
+  }
+}
+
 type State = {
-  statementPosition: boolean;
-  expressionPosition: boolean;
-  typePosition: boolean;
   lineCommentState: boolean;
   blockCommentState: boolean;
   regexState: boolean;
   stringState: false | string; // string indicates the type of quotes used
+  bracketStack: Stack<BracketType>;
+  curlyStack: Stack<CurlyType>;
 };
 
 function defaultState(): State {
   return {
-    statementPosition: true,
-    expressionPosition: true,
-    typePosition: false,
     lineCommentState: false,
     blockCommentState: false,
     regexState: false,
     stringState: false,
+    bracketStack: new Stack<BracketType>("bracket"),
+    curlyStack: new Stack<CurlyType>("curly"),
   };
-}
-
-function processVariableDeclaration(token: RawToken, flags: Flags): string[] {
-  let current: RawToken | undefined = token.next;
-  let destructuringDepth = 0;
-  const types: string[] = [];
-  while (current) {
-    if (current.text === "[" || current.text === "{") {
-      types.push(`punctuation-destruct-start-${destructuringDepth++}`);
-      current = current.next;
-      continue;
-    }
-    if (current.text === "]" || current.text === "}") {
-      types.push(`punctuation-destruct-end-${--destructuringDepth}`);
-      current = current.next;
-      continue;
-    }
-    if (current.text === "=") {
-      types.push("operator-assignment");
-      if (destructuringDepth === 0) {
-        break;
-      } else if (current.next) {
-        types.push(...processExpression(current.next, flags));
-        current = current.next.next;
-      }
-      continue;
-    }
-    if (current.text === ":") {
-      if (destructuringDepth === 0 && flags.types) {
-        types.push("operator-annotation");
-        break;
-      }
-    }
-    if (current.text === ";") {
-      types.push("punctuation");
-      break;
-    }
-    if (current.text === "," || current.text === ":") {
-      types.push(`punctuation`);
-    } else {
-      types.push(`token`);
-    }
-    current = current.next;
-  }
-  return [`keyword-${token.text}`, ...types];
-}
-
-function processExpression(token: RawToken, flags: Flags): string[] {
-  if (
-    token.text === "NaN" ||
-    token.text === "Infinity" ||
-    token.text.match(NUMBER_RE)
-  ) {
-    return ["number"];
-  }
-  return ["token"];
 }
 
 function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
@@ -257,30 +237,68 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       return "comment-line";
     }
 
-    if (
-      state.statementPosition &&
-      ["var", "let", "const"].includes(token.text)
-    ) {
-      const declaration = processVariableDeclaration(token, flags);
-      const last = declaration[declaration.length - 1];
-      if (last.endsWith("annotation")) {
-        state.typePosition = true;
-        state.expressionPosition = false;
-        state.statementPosition = false;
-      } else if (last.endsWith("assignment")) {
-        state.typePosition = false;
-        state.expressionPosition = true;
-        state.statementPosition = false;
-      }
-      return declaration;
+    if (["var", "let", "const"].includes(token.text)) {
+      return "keyword";
     }
 
-    if (state.expressionPosition && token.text !== ";") {
-      return processExpression(token, flags);
+    // Identifiers
+    if (token.text.match(IDENT_RE)) {
+      // Regular identifier
+      if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
+        return "token";
+      }
+      // Identifier in a list
+      if (lookbehindType<RawToken | TypedToken>(token, ["punctuation", "token"])) {
+        return "token";
+      }
+    }
+
+    if (token.text === "=") {
+      return "operator-assignment";
+    }
+
+    if (token.text === "[") {
+      if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
+        const { before } = state.bracketStack.push("destruct");
+        return `punctuation-destruct-start-${before}`;
+      }
+      const { before } = state.bracketStack.push("bracket");
+      return `punctuation-bracket-start-${before}`;
+    }
+
+    if (token.text === "]") {
+      const { after, value } = state.bracketStack.pop();
+      return `punctuation-${value}-end-${after}`;
+    }
+
+    if (token.text === "{") {
+      if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
+        const { before } = state.curlyStack.push("destruct");
+        return `punctuation-destruct-start-${before}`;
+      }
+      if (token?.prev?.type === "operator-assignment") {
+        const { before } = state.curlyStack.push("object");
+        return `punctuation-object-start-${before}`;
+      }
+      const { before } = state.curlyStack.push("curly");
+      return `punctuation-curly-start-${before}`;
+    }
+
+    if (token.text === "}") {
+      const { after, value } = state.curlyStack.pop();
+      return `punctuation-${value}-end-${after}`;
     }
 
     if (PUNCTUATION.includes(token.text)) {
       return "punctuation";
+    }
+
+    if (
+      token.text === "NaN" ||
+      token.text === "Infinity" ||
+      token.text.match(NUMBER_RE)
+    ) {
+      return "number";
     }
 
     return "token";

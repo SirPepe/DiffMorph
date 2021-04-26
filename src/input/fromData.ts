@@ -13,9 +13,10 @@ import {
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
 import { toRenderData } from "../lib/render";
-import { optimize } from "../lib/optimize";
+import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { createIdGenerator } from "../lib/util";
+import { toLifecycle } from "../lib/lifecycle";
 
 type Input = string | InputContainer;
 
@@ -65,5 +66,6 @@ export function fromData(
     }
     return applyLanguage(tokenized);
   });
-  return toRenderData(optimize(diff(typed)));
+  const diffs = optimizeDiffs(diff(typed));
+  return toRenderData(toLifecycle(diffs, true));
 }

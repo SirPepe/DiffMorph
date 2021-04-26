@@ -1,11 +1,12 @@
 import { diff } from "../../src/lib/diff";
-import { optimize } from "../../src/lib/optimize";
+import { optimizeDiffs } from "../../src/lib/optimize";
+import { Box, Decoration } from "../../src/types";
 import { lang } from "../helpers";
 const tokenize = lang("none");
 
 describe("Optimizer", () => {
   test("It turns a single addition/deletion into a movement", () => {
-    const res = optimize(diff([tokenize(".."), tokenize(". .")]));
+    const res = optimizeDiffs(diff([tokenize(".."), tokenize(". .")]));
     expect(res.length).toBe(2);
     expect(res[0].content.map((op) => op.kind)).toEqual(["ADD", "ADD"]);
     expect(res[1].content.length).toBe(1);
@@ -17,7 +18,7 @@ describe("Optimizer", () => {
   });
 
   test("It turns two additions/deletions into movements", () => {
-    const res = optimize(diff([tokenize(".."), tokenize("  .  .")]));
+    const res = optimizeDiffs(diff([tokenize(".."), tokenize("  .  .")]));
     expect(res.length).toBe(2);
     expect(res[0].content.map((op) => op.kind)).toEqual(["ADD", "ADD"]);
     expect(res[1].content.map((op) => op.kind)).toEqual(["MOV", "MOV"]);
@@ -34,7 +35,7 @@ describe("Optimizer", () => {
   });
 
   test("Handles extra additions on the same line", () => {
-    const res = optimize(diff([tokenize(".."), tokenize("  ..  .")]));
+    const res = optimizeDiffs(diff([tokenize(".."), tokenize("  ..  .")]));
     expect(res.length).toBe(2);
     expect(res[0].content.map((op) => op.kind)).toEqual(["ADD", "ADD"]);
     expect(res[1].content[0]).toMatchObject({
@@ -54,7 +55,7 @@ describe("Optimizer", () => {
   });
 
   test("Handles extra additions on a new line", () => {
-    const res = optimize(diff([tokenize(".."), tokenize("  .. \n.")]));
+    const res = optimizeDiffs(diff([tokenize(".."), tokenize("  .. \n.")]));
     expect(res.length).toBe(2);
     expect(res[0].content.map((op) => op.kind)).toEqual(["ADD", "ADD"]);
     expect(res[1].content[0]).toMatchObject({
@@ -71,5 +72,78 @@ describe("Optimizer", () => {
       kind: "ADD",
       item: { x: 0, y: 1 },
     });
+  });
+});
+
+describe("Optimizer on decorations", () => {
+  test("It turns a single addition/deletion into a movement", () => {
+    const a: Box<any, Decoration<any>> = {
+      kind: "BOX",
+      x: 0,
+      y: 0,
+      hash: "root",
+      width: 0,
+      height: 0,
+      id: "root0",
+      data: {},
+      language: "none",
+      content: [],
+      decorations: [],
+      parent: undefined,
+    };
+    a.decorations.push({
+      kind: "DECO",
+      hash: "foo",
+      x: 0,
+      y: 0,
+      width: 10,
+      height: 0,
+      data: {},
+      parent: a,
+    });
+    const b: Box<any, Decoration<any>> = {
+      kind: "BOX",
+      x: 0,
+      y: 0,
+      hash: "root",
+      width: 0,
+      height: 0,
+      id: "root0",
+      data: {},
+      language: "none",
+      content: [],
+      decorations: [],
+      parent: undefined,
+    };
+    b.decorations.push({
+      kind: "DECO",
+      hash: "foo",
+      x: 10,
+      y: 0,
+      width: 10,
+      height: 0,
+      data: {},
+      parent: b,
+    });
+    const res = optimizeDiffs(diff([a, b]));
+    expect(res.length).toBe(2);
+    expect(res[0].content.map((op) => op.kind)).toEqual([]);
+    expect(res[1].content.map((op) => op.kind)).toEqual([]);
+    expect(res[0].decorations.map((op) => op.kind)).toEqual(["ADD"]);
+    expect(res[1].decorations.map((op) => op.kind)).toEqual(["MOV"]);
+    expect(res[1].decorations[0]).toMatchObject({
+      kind: "MOV",
+      item: { x: 10, y: 0 },
+      from: { x: 0, y: 0 },
+    });
+  });
+});
+
+describe("Regressions", () => {
+  test("do not explode when all non-same-line candidates are used up", () => {
+    const res = optimizeDiffs(diff([tokenize("..."), tokenize("\n.")]));
+    expect(res.length).toBe(2);
+    expect(res[0].content.map((op) => op.kind)).toEqual(["ADD", "ADD", "ADD"]);
+    expect(res[1].content.map((op) => op.kind)).toEqual(["DEL", "DEL", "MOV"]);
   });
 });
