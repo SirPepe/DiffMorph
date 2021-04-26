@@ -156,20 +156,19 @@ function generateBoxCss(
 }
 
 function generateStyle(
-  rootFrames: RenderPositions[],
+  rootFrames: Map<number, RenderPositions>,
   classPrefix: string
 ): HTMLStyleElement {
   const styles = [];
-  for (let frameIdx = 0; frameIdx < rootFrames.length; frameIdx++) {
-    const { frame } = rootFrames[frameIdx];
-    styles.push(...generateBoxCss(rootFrames[frameIdx], classPrefix, frameIdx));
-    for (const position of frame.text.values()) {
+  for (const [frameIdx, rootFrame] of rootFrames) {
+    styles.push(...generateBoxCss(rootFrame, classPrefix, frameIdx));
+    for (const position of rootFrame.frame.text.values()) {
       styles.push(...generateTextCss(position, classPrefix, frameIdx));
     }
-    for (const position of frame.decorations.values()) {
+    for (const position of rootFrame.frame.decorations.values()) {
       styles.push(...generateDecorationCss(position, classPrefix, frameIdx));
     }
-    for (const position of frame.boxes.values()) {
+    for (const position of rootFrame.frame.boxes.values()) {
       styles.push(...generateBoxCss(position, classPrefix, frameIdx));
     }
   }
