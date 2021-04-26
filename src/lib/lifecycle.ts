@@ -125,6 +125,10 @@ function toBoxLifecycle<T extends Token, D extends Token>(
   };
 }
 
+function isDel(op: ExtendedDiffOp<unknown> | BOX<unknown>): boolean {
+  return op.kind === "DEL";
+}
+
 function getNextFrame<T>(
   source: Map<number, T>,
   from: number,
@@ -157,11 +161,14 @@ function getPrevFrame<T>(
 //   - if the frame after the DEL is taken up by ADD, only replace the DEL with
 //     BDE, where BDE's "item" position corresponds to ADD's item position.
 // * for each ADD
-//   - if the frame before the ADD is free and the current frame is not the
-//     first frame in the lifecycle, insert a BAD in the previous frame. Skip
-//     this for the first frame to ensure that we don't add a BAD (an invisible
-//     frame) for tokens that are supposed to be visible for the parent's entire
-//     lifetime (eg. there's an ADD in the first frame and then no other op)
+//    - if the frame before the ADD is free and either
+//      . the ADD is not in the first frame
+//      . there is a DEL somewhere before or after the ADD in the lifecycle
+//     insert a BAD in the previous frame. This step requires a DEL (or an
+//     implicit DEL by having the token not be there in the first frame) to
+//     ensure that we don't add a BAD (an invisible frame) for tokens that are
+//     supposed to be visible for the parent's entire lifetime (eg. there's an
+//     ADD in the first frame and then no other op)
 //   - if the frame before the ADD is taken up by a BDE, update the BDE's "item"
 //     position with the ADD's "item" position
 //   - if the frame before the ADD is taken up by a DEL, replace the DEL with a
@@ -193,6 +200,7 @@ function expandLifecycle(
       }
     }
   }
+  const ops = Array.from(lifecycle.values());
   for (const [frame, op] of lifecycle) {
     if (op.kind === "ADD") {
       const [prevFrame, prevOp] = getPrevFrame(
@@ -202,7 +210,9 @@ function expandLifecycle(
         parentMax
       );
       if (!prevOp) {
-        if (frame !== parentMin) {
+        const before = ops.slice(0, frame);
+        const after = ops.slice(frame + 1).reverse();
+        if (frame !== parentMin || before.find(isDel) || after.find(isDel)) {
           lifecycle.set(prevFrame, { kind: "BAD", item: op.item });
         }
       } else if (prevOp.kind === "BDE") {
