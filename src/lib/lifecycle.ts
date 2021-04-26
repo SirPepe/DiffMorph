@@ -173,8 +173,8 @@ function expandLifecycle(
   parentMin: number,
   parentMax: number
 ): void {
-  if (lifecycle.size < 2) {
-    return;
+  if (parentMax - parentMin < 1) {
+    return; // No need to expand something that can only ever be one frame
   }
   for (const [frame, op] of lifecycle) {
     if (op.kind === "DEL") {

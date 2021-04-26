@@ -85,7 +85,26 @@ describe("Lifecycles", () => {
 });
 
 describe("Expanded lifecycles", () => {
-  test("replaces DEL with BDE", () => {
+  test("add BAD for text tokens on the last frame", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize(""),
+      tokenize("."),
+    ]));
+    // without extension: nil, ADD
+    // with extension: BAD, ADD
+    const res = toLifecycle(diffs, true);
+    if (!res) {
+      throw new Error("result is null");
+    }
+    expect(res.text[0]).toEqual(
+      new Map<any, any>([
+        [0, { kind: "BAD", item: (diffs[1].content[0] as any).item }], // BAD
+        [1, diffs[1].content[0]], // ADD
+      ]),
+    );
+  });
+
+  test("replaces DEL with BDE on boxes", () => {
     const diffs = optimizeDiffs(diff([
       tokenize({
         id: "box",
