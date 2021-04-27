@@ -43,14 +43,14 @@ const DEFAULT_STYLES = `
 }`;
 
 function generateTextCss(
-  { id, x, y, isVisible }: DecorationPosition,
+  { id, x, y, alpha }: DecorationPosition,
   rootSelector: string,
   frameIdx: number
 ): string[] {
   const styles = [];
   const selector = `${rootSelector}.frame${frameIdx} .dm-token.dm-${id}`;
   const rules = [`transform:translate(${x}ch, calc(${y} * var(--line-height)))`];
-  if (isVisible) {
+  if (alpha === 1) {
     rules.push(`opacity:1`);
   }
   styles.push(`${selector}{${rules.join(";")}}`);
@@ -58,7 +58,7 @@ function generateTextCss(
 }
 
 function generateDecorationCss(
-  { id, x, y, width, height, isVisible }: DecorationPosition,
+  { id, x, y, width, height, alpha }: DecorationPosition,
   rootSelector: string,
   frameIdx: number
 ): string[] {
@@ -69,7 +69,7 @@ function generateDecorationCss(
     `width:${width}ch`,
     `height:calc(${height} * var(--line-height))`,
   ];
-  if (isVisible) {
+  if (alpha === 1) {
     rules.push(`opacity:1`);
   }
   styles.push(`${selector}{${rules.join(";")}}`);
@@ -77,7 +77,7 @@ function generateDecorationCss(
 }
 
 function generateBoxCss(
-  { id, x, y, width, height, isVisible, frame }: RenderPositions,
+  { id, x, y, width, height, alpha: isVisible, frame }: RenderPositions,
   rootSelector: string,
   frameIdx: number
 ): string[] {

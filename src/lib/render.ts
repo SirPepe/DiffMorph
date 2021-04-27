@@ -12,7 +12,7 @@ import {
 } from "../types";
 import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
-import { assertIs, createIdGenerator, minmax } from "./util";
+import { assertIs, createIdGenerator } from "./util";
 
 type OutputToken = { id: string; };
 
@@ -21,7 +21,7 @@ function toRenderPosition<Input extends Token>(
   id: string,
   isVisible: boolean
 ): TextPosition {
-  return { id, x, y, width, height, isVisible };
+  return { id, x, y, width, height, alpha: Number(isVisible) };
 }
 
 class TokenPool<Input extends Token, Output extends OutputToken> {

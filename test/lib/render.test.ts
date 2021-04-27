@@ -40,7 +40,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -51,14 +51,14 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
         boxes: new Map(),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(frames.get(1)).toEqual({
       id: "root",
@@ -76,7 +76,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -87,14 +87,14 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
         boxes: new Map(),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(frames.get(2)).toEqual({
       id: "root",
@@ -112,7 +112,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -123,14 +123,14 @@ describe("rendering", () => {
               y: 1,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
         boxes: new Map(),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(maxHeight).toBe(2);
     expect(maxWidth).toBe(5);
@@ -174,7 +174,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -185,14 +185,14 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
         boxes: new Map(),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(frames.get(0)).toEqual(frames.get(1));
     expect(frames.get(2)).toEqual({
@@ -211,7 +211,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -222,14 +222,14 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
         boxes: new Map(),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(maxHeight).toBe(1);
     expect(maxWidth).toBe(4);
@@ -302,7 +302,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -313,7 +313,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
@@ -323,7 +323,7 @@ describe("rendering", () => {
             {
               height: 1,
               id: "box",
-              isVisible: false,
+              alpha: 0,
               width: 4,
               x: 1,
               y: 0,
@@ -336,7 +336,7 @@ describe("rendering", () => {
                     {
                       height: 1,
                       id: "j5gb800",
-                      isVisible: false,
+                      alpha: 0,
                       width: 4,
                       x: 1,
                       y: 0,
@@ -349,7 +349,7 @@ describe("rendering", () => {
         ]),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(frames.get(1)).toEqual({
       id: "root",
@@ -367,7 +367,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -378,7 +378,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
@@ -388,7 +388,7 @@ describe("rendering", () => {
             {
               height: 1,
               id: "box",
-              isVisible: true,
+              alpha: 1,
               width: 4,
               x: 1,
               y: 0,
@@ -401,7 +401,7 @@ describe("rendering", () => {
                     {
                       height: 1,
                       id: "j5gb800",
-                      isVisible: true,
+                      alpha: 1,
                       width: 4,
                       x: 1,
                       y: 0,
@@ -414,7 +414,7 @@ describe("rendering", () => {
         ]),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(frames.get(2)).toEqual({
       id: "root",
@@ -432,7 +432,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -443,7 +443,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
@@ -453,7 +453,7 @@ describe("rendering", () => {
             {
               height: 1,
               id: "box",
-              isVisible: false,
+              alpha: 0,
               width: 4,
               x: 1,
               y: 0,
@@ -466,7 +466,7 @@ describe("rendering", () => {
                     {
                       height: 1,
                       id: "j5gb800",
-                      isVisible: false,
+                      alpha: 0,
                       width: 4,
                       x: 1,
                       y: 0,
@@ -479,7 +479,7 @@ describe("rendering", () => {
         ]),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(maxHeight).toBe(1);
     expect(maxWidth).toBe(6);
@@ -526,7 +526,7 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
           [
@@ -537,14 +537,14 @@ describe("rendering", () => {
               y: 0,
               width: 1,
               height: 1,
-              isVisible: true,
+              alpha: 1,
             },
           ],
         ]),
         boxes: new Map(),
         decorations: new Map(),
       },
-      isVisible: true,
+      alpha: 1,
     });
     expect(maxHeight).toBe(1);
     expect(maxWidth).toBe(2);
@@ -576,7 +576,7 @@ describe("rendering", () => {
             },
             height: 1,
             id: "root",
-            isVisible: true,
+            alpha: 1,
             width: 0,
             x: 0,
             y: 0,

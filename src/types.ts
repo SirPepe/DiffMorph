@@ -116,7 +116,7 @@ type BasePosition = {
   y: number;
   width: number;
   height: number;
-  isVisible: boolean;
+  alpha: number;
 };
 
 export type TextPosition = BasePosition;
