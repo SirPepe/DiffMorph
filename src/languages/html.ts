@@ -160,6 +160,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     if (state.tagState && token.text === ">") {
       state.tagState = false;
       if (
+        !xml &&
         token?.prev?.text === "style" &&
         token.prev.type === "tag" &&
         token?.prev?.prev?.text !== "/" // don't switch to CSS after </style>
@@ -188,6 +189,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       if (QUOTES.includes(token.text) && state.attrValueState === false) {
         state.attrValueState = token.text;
         if (
+          !xml &&
           token.next &&
           token?.prev?.prev?.type === "attribute" &&
           token?.prev?.prev?.text === "style"
