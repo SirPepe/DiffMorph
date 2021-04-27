@@ -5,7 +5,7 @@ describe("Basic TOML", () => {
   test("key and value", () => {
     const tokens = toml(`foo = "bar"`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["string-key", "operator", "value", "value", "value"]);
+    expect(types).toEqual(["key", "operator", "value", "value", "value"]);
   });
 
   test("multi-line string value", () => {
@@ -14,7 +14,7 @@ Hello
 """`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "string-key",
+      "key",
       "operator",
       "value",
       "value",
@@ -30,9 +30,9 @@ Hello
     const tokens = toml(`'foo' = "bar"`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "string-key",
-      "string-key",
-      "string-key",
+      "key",
+      "key",
+      "key",
       "operator",
       "value",
       "value",
@@ -45,14 +45,14 @@ Hello
 bar = 42`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "string-key",
-      "string-key",
-      "string-key",
+      "key",
+      "key",
+      "key",
       "operator",
       "value",
       "value",
       "value",
-      "string-key",
+      "key",
       "operator",
       "number",
     ]);
@@ -67,35 +67,35 @@ bar.x = +42_23.1337
 time = 07:32:00`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "literal-header",
-      "literal-header",
-      "literal-header",
-      "string-key",
-      "string-key",
-      "string-key",
-      "string-key",
-      "string-key",
-      "string-key",
-      "string-key",
+      "header",
+      "header",
+      "header",
+      "key",
+      "key",
+      "key",
+      "key",
+      "key",
+      "key",
+      "key",
       "operator",
       "value",
       "value",
       "value",
       "comment",
       "comment",
-      "string-key",
-      "string-key",
-      "string-key",
+      "key",
+      "key",
+      "key",
       "operator",
       "number",
-      "literal-header",
-      "literal-header",
-      "literal-header",
-      "literal-header",
-      "literal-header",
-      "literal-header",
-      "literal-header",
-      "string-key",
+      "header",
+      "header",
+      "header",
+      "header",
+      "header",
+      "header",
+      "header",
+      "key",
       "operator",
       "token-datetime",
       "token-datetime",
@@ -109,9 +109,9 @@ time = 07:32:00`);
     const tokens = toml(`foo = ["bar", 23, .1, inf, -nan, true]`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "string-key",
+      "key",
       "operator",
-      "punctuation-array-start-0",
+      "punctuation array-start-0",
       "value",
       "value",
       "value",
@@ -124,8 +124,8 @@ time = 07:32:00`);
       "punctuation",
       "number",
       "punctuation",
-      "keyword-true",
-      "punctuation-array-end-0",
+      "keyword",
+      "punctuation array-end-0",
     ]);
   });
 
@@ -133,23 +133,23 @@ time = 07:32:00`);
     const tokens = toml(`name = { first = "Peter", last = "Kröner" }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "string-key",
+      "key",
       "operator",
-      "punctuation-table-start-0",
-      "string-key",
+      "punctuation table-start-0",
+      "key",
       "operator",
       "value",
       "value",
       "value",
       "punctuation",
-      "string-key",
+      "key",
       "operator",
       "value", // "
       "value", // Kr
       "value", // ö
       "value", // ner
       "value", // "
-      "punctuation-table-end-0",
+      "punctuation table-end-0",
     ]);
   });
   test("typical Cargo.toml", () => {
@@ -166,15 +166,15 @@ version = "0.1.0"
 source = "git+https://github.com/rust-lang-nursery/rand.git#9f35b8e439eeedd60b9414c58f389bdc6a3284f9"`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "literal-header",
-      "literal-header",
-      "literal-header",
-      "string-key",
+      "header",
+      "header",
+      "header",
+      "key",
       "operator",
       "value",
       "value",
       "value",
-      "string-key",
+      "key",
       "operator",
       "value",
       "value",
@@ -183,9 +183,9 @@ source = "git+https://github.com/rust-lang-nursery/rand.git#9f35b8e439eeedd60b94
       "value",
       "value",
       "value",
-      "string-key",
+      "key",
       "operator",
-      "punctuation-array-start-0",
+      "punctuation array-start-0",
       "value",
       "value",
       "value",
@@ -218,16 +218,16 @@ source = "git+https://github.com/rust-lang-nursery/rand.git#9f35b8e439eeedd60b94
       "value",
       "value",
       "punctuation",
-      "punctuation-array-end-0",
-      "literal-header",
-      "literal-header",
-      "literal-header",
-      "string-key",
+      "punctuation array-end-0",
+      "header",
+      "header",
+      "header",
+      "key",
       "operator",
       "value",
       "value",
       "value",
-      "string-key",
+      "key",
       "operator",
       "value",
       "value",
@@ -236,7 +236,7 @@ source = "git+https://github.com/rust-lang-nursery/rand.git#9f35b8e439eeedd60b94
       "value",
       "value",
       "value",
-      "string-key",
+      "key",
       "operator",
       "value",
       "value",

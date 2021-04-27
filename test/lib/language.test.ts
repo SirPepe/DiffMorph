@@ -8,6 +8,7 @@ import { type } from "../helpers";
 // adjacent. This can be used to test the continuous coordinate system.
 registerLanguage({
   name: "test",
+  theme: {},
   definitionFactory: () => (token) => {
     if (
       token.text === "a" &&

@@ -12,8 +12,8 @@ describe("Basic JSON", () => {
         width: 1,
         height: 1,
         text: "{",
-        type: "punctuation-object-start-0",
-        hash: "10igw9m",
+        type: "punctuation object-start-0",
+        hash: "q6cs7w",
         parent: expect.any(Object),
         next: tokens[1],
         prev: undefined,
@@ -25,8 +25,8 @@ describe("Basic JSON", () => {
         width: 1,
         height: 1,
         text: "}",
-        type: "punctuation-object-end-0",
-        hash: "1mj04u8",
+        type: "punctuation object-end-0",
+        hash: "ij1r2g",
         parent: expect.any(Object),
         next: undefined,
         prev: tokens[0],
@@ -57,8 +57,8 @@ describe("Basic JSON", () => {
     const tokens = json(`[]`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-array-start-0",
-      "punctuation-array-end-0",
+      "punctuation array-start-0",
+      "punctuation array-end-0",
     ]);
   });
 
@@ -66,28 +66,28 @@ describe("Basic JSON", () => {
     const tokens = json(`[[]]`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-array-start-0",
-      "punctuation-array-start-1",
-      "punctuation-array-end-1",
-      "punctuation-array-end-0",
+      "punctuation array-start-0",
+      "punctuation array-start-1",
+      "punctuation array-end-1",
+      "punctuation array-end-0",
     ]);
   });
 
   test("Standalone null", () => {
     const tokens = json(`null`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["keyword-null"]);
+    expect(types).toEqual(["keyword"]);
   });
 
   test("Key and string value", () => {
     const tokens = json(`{ "foo": "bar" }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
       "value",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -95,11 +95,11 @@ describe("Basic JSON", () => {
     const tokens = json(`{ "foo": "bar\\nbaz" }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
       "value",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -107,11 +107,11 @@ describe("Basic JSON", () => {
     const tokens = json(`{ "foo": 42 }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
       "number",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -119,11 +119,11 @@ describe("Basic JSON", () => {
     const tokens = json(`{ "foo": 42.23 }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
       "number",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -131,11 +131,11 @@ describe("Basic JSON", () => {
     const tokens = json(`{ "foo": null }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
-      "keyword-null",
-      "punctuation-object-end-0",
+      "keyword",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -143,11 +143,11 @@ describe("Basic JSON", () => {
     const tokens = json(`{ "foo": true }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
-      "keyword-true",
-      "punctuation-object-end-0",
+      "keyword",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -155,11 +155,11 @@ describe("Basic JSON", () => {
     const tokens = json(`{ "foo": false }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
-      "keyword-false",
-      "punctuation-object-end-0",
+      "keyword",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -167,15 +167,15 @@ describe("Basic JSON", () => {
     const tokens = json(`{ "foo": { "bar": false } }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
-      "punctuation-object-start-1",
+      "punctuation object-start-1",
       "string",
       "punctuation",
-      "keyword-false",
-      "punctuation-object-end-1",
-      "punctuation-object-end-0",
+      "keyword",
+      "punctuation object-end-1",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -183,15 +183,15 @@ describe("Basic JSON", () => {
     const tokens = json(`{ "foo": false, "bar": 0 }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
-      "keyword-false",
+      "keyword",
       "punctuation",
       "string",
       "punctuation",
       "number",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
   });
 });
@@ -215,11 +215,11 @@ describe("Boxes", () => {
     );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
       "number",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
     expect(tokens[0].parent).toBe(tokens[4].parent);
     expect(tokens[1].parent).toBe(tokens[2].parent);
@@ -245,12 +245,12 @@ describe("Boxes", () => {
     );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0", // {
+      "punctuation object-start-0", // {
       "string", // "foo
       "string", // bar" (inside box, must not be joined with rest)
       "punctuation", // :
       "number", // 42
-      "punctuation-object-end-0", // }
+      "punctuation object-end-0", // }
     ]);
   });
 });
@@ -263,14 +263,14 @@ describe("broken JSON", () => {
 }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
       "value",
       "string",
       "punctuation",
       "value",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
 
   });

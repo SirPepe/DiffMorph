@@ -4,10 +4,12 @@ import { type } from "../helpers";
 
 registerLanguage({
   name: "inline-css",
+  theme: languageDefinition.theme,
   definitionFactory: () =>
     languageDefinition.definitionFactory({ inline: true }),
   postprocessor: languageDefinition.postprocessor,
 });
+
 const css = type("css");
 const inlineCss = type("inline-css");
 
@@ -16,8 +18,8 @@ describe("Basic CSS", () => {
     const tokens = css(`div { color: red; font-family: sans-serif; }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "value-selector",
-      "punctuation-rule-start",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "token",
@@ -28,7 +30,7 @@ describe("Basic CSS", () => {
       "token",
       "token",
       "punctuation",
-      "punctuation-rule-end",
+      "punctuation rule-end",
     ]);
   });
   test("Simple rule with non-trivial selector", () => {
@@ -37,73 +39,73 @@ describe("Basic CSS", () => {
     );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
       "string",
       "string",
       "string",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "punctuation-rule-start",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "token",
       "punctuation",
-      "punctuation-rule-end",
+      "punctuation rule-end",
     ]);
   });
   test("Two simple rules", () => {
     const tokens = css(`div { color: red; } #foo { font-family: sans-serif; }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "value-selector",
-      "punctuation-rule-start",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "token",
       "punctuation",
-      "punctuation-rule-end",
-      "value-selector",
-      "punctuation-rule-start",
+      "punctuation rule-end",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "token",
       "token",
       "token",
       "punctuation",
-      "punctuation-rule-end",
+      "punctuation rule-end",
     ]);
   });
   test("Custom properties", () => {
     const tokens = css(`:root { --foo: red } .foo { color: var(--foo) }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "value-selector",
-      "punctuation-rule-start",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "token",
-      "punctuation-rule-end",
-      "value-selector",
-      "punctuation-rule-start",
+      "punctuation rule-end",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
-      "keyword-function",
+      "keyword function",
       "punctuation",
       "token",
       "token",
       "token",
       "punctuation",
-      "punctuation-rule-end",
+      "punctuation rule-end",
     ]);
   });
 });
@@ -113,10 +115,10 @@ describe("At-rules", () => {
     const tokens = css(`@media print {}`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-media",
-      "keyword-media-type",
-      "punctuation-at-media-start",
-      "punctuation-at-media-end",
+      "keyword at-media",
+      "keyword media-type",
+      "punctuation at-media-start",
+      "punctuation at-media-end",
     ]);
   });
 
@@ -124,16 +126,16 @@ describe("At-rules", () => {
     const tokens = css(`@media (min-width: 800px) {}`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-media",
-      "punctuation-at-media-argument",
+      "keyword at-media",
+      "punctuation at-media-argument",
       "token",
       "token",
       "token",
-      "punctuation-at-media",
-      "number-at-media",
-      "punctuation-at-media-argument",
-      "punctuation-at-media-start",
-      "punctuation-at-media-end",
+      "punctuation at-media",
+      "number at-media",
+      "punctuation at-media-argument",
+      "punctuation at-media-start",
+      "punctuation at-media-end",
     ]);
   });
 
@@ -141,18 +143,18 @@ describe("At-rules", () => {
     const tokens = css(`@media screen and (min-width: 800px) {}`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-media",
-      "keyword-media-type",
+      "keyword at-media",
+      "keyword media-type",
       "operator",
-      "punctuation-at-media-argument",
+      "punctuation at-media-argument",
       "token",
       "token",
       "token",
-      "punctuation-at-media",
-      "number-at-media",
-      "punctuation-at-media-argument",
-      "punctuation-at-media-start",
-      "punctuation-at-media-end",
+      "punctuation at-media",
+      "number at-media",
+      "punctuation at-media-argument",
+      "punctuation at-media-start",
+      "punctuation at-media-end",
     ]);
   });
 
@@ -162,22 +164,22 @@ describe("At-rules", () => {
     );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-media",
-      "keyword-media-type",
+      "keyword at-media",
+      "keyword media-type",
       "operator",
-      "punctuation-at-media-argument",
+      "punctuation at-media-argument",
       "token",
       "token",
       "token",
-      "punctuation-at-media",
-      "number-at-media",
-      "punctuation-at-media-argument",
-      "punctuation-at-media-start",
-      "keyword-at-media",
-      "keyword-media-type",
-      "punctuation-at-media-start",
-      "punctuation-at-media-end",
-      "punctuation-at-media-end",
+      "punctuation at-media",
+      "number at-media",
+      "punctuation at-media-argument",
+      "punctuation at-media-start",
+      "keyword at-media",
+      "keyword media-type",
+      "punctuation at-media-start",
+      "punctuation at-media-end",
+      "punctuation at-media-end",
     ]);
   });
 
@@ -185,14 +187,14 @@ describe("At-rules", () => {
     const tokens = css(`@supports (display: flex) {}`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-supports",
-      "punctuation-at-supports-argument",
+      "keyword at-supports",
+      "punctuation at-supports-argument",
       "token",
-      "punctuation-at-supports",
+      "punctuation at-supports",
       "token",
-      "punctuation-at-supports-argument",
-      "punctuation-at-supports-start",
-      "punctuation-at-supports-end",
+      "punctuation at-supports-argument",
+      "punctuation at-supports-start",
+      "punctuation at-supports-end",
     ]);
   });
 
@@ -200,7 +202,7 @@ describe("At-rules", () => {
     const tokens = css(`@import "foo.css"`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-import",
+      "keyword at-import",
       "string",
       "string",
       "string",
@@ -213,15 +215,15 @@ describe("At-rules", () => {
     const tokens = css(`@import url("foo.css")`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-import",
-      "keyword-url",
-      "punctuation-url",
-      "string-url",
-      "string-url",
-      "string-url",
-      "string-url",
-      "string-url",
-      "punctuation-url",
+      "keyword at-import",
+      "keyword",
+      "punctuation url",
+      "string url",
+      "string url",
+      "string url",
+      "string url",
+      "string url",
+      "punctuation url",
     ]);
   });
 
@@ -229,13 +231,13 @@ describe("At-rules", () => {
     const tokens = css(`@import url(foo.css)`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-import",
-      "keyword-url",
-      "punctuation-url",
-      "string-url",
-      "string-url",
-      "string-url",
-      "punctuation-url",
+      "keyword at-import",
+      "keyword",
+      "punctuation url",
+      "string url",
+      "string url",
+      "string url",
+      "punctuation url",
     ]);
   });
 
@@ -247,36 +249,36 @@ describe("At-rules", () => {
 }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "keyword-at-keyframes",
+      "keyword at-keyframes",
       "token",
-      "punctuation-at-keyframes-start",
-      "value-selector",
-      "punctuation-rule-start",
+      "punctuation at-keyframes-start",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "number",
       "punctuation",
-      "punctuation-rule-end",
-      "value-selector",
-      "value-selector",
-      "punctuation-rule-start",
+      "punctuation rule-end",
+      "value selector",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "number",
       "punctuation",
-      "punctuation-rule-end",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "value-selector",
-      "punctuation-rule-start",
+      "punctuation rule-end",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "number",
       "punctuation",
-      "punctuation-rule-end",
-      "punctuation-at-keyframes-end",
+      "punctuation rule-end",
+      "punctuation at-keyframes-end",
     ]);
   });
 });

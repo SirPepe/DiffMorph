@@ -345,8 +345,11 @@ function glueHTML(token: TypedToken): boolean {
   return false;
 }
 
+const theme = {};
+
 export const languageDefinition: LanguageDefinition<Flags> = {
   name: "html",
+  theme,
   definitionFactory: defineHTML,
   postprocessor: glueHTML,
 };

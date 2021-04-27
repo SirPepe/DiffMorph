@@ -9,6 +9,7 @@ function defineJSONC(): ReturnType<
 
 export const languageDefinition: LanguageDefinition<Record<string, any>> = {
   name: "jsonc",
+  theme: JSON.theme,
   definitionFactory: defineJSONC,
   postprocessor: JSON.postprocessor,
 };

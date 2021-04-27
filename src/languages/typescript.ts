@@ -9,6 +9,7 @@ function defineJavaScript(): ReturnType<
 
 export const languageDefinition: LanguageDefinition<Record<string, any>> = {
   name: "typescript",
+  theme: ECMAScript.theme,
   definitionFactory: defineJavaScript,
   postprocessor: ECMAScript.postprocessor,
 };

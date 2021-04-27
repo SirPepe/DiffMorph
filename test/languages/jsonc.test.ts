@@ -6,11 +6,11 @@ describe("JSONC", () => {
     const tokens = jsonc(`{ "foo": "bar" }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
       "value",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -18,10 +18,10 @@ describe("JSONC", () => {
     const tokens = jsonc("// a\n{}");
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "comment-line",
-      "comment-line",
-      "punctuation-object-start-0",
-      "punctuation-object-end-0",
+      "comment comment-line",
+      "comment comment-line",
+      "punctuation object-start-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -29,11 +29,11 @@ describe("JSONC", () => {
     const tokens = jsonc("/* a */\n{}");
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "comment-block",
-      "comment-block",
-      "comment-block",
-      "punctuation-object-start-0",
-      "punctuation-object-end-0",
+      "comment comment-block",
+      "comment comment-block",
+      "comment comment-block",
+      "punctuation object-start-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -43,11 +43,11 @@ describe("JSONC", () => {
 */\n{}`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "comment-block",
-      "comment-block",
-      "comment-block",
-      "punctuation-object-start-0",
-      "punctuation-object-end-0",
+      "comment comment-block",
+      "comment comment-block",
+      "comment comment-block",
+      "punctuation object-start-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -55,11 +55,11 @@ describe("JSONC", () => {
     const tokens = jsonc(`{ "//foo": "/*bar*/" }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "punctuation-object-start-0",
+      "punctuation object-start-0",
       "string",
       "punctuation",
       "value",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
   });
 });

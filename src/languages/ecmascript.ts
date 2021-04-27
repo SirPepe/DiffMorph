@@ -309,8 +309,11 @@ function postprocessECMAScript(): boolean {
   return false;
 }
 
+const theme = {};
+
 export const languageDefinition: LanguageDefinition<Flags> = {
   name: "ecmascript",
+  theme,
   definitionFactory: defineECMAScript,
   postprocessor: postprocessECMAScript,
 };

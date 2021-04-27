@@ -49,25 +49,25 @@ function defineTOML(): (token: RawToken) => string | string[] {
     if (state.header && token.text === "]") {
       state.header = false;
       if (token?.next?.text === "]") { // array table header
-        return ["literal-header", "literal-header"];
+        return ["header", "header"];
       }
-      return "literal-header";
+      return "header";
     }
     // enter header state
     if (!state.header && token.x === 0 && token.text === "[") {
       state.header = true;
-      return "literal-header";
+      return "header";
     }
     // in header state?
     if (state.header) {
-      return "literal-header";
+      return "header";
     }
 
     // exit key state on incoming equals sign. Don't check for existing key
     // state as the current token may be a one-token key
     if (token.next?.text === "=") {
       state.key = false;
-      return "string-key";
+      return "key";
     }
 
     // enter key state
@@ -75,12 +75,12 @@ function defineTOML(): (token: RawToken) => string | string[] {
       // first key ever
       if (!token.prev) {
         state.key = true;
-        return "string-key";
+        return "key";
       }
       // key on a new line outside an array or table
       if (token.prev.y !== token.y && state.stack.length === 0) {
         state.key = true;
-        return "string-key";
+        return "key";
       }
       // Key inside an inline table
       if (
@@ -88,12 +88,12 @@ function defineTOML(): (token: RawToken) => string | string[] {
         (token.prev.text === "{" ||  token.prev.text === ",")
       ) {
         state.key = true;
-        return "string-key";
+        return "key";
       }
     }
     // in key state?
     if (state.key) {
-      return "string-key";
+      return "key";
     }
 
     // exit value string states
@@ -139,25 +139,25 @@ function defineTOML(): (token: RawToken) => string | string[] {
 
     // is token a keyword?
     if (KEYWORDS.includes(token.text)) {
-      return `keyword-${token.text.toLowerCase()}`;
+      return "keyword";
     }
 
     // Objects and arrays
     if (token.text === "{") {
       state.stack.push("t");
-      return `punctuation-table-start-${state.tableDepth++}`;
+      return `punctuation table-start-${state.tableDepth++}`;
     }
     if (token.text === "[") {
       state.stack.push("a");
-      return `punctuation-array-start-${state.arrayDepth++}`;
+      return `punctuation array-start-${state.arrayDepth++}`;
     }
     if (token.text === "]") {
       state.stack.pop();
-      return `punctuation-array-end-${--state.arrayDepth}`;
+      return `punctuation array-end-${--state.arrayDepth}`;
     }
     if (token.text === "}") {
       state.stack.pop();
-      return `punctuation-table-end-${--state.tableDepth}`;
+      return `punctuation table-end-${--state.tableDepth}`;
     }
 
     if (token.text === "," || token.text === ":") {
@@ -214,7 +214,7 @@ function postprocessTOML(token: TypedToken): boolean {
     return isAdjacent(token, token.prev);
   }
   if (
-    token.type === "literal-header"
+    token.type === "header"
     && ["[", "]"].includes(token.text)
     && token.text === token?.prev?.text
   ) {
@@ -223,8 +223,38 @@ function postprocessTOML(token: TypedToken): boolean {
   return false;
 }
 
+const theme = {
+  number: {
+    color: "var(--number)",
+  },
+  keyword: {
+    color: "var(--number)",
+  },
+  key: {
+    color: "var(--string)",
+  },
+  value: {
+    color: "var(--value)",
+  },
+  header: {
+    color: "var(--literal)",
+    "font-weight": "bold",
+  },
+  punctuation: {
+    color: "var(--punctuation)",
+  },
+  operator: {
+    color: "var(--type)",
+  },
+  comment: {
+    color: "var(--comment)",
+    "font-style": "italic",
+  },
+};
+
 export const languageDefinition: LanguageDefinition<{}> = {
   name: "toml",
+  theme,
   definitionFactory: defineTOML,
   postprocessor: postprocessTOML,
 };

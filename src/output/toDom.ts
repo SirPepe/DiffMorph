@@ -6,6 +6,7 @@ import {
   RenderRoot,
   RenderText,
 } from "../types";
+import { languages } from "../languages";
 import { createIdGenerator } from "../lib/util";
 
 const nextId = createIdGenerator();
@@ -39,59 +40,7 @@ const DEFAULT_STYLES = `
 .dm-token, .dm-decoration {
   transition: transform var(--dm-transition-time, 500ms),
               opacity var(--dm-transition-time, 500ms);
-}
-/* JSON and JSONC */
-.dm-box.language-json .dm-token.number,
-.dm-box.language-jsonc .dm-token.number {
-  color: var(--number);
-}
-.dm-box.language-json .dm-token.string,
-.dm-box.language-jsonc .dm-token.string {
-  color: var(--string);
-}
-.dm-box.language-json .dm-token.value,
-.dm-box.language-jsonc .dm-token.value {
-  color: var(--value);
-}
-.dm-box.language-json .dm-token[class*="keyword-"],
-.dm-box.language-jsonc .dm-token[class*="keyword-"] {
-  color: var(--literal);
-}
-.dm-box.language-json .dm-token[class*="punctuation"],
-.dm-box.language-jsonc .dm-token[class*="punctuation"] {
-  color: var(--punctuation);
-}
-.dm-box.language-json .dm-token[class*="comment-"],
-.dm-box.language-jsonc .dm-token[class*="comment-"] {
-  color: var(--comment);
-  font-style: italic;
-}
-/* TOML */
-.dm-box.language-toml .dm-token.number,
-.dm-box.language-toml .dm-token.keyword {
-  color: var(--number);
-}
-.dm-box.language-toml .dm-token.string-key {
-  color: var(--string);
-}
-.dm-box.language-toml .dm-token.value {
-  color: var(--value);
-}
-.dm-box.language-toml .dm-token[class*="literal-"] {
-  color: var(--literal);
-  font-weight: bold;
-}
-.dm-box.language-toml .dm-token[class*="punctuation"] {
-  color: var(--punctuation);
-}
-.dm-box.language-toml .dm-token[class*="operator"] {
-  color: var(--type);
-}
-.dm-box.language-toml .dm-token.comment {
-  color: var(--comment);
-  font-style: italic;
-}
-`;
+}`;
 
 function generateTextCss(
   { id, x, y, isVisible }: DecorationPosition,
@@ -155,24 +104,41 @@ function generateBoxCss(
   return styles;
 }
 
+function themeToCss(
+  prefix: string,
+  theme: Record<string, Record<string, string>>
+): string {
+  return Object.entries(theme).map(([type, props]) => {
+    const selector = `${prefix} .` + type.split(/\s+/).join(".");
+    const declarations = Object.entries(props).map(([property, value]) => {
+      return `${property}:${value}`;
+    }).join(";");
+    return `${selector}{${declarations}}`;
+  }).join("\n");
+}
+
+function getDefaultStyles(langs: Set<string>): string {
+  let css = DEFAULT_STYLES;
+  for (const lang of langs) {
+    if (lang in languages) {
+      css += themeToCss(
+        `.dm-box.language-${lang}`,
+        languages[lang].theme)
+    }
+  }
+  return css;
+}
+
 function generateStyle(
   rootFrames: Map<number, RenderPositions>,
+  languages: Set<string>,
   classPrefix: string
 ): HTMLStyleElement {
   const styles = [];
   for (const [frameIdx, rootFrame] of rootFrames) {
     styles.push(...generateBoxCss(rootFrame, classPrefix, frameIdx));
-    for (const position of rootFrame.frame.text.values()) {
-      styles.push(...generateTextCss(position, classPrefix, frameIdx));
-    }
-    for (const position of rootFrame.frame.decorations.values()) {
-      styles.push(...generateDecorationCss(position, classPrefix, frameIdx));
-    }
-    for (const position of rootFrame.frame.boxes.values()) {
-      styles.push(...generateBoxCss(position, classPrefix, frameIdx));
-    }
   }
-  const css = DEFAULT_STYLES + styles.join("\n");
+  const css = getDefaultStyles(languages) + styles.join("\n");
   const element = document.createElement("style");
   element.innerHTML = css; // innerHTML visible when logging element's outerHTML
   return element;
@@ -195,7 +161,11 @@ function generateDecoration({ id, data }: RenderDecoration): HTMLElement {
   return element;
 }
 
-function generateDom(root: RenderRoot): HTMLElement {
+function generateDom(root: RenderRoot): [HTMLElement, Set<string>] {
+  const languages = new Set<string>();
+  if (root.language) {
+    languages.add(root.language);
+  }
   const { tagName = "span", attributes = [] } = root.data;
   const element = document.createElement(tagName);
   element.className = `dm-box dm-${root.id} language-${root.language}`;
@@ -209,9 +179,13 @@ function generateDom(root: RenderRoot): HTMLElement {
     element.append(generateDecoration(decorations));
   }
   for (const box of root.content.boxes.values()) {
-    element.append(generateDom(box));
+    const [dom, boxLanguages] = generateDom(box);
+    element.append(dom);
+    for (const boxLanguage of boxLanguages) {
+      languages.add(boxLanguage);
+    }
   }
-  return element;
+  return [element, languages];
 }
 
 export function toDom(
@@ -222,7 +196,9 @@ export function toDom(
   code.className = "dm-code";
   const id = nextId("dom", "container");
   wrapper.className = `dm dm-${id}`;
-  code.append(generateDom(renderData.objects));
-  wrapper.append(code, generateStyle(renderData.frames, `.dm-${id}`));
+  const [dom, languages] = generateDom(renderData.objects);
+  code.append(dom)
+  const style = generateStyle(renderData.frames, languages, `.dm-${id}`);
+  wrapper.append(code, style);
   return [wrapper, renderData.maxWidth, renderData.maxHeight];
 }

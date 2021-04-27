@@ -44,7 +44,7 @@ function defineJSON(
         token?.prev?.text === "*"
       ) {
         state.blockComment = false;
-        return "comment-block";
+        return "comment comment-block";
       }
 
       // enter block comment state
@@ -56,12 +56,12 @@ function defineJSON(
         token?.next?.text === "*"
       ) {
         state.blockComment = true;
-        return "comment-block";
+        return "comment comment-block";
       }
 
       // are we in block comment state?
       if (state.blockComment) {
-        return "comment-block";
+        return "comment comment-block";
       }
 
       // enter line comment state
@@ -73,12 +73,12 @@ function defineJSON(
         token?.next?.text === "/"
       ) {
         state.lineComment = true;
-        return "comment-line";
+        return "comment comment-line";
       }
 
       // in line comment state?
       if (state.lineComment) {
-        return "comment-line";
+        return "comment comment-line";
       }
     }
 
@@ -128,21 +128,21 @@ function defineJSON(
 
     // is token a keyword?
     if (KEYWORDS.includes(token.text)) {
-      return `keyword-${token.text}`;
+      return "keyword";
     }
 
     // Objects and arrays
     if (token.text === "{") {
-      return `punctuation-object-start-${state.objectDepth++}`;
+      return `punctuation object-start-${state.objectDepth++}`;
     }
     if (token.text === "[") {
-      return `punctuation-array-start-${state.arrayDepth++}`;
+      return `punctuation array-start-${state.arrayDepth++}`;
     }
     if (token.text === "]") {
-      return `punctuation-array-end-${--state.arrayDepth}`;
+      return `punctuation array-end-${--state.arrayDepth}`;
     }
     if (token.text === "}") {
-      return `punctuation-object-end-${--state.objectDepth}`;
+      return `punctuation object-end-${--state.objectDepth}`;
     }
 
     if (token.text === "," || token.text === ":") {
@@ -174,8 +174,31 @@ function postprocessJSON(token: TypedToken): boolean {
   return false;
 }
 
+const theme = {
+  number: {
+    color: "var(--number)",
+  },
+  string: {
+    color: "var(--string)",
+  },
+  value: {
+    color: "var(--value)",
+  },
+  keyword: {
+    color: "var(--literal)",
+  },
+  punctuation: {
+    color: "var(--punctuation)",
+  },
+  comment: {
+    color: "var(--comment)",
+    "font-style": "italic",
+  }
+};
+
 export const languageDefinition: LanguageDefinition<Flags> = {
   name: "json",
+  theme,
   definitionFactory: defineJSON,
   postprocessor: postprocessJSON,
 };

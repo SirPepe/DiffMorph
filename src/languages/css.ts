@@ -138,7 +138,7 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
     if (token.text === state.stringState) {
       state.stringState = false;
       if (state.urlState) {
-        return "string-url";
+        return "string url";
       }
       return "string";
     }
@@ -146,14 +146,14 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
     if (STRINGS.includes(token.text) && state.stringState === false) {
       state.stringState = token.text;
       if (state.urlState) {
-        return "string-url";
+        return "string url";
       }
       return "string";
     }
     // are we in string state?
     if (state.stringState) {
       if (state.urlState) {
-        return "string-url";
+        return "string url";
       }
       return "string";
     }
@@ -161,16 +161,16 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
     // exit url state
     if (state.urlState && token.text === ")") {
       state.urlState = false;
-      return "punctuation-url";
+      return "punctuation url";
     }
     // enter url state
     if (token.text.toLowerCase() === "url" && token?.next?.text === "(") {
       state.urlState = true;
-      return ["keyword-url", "punctuation-url"];
+      return ["keyword", "punctuation url"];
     }
     // are we in url state? If the url is quoted, string logic takes over
     if (state.urlState) {
-      return "string-url";
+      return "string url";
     }
 
     // enter @rule
@@ -182,13 +182,13 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
         state.contextStack.push(value);
         state.atHeaderState = true;
       }
-      return [`keyword-${value}`, `keyword-${value}`];
+      return [`keyword ${value}`, `keyword ${value}`];
     }
 
     // @rule header
     if (getContext(state).startsWith("at-")) {
       if (token.text === "}") {
-        const value = `punctuation-${getContext(state)}-end`;
+        const value = `punctuation ${getContext(state)}-end`;
         state.contextStack.pop();
         return value;
       }
@@ -197,24 +197,24 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
           getContext(state).endsWith("media") &&
           MEDIA_TYPES.has(token.text)
         ) {
-          return "keyword-media-type";
+          return "keyword media-type";
         }
         if (token.text === "(" || token.text === ")") {
-          return `punctuation-${getContext(state)}-argument`;
+          return `punctuation ${getContext(state)}-argument`;
         }
         if (token.text === "{") {
           state.atHeaderState = false;
-          return `punctuation-${getContext(state)}-start`;
+          return `punctuation ${getContext(state)}-start`;
         }
         if (token.text === ":") {
-          return `punctuation-${getContext(state)}`;
+          return `punctuation ${getContext(state)}`;
         }
         if (["and", "not", "or", "only"].includes(token.text.toLowerCase())) {
           return "operator";
         }
         const numeric = parseNumeric(token);
         if (numeric) {
-          return numeric.map((type) => `${type}-${getContext(state)}`);
+          return numeric.map((type) => `${type} ${getContext(state)}`);
         }
       }
     }
@@ -223,7 +223,7 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
     if (getContext(state) === "selector" && token.text === "{") {
       state.contextStack[state.contextStack.length - 1] = "rule";
       state.ruleContext = "left";
-      return "punctuation-rule-start";
+      return "punctuation rule-start";
     }
     // enter css rule selector state
     if (
@@ -234,17 +234,17 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
         token.prev.text === ">") // after <style> embedded in HTML
     ) {
       state.contextStack.push("selector");
-      return "value-selector";
+      return "value selector";
     }
     // css rule selector state
     if (getContext(state) === "selector") {
-      return "value-selector";
+      return "value selector";
     }
     // exit css rule state
     if (getContext(state) === "rule" && token.text === "}") {
       state.contextStack.pop();
       state.ruleContext = "none";
-      return "punctuation-rule-end";
+      return "punctuation rule-end";
     }
 
     // properties and switching to values
@@ -267,7 +267,7 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
 
     // Function values like var(), calc() etc.
     if (token.text.match(/[a-z-]/) && token?.next?.text === "(") {
-      return "keyword-function";
+      return "keyword function";
     }
 
     // Number values
@@ -288,12 +288,12 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
 
 function postprocessCss(token: TypedToken): boolean {
   // Join @ sign and rule name
-  if (token.type.startsWith("keyword-at") && token.type === token?.prev?.type) {
+  if (token.type.startsWith("keyword at") && token.type === token?.prev?.type) {
     return true;
   }
   // Join colons, dots and hashes with selector token directly afterwards
   if (
-    token.type === "value-selector" &&
+    token.type === "value selector" &&
     token?.prev?.type === token.type &&
     isAdjacent(token, token.prev) &&
     [":", ".", "#"].includes(token.prev.text)
@@ -334,8 +334,11 @@ function postprocessCss(token: TypedToken): boolean {
   return false;
 }
 
+const theme = {};
+
 export const languageDefinition: LanguageDefinition<Flags> = {
   name: "css",
+  theme,
   definitionFactory: defineCss,
   postprocessor: postprocessCss,
 };

@@ -157,13 +157,13 @@ describe("embedded languages", () => {
     expect(types).toEqual([
       "tag",
       "tag",
-      "value-selector",
-      "value-selector",
-      "punctuation-rule-start",
+      "value selector",
+      "value selector",
+      "punctuation rule-start",
       "property",
       "punctuation",
       "token",
-      "punctuation-rule-end",
+      "punctuation rule-end",
       "tag",
     ]);
   });

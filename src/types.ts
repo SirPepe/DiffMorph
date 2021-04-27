@@ -172,6 +172,7 @@ type LanguageFunctionFactory<Flags extends Record<string, any>> = (
 
 export type LanguageDefinition<Flags extends Record<string, any>> = {
   name: string;
+  theme: Record<string, Record<string, string>>;
   definitionFactory: LanguageFunctionFactory<Flags>;
   postprocessor: LanguagePostprocessor;
 };
