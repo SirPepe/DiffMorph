@@ -142,11 +142,11 @@ function toRenderDecoration(
 
 function renderFrames(
   lifecycle: BoxLifecycle<TypedToken, Decoration<any>>,
-): [ RenderRoot, Map<number, RenderPositions> ] {
+): [ RenderRoot<RenderText, RenderDecoration>, Map<number, RenderPositions> ] {
   const frames = new Map<number, RenderPositions>();
   const textTokens = new Map<string, RenderText>();
   const decoTokens = new Map<string, RenderDecoration>();
-  const boxTokens = new Map<string, RenderRoot>();
+  const boxTokens = new Map<string, RenderRoot<RenderText, RenderDecoration>>();
   const textPool = new TokenPool(toRenderText);
   const decoPool = new TokenPool(toRenderDecoration);
   for (let [frameIdx, self] of lifecycle.self) {
@@ -203,7 +203,7 @@ function renderFrames(
 
 export function toRenderData(
   rootLifecycle: BoxLifecycle<TypedToken, Decoration<any>> | null
-): RenderData {
+): RenderData<RenderText, RenderDecoration> {
   if (rootLifecycle === null) {
     return {
       objects: {

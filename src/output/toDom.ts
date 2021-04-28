@@ -161,7 +161,9 @@ function generateDecoration({ id, data }: RenderDecoration): HTMLElement {
   return element;
 }
 
-function generateDom(root: RenderRoot): [HTMLElement, Set<string>] {
+function generateDom(
+  root: RenderRoot<RenderText, RenderDecoration>
+): [HTMLElement, Set<string>] {
   const languages = new Set<string>();
   if (root.language) {
     languages.add(root.language);
@@ -189,7 +191,7 @@ function generateDom(root: RenderRoot): [HTMLElement, Set<string>] {
 }
 
 export function toDom(
-  renderData: RenderData
+  renderData: RenderData<RenderText, RenderDecoration>
 ): [Wrapper: HTMLElement, MaxWidth: number, MaxHeight: number] {
   const wrapper = document.createElement("div");
   const code = document.createElement("pre");
