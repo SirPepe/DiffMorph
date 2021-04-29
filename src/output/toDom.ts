@@ -22,7 +22,7 @@ const DEFAULT_STYLES = `
   --comment: var(--dm-comment, ${DEFAULT_COLORS.comment});
   --global: var(--dm-global, ${DEFAULT_COLORS.global});
   --type: var(--dm-type, ${DEFAULT_COLORS.type});
-  --tag: var(--dm-tag, hsl(${DEFAULT_COLORS.tag});
+  --tag: var(--dm-tag, ${DEFAULT_COLORS.tag});
   --value: var(--dm-value, ${DEFAULT_COLORS.value});
   --literal: var(--dm-literal, ${DEFAULT_COLORS.literal});
   --punctuation: var(--dm-punctuation, ${DEFAULT_COLORS.punctuation});
