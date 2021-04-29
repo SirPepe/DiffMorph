@@ -46,7 +46,11 @@ const DEFAULT_STYLES = `
 function generateTextCss(
   { id, x, y, alpha }: DecorationPosition,
   baseSelector: string,
+  offsetX: number,
+  offsetY: number
 ): string[] {
+  x -= offsetX;
+  y -= offsetY;
   const styles = [];
   const selector = `${baseSelector} > .dm-token.dm-${id}`;
   const rules = [`transform:translate(${x}ch, calc(${y} * var(--line-height)))`];
@@ -60,7 +64,11 @@ function generateTextCss(
 function generateDecorationCss(
   { id, x, y, width, height, alpha }: DecorationPosition,
   baseSelector: string,
+  offsetX: number,
+  offsetY: number
 ): string[] {
+  x -= offsetX;
+  y -= offsetY;
   const styles = [];
   const selector = `${baseSelector} > .dm-decoration.dm-${id}`;
   const rules = [
@@ -75,9 +83,14 @@ function generateDecorationCss(
   return styles;
 }
 
+// In DOM, boxes are actual objects that create a relative coordinate system for
+// their contents. Said contents has absolute coordinates, which we must
+// compensate for with extra offsets.
 function generateBoxCss(
   { id, x, y, width, height, alpha, frame }: RenderPositions,
   baseSelector: string,
+  offsetX: number,
+  offsetY: number
 ): string[] {
   const styles = [];
   const selector = `${baseSelector} > .dm-box.dm-${id}`;
@@ -91,13 +104,13 @@ function generateBoxCss(
   }
   styles.push(`${selector}{${rules.join(";")}}`);
   for (const position of frame.text.values()) {
-    styles.push(...generateTextCss(position, selector));
+    styles.push(...generateTextCss(position, selector, x - offsetX, y - offsetY));
   }
   for (const position of frame.decorations.values()) {
-    styles.push(...generateDecorationCss(position, selector));
+    styles.push(...generateDecorationCss(position, selector, x - offsetX, y - offsetY));
   }
   for (const position of frame.boxes.values()) {
-    styles.push(...generateBoxCss(position, selector));
+    styles.push(...generateBoxCss(position, selector, x - offsetX, y - offsetY));
   }
   return styles;
 }
@@ -137,7 +150,7 @@ function generateStyle(
   const styles = [];
   for (const [frameIdx, rootFrame] of rootFrames) {
     const baseSelector = `${rootSelector}.frame${frameIdx} .dm-code`;
-    styles.push(...generateBoxCss(rootFrame, baseSelector));
+    styles.push(...generateBoxCss(rootFrame, baseSelector, 0, 0));
   }
   const css = getDefaultStyles(languages) + styles.join("\n");
   const element = document.createElement("style");
