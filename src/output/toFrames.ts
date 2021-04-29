@@ -1,3 +1,4 @@
+import BezierEasing from "bezier-easing";
 import {
   DecorationPosition,
   RenderData,
@@ -7,8 +8,30 @@ import {
   RenderText,
   TextPosition
 } from "../types";
-import BezierEasing from "bezier-easing";
+import { languages } from "../languages";
 import { assertIs } from "../lib/util";
+import { DEFAULT_COLORS, Theme, ThemeProperties } from "../lib/theme";
+
+// Translate language theme into canvas styles
+function setStyles(
+  ctx: CanvasRenderingContext2D,
+  styles: ThemeProperties
+): void {
+  const {
+    color,
+    "font-style": fontStyle = "normal",
+    "font-weight": fontWeight = "normal"
+  } = styles;
+  // Text color
+  if (color) {
+    const value = (DEFAULT_COLORS as any)[color] as string | undefined;
+    if (value) {
+      ctx.fillStyle = value;
+    }
+  }
+  // Assuming the base style is just the size and font family, this should work
+  ctx.font = `${fontStyle} ${fontWeight} ${ctx.font}`;
+}
 
 const ease = BezierEasing(0.25, 0.1, 0.25, 1);
 
@@ -137,20 +160,28 @@ export function tweenFrames(
 }
 
 class TextNode {
+  private styles: ThemeProperties | undefined;
   constructor(
     private ctx: CanvasRenderingContext2D,
     private text: string,
-    private styles: Record<string, string>,
+    type: string,
+    theme: Theme,
     private cellSize: number,
     private lineHeight: number,
-  ){}
+  ){
+    type = type.split(/\s/)[0];
+    this.styles = theme[type];
+  }
+
   public draw(x: number, y: number, alpha: number): void {
     if (alpha === 0) {
       return;
     }
     this.ctx.save();
     this.ctx.globalAlpha = alpha;
-    Object.assign(this.ctx, this.styles);
+    if (this.styles) {
+      setStyles(this.ctx, this.styles);
+    }
     this.ctx.fillText(
       this.text,
       x * this.cellSize,
@@ -177,11 +208,17 @@ function toRenderNodes(
   cellSize: number,
   lineHeight: number,
 ): RenderRoot<TextNode, DecorationNode> {
+  const styles = root.language
+    ? languages[root.language]?.theme
+    : {};
   return {
     ...root,
     content: {
-      text: new Map(Array.from(root.content.text, ([id, text]) => {
-        return [id, new TextNode(ctx, text.text, {}, cellSize, lineHeight)];
+      text: new Map(Array.from(root.content.text, ([id, { text, type }]) => {
+        return [
+          id,
+          new TextNode(ctx, text, type, styles, cellSize, lineHeight)
+        ];
       })),
       decorations: new Map(Array.from(root.content.decorations, ([id]) => {
         return [id, new DecorationNode(ctx, {}, cellSize, lineHeight)];

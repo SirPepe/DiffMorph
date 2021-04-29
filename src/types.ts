@@ -7,6 +7,8 @@
 // do not; highlights are intended to be rendered in the final output to create
 // squiggly lines or other text decorations.
 
+import { Theme } from "./lib/theme";
+
 // Represents a bit of code
 export type Code = string | CodeContainer;
 
@@ -172,7 +174,7 @@ type LanguageFunctionFactory<Flags extends Record<string, any>> = (
 
 export type LanguageDefinition<Flags extends Record<string, any>> = {
   name: string;
-  theme: Record<string, Record<string, string>>;
+  theme: Theme;
   definitionFactory: LanguageFunctionFactory<Flags>;
   postprocessor: LanguagePostprocessor;
 };

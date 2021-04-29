@@ -334,11 +334,9 @@ function postprocessCss(token: TypedToken): boolean {
   return false;
 }
 
-const theme = {};
-
 export const languageDefinition: LanguageDefinition<Flags> = {
   name: "css",
-  theme,
+  theme: {},
   definitionFactory: defineCss,
   postprocessor: postprocessCss,
 };

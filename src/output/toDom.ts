@@ -8,6 +8,7 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { createIdGenerator } from "../lib/util";
+import { DEFAULT_COLORS, Theme } from "../lib/theme";
 
 const nextId = createIdGenerator();
 
@@ -16,15 +17,15 @@ const DEFAULT_STYLES = `
   transition: transform var(--dm-transition-time, 500ms);
   position: relative;
   --line-height: var(--dm-line-height, 2.5ch);
-  --string: var(--dm-string, hsl(340, 95%, 38%));
-  --number: var(--dm-number, hsl(170, 100%, 25%));
-  --comment: var(--dm-comment, hsl(0, 0%, 50%));
-  --global: var(--dm-global, hsl(215, 100%, 40%));
-  --type: var(--dm-type, hsl(207, 75%, 25%));
-  --tag: var(--dm-tag, hsl(185, 100%, 17.5%));
-  --value: var(--dm-value, hsl(135, 100%, 28%));
-  --literal: var(--dm-literal, hsl(280, 70%, 50%));
-  --punctuation: var(--dm-punctuation, hsl(0, 0%, 25%));
+  --string: var(--dm-string, ${DEFAULT_COLORS.string});
+  --number: var(--dm-number, ${DEFAULT_COLORS.number});
+  --comment: var(--dm-comment, ${DEFAULT_COLORS.comment});
+  --global: var(--dm-global, ${DEFAULT_COLORS.global});
+  --type: var(--dm-type, ${DEFAULT_COLORS.type});
+  --tag: var(--dm-tag, hsl(${DEFAULT_COLORS.tag});
+  --value: var(--dm-value, ${DEFAULT_COLORS.value});
+  --literal: var(--dm-literal, ${DEFAULT_COLORS.literal});
+  --punctuation: var(--dm-punctuation, ${DEFAULT_COLORS.punctuation});
 }
 .dm-token, .dm-decoration, .dm-box {
   overflow: visible;
@@ -104,14 +105,16 @@ function generateBoxCss(
   return styles;
 }
 
-function themeToCss(
-  prefix: string,
-  theme: Record<string, Record<string, string>>
-): string {
+function themeToCss(prefix: string, theme: Theme): string {
   return Object.entries(theme).map(([type, props]) => {
     const selector = `${prefix} .` + type.split(/\s+/).join(".");
     const declarations = Object.entries(props).map(([property, value]) => {
-      return `${property}:${value}`;
+      if (value) {
+        if (property === "color") {
+          value = `var(--${value})`;
+        }
+        return `${property}:${value}`;
+      }
     }).join(";");
     return `${selector}{${declarations}}`;
   }).join("\n");
