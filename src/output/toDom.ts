@@ -45,11 +45,10 @@ const DEFAULT_STYLES = `
 
 function generateTextCss(
   { id, x, y, alpha }: DecorationPosition,
-  rootSelector: string,
-  frameIdx: number
+  baseSelector: string,
 ): string[] {
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-token.dm-${id}`;
+  const selector = `${baseSelector} > .dm-token.dm-${id}`;
   const rules = [`transform:translate(${x}ch, calc(${y} * var(--line-height)))`];
   if (alpha === 1) {
     rules.push(`opacity:1`);
@@ -60,11 +59,10 @@ function generateTextCss(
 
 function generateDecorationCss(
   { id, x, y, width, height, alpha }: DecorationPosition,
-  rootSelector: string,
-  frameIdx: number
+  baseSelector: string,
 ): string[] {
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-decoration.dm-${id}`;
+  const selector = `${baseSelector} > .dm-decoration.dm-${id}`;
   const rules = [
     `transform:translate(${x}ch,calc(${y} * var(--line-height)))`,
     `width:${width}ch`,
@@ -78,29 +76,28 @@ function generateDecorationCss(
 }
 
 function generateBoxCss(
-  { id, x, y, width, height, alpha: isVisible, frame }: RenderPositions,
-  rootSelector: string,
-  frameIdx: number
+  { id, x, y, width, height, alpha, frame }: RenderPositions,
+  baseSelector: string,
 ): string[] {
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-box.dm-${id}`;
+  const selector = `${baseSelector} > .dm-box.dm-${id}`;
   const rules = [
     `transform:translate(${x}ch,calc(${y} * var(--line-height)))`,
     `width:${width}ch`,
     `height:calc(${height} * var(--line-height))`,
   ];
-  if (isVisible) {
+  if (alpha) {
     rules.push(`opacity:1`);
   }
   styles.push(`${selector}{${rules.join(";")}}`);
   for (const position of frame.text.values()) {
-    styles.push(...generateTextCss(position, rootSelector, frameIdx));
+    styles.push(...generateTextCss(position, selector));
   }
   for (const position of frame.decorations.values()) {
-    styles.push(...generateDecorationCss(position, rootSelector, frameIdx));
+    styles.push(...generateDecorationCss(position, selector));
   }
   for (const position of frame.boxes.values()) {
-    styles.push(...generateBoxCss(position, rootSelector, frameIdx));
+    styles.push(...generateBoxCss(position, selector));
   }
   return styles;
 }
@@ -135,11 +132,12 @@ function getDefaultStyles(langs: Set<string>): string {
 function generateStyle(
   rootFrames: Map<number, RenderPositions>,
   languages: Set<string>,
-  classPrefix: string
+  rootSelector: string
 ): HTMLStyleElement {
   const styles = [];
   for (const [frameIdx, rootFrame] of rootFrames) {
-    styles.push(...generateBoxCss(rootFrame, classPrefix, frameIdx));
+    const baseSelector = `${rootSelector}.frame${frameIdx} .dm-code`;
+    styles.push(...generateBoxCss(rootFrame, baseSelector));
   }
   const css = getDefaultStyles(languages) + styles.join("\n");
   const element = document.createElement("style");
@@ -173,10 +171,10 @@ function generateDom(
   }
   const { tagName = "span", attributes = [] } = root.data;
   const element = document.createElement(tagName);
-  element.className = `dm-box dm-${root.id} language-${root.language}`;
   for (const [attribute, value] of attributes) {
     element.setAttribute(attribute, value);
   }
+  element.classList.add("dm-box", `dm-${root.id}`, `language-${root.language}`);
   for (const text of root.content.text.values()) {
     element.append(generateText(text));
   }
