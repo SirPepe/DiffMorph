@@ -16,6 +16,31 @@ function value(from: number, to: number, step: number, steps: number): number {
   return from + (to - from) * ease(step / steps)
 }
 
+// Text does not change its dimensions
+function tweenTextPositions(
+  fromPositions: Map<string, TextPosition>,
+  toPositions: Map<string, TextPosition>,
+  step: number,
+  steps: number
+): Map<string, TextPosition> {
+  const result = new Map<string, TextPosition>();
+  const ids = new Set([...fromPositions.keys(), ...toPositions.keys()]);
+  for (const id of ids) {
+    const from = fromPositions.get(id);
+    const to = toPositions.get(id);
+    if (!from || !to){
+      continue;
+    }
+    result.set(id, {
+      ...from,
+      x: value(from.x, to.x, step, steps),
+      y: value(from.y, to.y, step, steps),
+      alpha: value(from.alpha, to.alpha, step, steps),
+    });
+  }
+  return result;
+}
+
 // Decorations can change positions, dimensions and alpha
 function tweenDecorationPositions(
   fromPositions: Map<string, DecorationPosition>,
@@ -37,31 +62,6 @@ function tweenDecorationPositions(
       y: value(from.y, to.y, step, steps),
       width: value(from.width, to.width, step, steps),
       height: value(from.height, to.height, step, steps),
-      alpha: value(from.alpha, to.alpha, step, steps),
-    });
-  }
-  return result;
-}
-
-// Text does not change its dimensions
-function tweenTextPositions(
-  fromPositions: Map<string, TextPosition>,
-  toPositions: Map<string, TextPosition>,
-  step: number,
-  steps: number
-): Map<string, TextPosition> {
-  const result = new Map<string, TextPosition>();
-  const ids = new Set([...fromPositions.keys(), ...toPositions.keys()]);
-  for (const id of ids) {
-    const from = fromPositions.get(id);
-    const to = toPositions.get(id);
-    if (!from || !to){
-      continue;
-    }
-    result.set(id, {
-      ...from,
-      x: value(from.x, to.x, step, steps),
-      y: value(from.y, to.y, step, steps),
       alpha: value(from.alpha, to.alpha, step, steps),
     });
   }
@@ -247,10 +247,10 @@ function setupContext(
 }
 
 // Generate lazily for hopefully some resemblance of efficiency
-export function * toFrames(
+export function toFrames(
   renderData: RenderData<RenderText, RenderDecoration>,
   steps = 30 // 500ms @ 60fps
-): Generator<ImageData, undefined, unknown> {
+): [number, number, () => Generator<ImageData, void, unknown>] {
   const lineHeight = 2.5;
   const [ctx, cellSize] = setupContext(
     lineHeight,
@@ -259,10 +259,14 @@ export function * toFrames(
   );
   const frames = tweenFrames(renderData.frames, steps);
   const nodes = toRenderNodes(renderData.objects, ctx, cellSize, lineHeight);
-  for (const frame of frames.values()) {
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    renderNodes(nodes, ctx, frame, 0, 0);
-    yield ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-  }
-  return;
+  return [ctx.canvas.width, ctx.canvas.height, function * () {
+    for (const frame of frames.values()) {
+      ctx.save();
+      ctx.fillStyle = "white";
+      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      ctx.restore();
+      renderNodes(nodes, ctx, frame, 0, 0);
+      yield ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
+    }
+  }];
 }
