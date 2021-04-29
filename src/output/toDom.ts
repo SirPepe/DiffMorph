@@ -41,6 +41,9 @@ const DEFAULT_STYLES = `
 .dm-token, .dm-decoration {
   transition: transform var(--dm-transition-time, 500ms),
               opacity var(--dm-transition-time, 500ms);
+}
+.dm-box {
+  transition: transform var(--dm-transition-time, 500ms);
 }`;
 
 function generateTextCss(
