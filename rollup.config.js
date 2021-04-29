@@ -74,10 +74,31 @@ export default [
     ...esmConfig,
   },
   {
+    input: "src/index.ts",
+    output: {
+      sourcemap: true,
+      file: "dist/esm/index.js",
+      format: "esm",
+      plugins: [license({ banner })],
+    },
+    ...esmConfig,
+  },
+  {
     input: "src/element/element.ts",
     output: {
       sourcemap: true,
       file: "dist/min/element.js",
+      format: "umd",
+      name: "DiffMorph",
+      plugins: [terser(), license({ banner })],
+    },
+    ...minConfig,
+  },
+  {
+    input: "src/index.ts",
+    output: {
+      sourcemap: true,
+      file: "dist/min/index.js",
       format: "umd",
       name: "DiffMorph",
       plugins: [terser(), license({ banner })],
