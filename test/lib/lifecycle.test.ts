@@ -111,7 +111,7 @@ describe("Expanded lifecycles", () => {
       tokenize("."),
     ]));
     // without extension: nil, nil, ADD
-    // with extension: BDE, DEL, ADD
+    // with extension: BDE, BAD, ADD
     const res = toLifecycle(diffs, true);
     if (!res) {
       throw new Error("result is null");
@@ -136,8 +136,36 @@ describe("Expanded lifecycles", () => {
       tokenize(""),
       tokenize("."),
     ]));
-    // without extension: nil, nil, ADD
-    // with extension: BDE, DEL, ADD
+    // without extension: nil, nil, nil, ADD
+    // with extension: BDE, DEL, BAD, ADD
+    const res = toLifecycle(diffs, true);
+    if (!res) {
+      throw new Error("result is null");
+    }
+    expect(res.text[0]).toEqual(
+      new Map<any, any>([
+        [0, {
+          kind: "BDE",
+          from: (diffs[3].content[0] as any).item,
+          item: (diffs[3].content[0] as any).item }
+        ],
+        [1, { kind: "DEL", item: (diffs[3].content[0] as any).item }],
+        [2, { kind: "BAD", item: (diffs[3].content[0] as any).item }],
+        [3, diffs[3].content[0]], // ADD
+      ]),
+    );
+  });
+
+  test("add BDE and DEL for text tokens visible in the last frame", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize(""),
+      tokenize(""),
+      tokenize(""),
+      tokenize("."),
+      tokenize("."),
+    ]));
+    // without extension: nil, nil, nil, ADD, nil
+    // with extension: BDE, DEL, BAD, ADD, nil
     const res = toLifecycle(diffs, true);
     if (!res) {
       throw new Error("result is null");

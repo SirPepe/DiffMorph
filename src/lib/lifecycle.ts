@@ -1,6 +1,6 @@
 import { Box, Token } from "../types";
 import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "./diff";
-import { minmax } from "./util";
+import { assertIs, minmax } from "./util";
 
 export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
 
@@ -228,13 +228,16 @@ function expandLifecycle(
   // don't get properly deleted because the sequence is over. This makes for a
   // jarring visual effect in GIFs and such, so we have to augment these cases
   // with BDE and DEL where appropriate.
-  const last = lifecycle.get(parentMax);
-  if (!last || last.kind === "DEL") {
-    return; // no wrap-around for this token necessary, token not in last frame
+  const max = Math.max(...lifecycle.keys());
+  const last = lifecycle.get(max) as ExtendedDiffOp<unknown> | BOX<unknown>;
+  // No wrap-around for this token necessary, token not in last frame
+  if (last.kind === "DEL") {
+    return;
   }
+  // No wrap-around for this token necessary, token present in first frame
   const first = lifecycle.get(parentMin);
   if (first) {
-    return; // no wrap-around for this token necessary, token in first frame
+    return;
   }
   // Insert BDE to smooth out the wrap-around
   lifecycle.set(parentMin, { kind: "BDE", from: last.item, item: last.item });
