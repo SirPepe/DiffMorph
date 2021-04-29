@@ -183,6 +183,7 @@ function expandLifecycle(
   if (parentMax - parentMin < 1) {
     return; // No need to expand something that can only ever be one frame
   }
+  // Handle DEL operations in general
   for (const [frame, op] of lifecycle) {
     if (op.kind === "DEL") {
       const [nextFrame, nextOp] = getNextFrame(
@@ -200,6 +201,7 @@ function expandLifecycle(
       }
     }
   }
+  // Handle ADD operations in general
   const ops = Array.from(lifecycle.values());
   for (const [frame, op] of lifecycle) {
     if (op.kind === "ADD") {
@@ -221,6 +223,25 @@ function expandLifecycle(
         lifecycle.set(prevFrame, { kind: "BAD", item: op.item });
       }
     }
+  }
+  // Handle wrap-around of tokens that are present in the last frame, but that
+  // don't get properly deleted because the sequence is over. This makes for a
+  // jarring visual effect in GIFs and such, so we have to augment these cases
+  // with BDE and DEL where appropriate.
+  const last = lifecycle.get(parentMax);
+  if (!last || last.kind === "DEL") {
+    return; // no wrap-around for this token necessary, token not in last frame
+  }
+  const first = lifecycle.get(parentMin);
+  if (first) {
+    return; // no wrap-around for this token necessary, token in first frame
+  }
+  // Insert BDE to smooth out the wrap-around
+  lifecycle.set(parentMin, { kind: "BDE", from: last.item, item: last.item });
+  // If the second frame is also free, insert the proper DEL operation
+  const second = lifecycle.get(parentMin + 1);
+  if (!second) {
+    lifecycle.set(parentMin + 1, { kind: "DEL", item: last.item });
   }
 }
 

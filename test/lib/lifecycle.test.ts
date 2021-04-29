@@ -104,6 +104,58 @@ describe("Expanded lifecycles", () => {
     );
   });
 
+  test("add BDE for text tokens in the last frame that don't appear in the first", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize(""),
+      tokenize(""),
+      tokenize("."),
+    ]));
+    // without extension: nil, nil, ADD
+    // with extension: BDE, DEL, ADD
+    const res = toLifecycle(diffs, true);
+    if (!res) {
+      throw new Error("result is null");
+    }
+    expect(res.text[0]).toEqual(
+      new Map<any, any>([
+        [0, {
+          kind: "BDE",
+          from: (diffs[2].content[0] as any).item,
+          item: (diffs[2].content[0] as any).item }
+        ],
+        [1, { kind: "BAD", item: (diffs[2].content[0] as any).item }],
+        [2, diffs[2].content[0]], // ADD
+      ]),
+    );
+  });
+
+  test("add BDE and DEL for text tokens in the last frame that don't appear in the first", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize(""),
+      tokenize(""),
+      tokenize(""),
+      tokenize("."),
+    ]));
+    // without extension: nil, nil, ADD
+    // with extension: BDE, DEL, ADD
+    const res = toLifecycle(diffs, true);
+    if (!res) {
+      throw new Error("result is null");
+    }
+    expect(res.text[0]).toEqual(
+      new Map<any, any>([
+        [0, {
+          kind: "BDE",
+          from: (diffs[3].content[0] as any).item,
+          item: (diffs[3].content[0] as any).item }
+        ],
+        [1, { kind: "DEL", item: (diffs[3].content[0] as any).item }],
+        [2, { kind: "BAD", item: (diffs[3].content[0] as any).item }],
+        [3, diffs[3].content[0]], // ADD
+      ]),
+    );
+  });
+
   test("replaces DEL with BDE on boxes", () => {
     const diffs = optimizeDiffs(diff([
       tokenize({
@@ -176,7 +228,7 @@ describe("Expanded lifecycles", () => {
       tokenize(""),
     ]));
     // without extension: nil, nil, ADD, DEL, nil
-    // with extension: nil, BAD, ADD, DEL, BDE
+    // with extension: nil, BAD, ADD, BDE, DEL,
     const res = toLifecycle(diffs, true);
     if (!res) {
       throw new Error("result is null");
@@ -184,9 +236,9 @@ describe("Expanded lifecycles", () => {
     expect(Array.from(res.self.values(), ({ kind }) => kind)).toEqual(["ADD", "BOX", "MOV", "MOV", "BOX"]);
     expect(res.boxes[0].self).toEqual(
       new Map([
+        [1, { kind: "BAD", item: (diffs[2].content[0] as any).root.item }],
         [2, (diffs[2].content[0] as any).root], // ADD
         [3, { kind: "BDE", item: (diffs[3].content[0] as any).root.item, from: (diffs[2].content[0] as any).root.item }],
-        [1, { kind: "BAD", item: (diffs[2].content[0] as any).root.item }],
         [4, (diffs[3].content[0] as any).root], // DEL
       ]),
     );
