@@ -45,5 +45,53 @@ a = 1
 b = 2</dm-frame>
 </diff-morph>
 
+<diff-morph class="language-xml" controls>
+<dm-frame>&lt;?xml version="1.0" ?&gt;</dm-frame>
+<dm-frame>&lt;?xml version="1.0" ?&gt;
+&lt;soap:Envelope&gt;&lt;/soap:Envelope&gt;</dm-frame>
+<dm-frame>&lt;?xml version="1.0" ?&gt;
+&lt;soap:Envelope
+  xmlns:soap="http://www.w3.org/2003/05/soap-envelope"&gt;
+&lt;/soap:Envelope&gt;</dm-frame>
+<dm-frame>&lt;?xml version="1.0" ?&gt;
+&lt;soap:Envelope
+  xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+  xmlns:m="http://www.example.org"&gt;
+&lt;/soap:Envelope&gt;</dm-frame>
+<dm-frame>&lt;?xml version="1.0" ?&gt;
+&lt;soap:Envelope
+  xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+  xmlns:m="http://www.example.org"&gt;
+  &lt;soap:Header&gt;&lt;/soap:Header&gt;
+&lt;/soap:Envelope&gt;</dm-frame>
+<dm-frame>&lt;?xml version="1.0" ?&gt;
+&lt;soap:Envelope
+  xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+  xmlns:m="http://www.example.org"&gt;
+  &lt;soap:Header&gt;&lt;/soap:Header&gt;
+  &lt;soap:Body&gt;&lt;/soap:Body&gt;
+&lt;/soap:Envelope&gt;</dm-frame>
+<dm-frame>&lt;?xml version="1.0" ?&gt;
+&lt;soap:Envelope
+  xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+  xmlns:m="http://www.example.org"&gt;
+  &lt;soap:Header&gt;&lt;/soap:Header&gt;
+  &lt;soap:Body&gt;
+    &lt;m:GetStockPrice&gt;&lt;/m:GetStockPrice&gt;
+  &lt;/soap:Body&gt;
+&lt;/soap:Envelope&gt;</dm-frame>
+<dm-frame>&lt;?xml version="1.0" ?&gt;
+&lt;soap:Envelope
+  xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+  xmlns:m="http://www.example.org"&gt;
+  &lt;soap:Header&gt;&lt;/soap:Header&gt;
+  &lt;soap:Body&gt;
+    &lt;m:GetStockPrice&gt;
+      &lt;m:StockName&gt;T&lt;/m:StockName&gt;
+    &lt;/m:GetStockPrice&gt;
+  &lt;/soap:Body&gt;
+&lt;/soap:Envelope&gt;</dm-frame>
+</diff-morph>
+
 </body>
 </html>

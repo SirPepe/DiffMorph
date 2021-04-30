@@ -158,7 +158,6 @@ describe("embedded languages", () => {
       "tag",
       "tag",
       "value selector",
-      "value selector",
       "punctuation rule-start",
       "property",
       "punctuation",
