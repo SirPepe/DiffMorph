@@ -173,7 +173,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     // handle tag contents
     if (state.tagState) {
       // Continue after namespace operator in XML mode
-      if (xml && token.prev?.type?.endsWith("namespace")) {
+      if (xml && token.prev?.type?.match(/\snamespace/)) {
         if (token?.prev.prev) {
           return token?.prev.prev.type;
         }
@@ -229,10 +229,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
 
       // Namespace
       if (xml && token.text === ":") {
+        const namespaceFor = token.prev?.type || "none";
         if (state.tagState === "__XML_DECLARATION__") {
-          return "operator-xml namespace";
+          return `operator-xml namespace-${namespaceFor}`;
         } else {
-          return "operator namespace";
+          return `operator namespace-${namespaceFor}`;
         }
       }
 
@@ -335,7 +336,7 @@ function glueHTML(token: TypedToken): boolean {
       return true;
     }
     if (
-      token?.prev?.prev?.type === "operator namespace" &&
+      token?.prev?.prev?.type?.startsWith("operator namespace") &&
       token?.prev?.prev?.prev?.text.startsWith("</")
     ) {
       return true;
