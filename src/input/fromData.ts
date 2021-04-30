@@ -8,6 +8,8 @@ import {
   CodeContainer,
   Decoration,
   RenderData,
+  RenderDecoration,
+  RenderText,
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
@@ -58,7 +60,7 @@ export function processCode(
 export function fromData(
   inputs: InputContainer[],
   languageOverride?: string
-): RenderData {
+): RenderData<RenderText, RenderDecoration> {
   const typed = inputs.map((input) => {
     const tokenized = processCode(input);
     if (languageOverride) {

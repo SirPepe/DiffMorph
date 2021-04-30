@@ -1,3 +1,4 @@
+import { Theme, themeColors } from "../lib/theme";
 import { isAdjacent, lookaheadText } from "../lib/util";
 import { LanguageDefinition, RawToken, TypedToken } from "../types";
 
@@ -223,31 +224,31 @@ function postprocessTOML(token: TypedToken): boolean {
   return false;
 }
 
-const theme = {
+const theme: Theme = {
   number: {
-    color: "var(--number)",
+    color: themeColors.number,
   },
   keyword: {
-    color: "var(--number)",
+    color: themeColors.number,
   },
   key: {
-    color: "var(--string)",
+    color: themeColors.string,
   },
   value: {
-    color: "var(--value)",
+    color: themeColors.value,
   },
   header: {
-    color: "var(--literal)",
+    color: themeColors.literal,
     "font-weight": "bold",
   },
   punctuation: {
-    color: "var(--punctuation)",
+    color: themeColors.punctuation,
   },
   operator: {
-    color: "var(--type)",
+    color: themeColors.type,
   },
   comment: {
-    color: "var(--comment)",
+    color: themeColors.comment,
     "font-style": "italic",
   },
 };

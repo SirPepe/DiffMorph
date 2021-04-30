@@ -2,6 +2,7 @@
 // only) can be enabled by a flag, which the JSONC definition binds to true.
 
 import { isAdjacent, isNewLine } from "../lib/util";
+import { Theme, themeColors } from "../lib/theme";
 import { LanguageDefinition, RawToken, TypedToken } from "../types";
 
 type Flags = {
@@ -174,24 +175,24 @@ function postprocessJSON(token: TypedToken): boolean {
   return false;
 }
 
-const theme = {
+const theme: Theme = {
   number: {
-    color: "var(--number)",
+    color: themeColors.number,
   },
   string: {
-    color: "var(--string)",
+    color: themeColors.string,
   },
   value: {
-    color: "var(--value)",
+    color: themeColors.value,
   },
   keyword: {
-    color: "var(--literal)",
+    color: themeColors.literal,
   },
   punctuation: {
-    color: "var(--punctuation)",
+    color: themeColors.punctuation,
   },
   comment: {
-    color: "var(--comment)",
+    color: themeColors.comment,
     "font-style": "italic",
   }
 };

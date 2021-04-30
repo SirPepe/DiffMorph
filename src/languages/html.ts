@@ -11,6 +11,7 @@ import {
   RawToken,
   TypedToken,
 } from "../types";
+import { Theme, themeColors } from "../lib/theme";
 
 type Flags = {
   xml: boolean;
@@ -92,7 +93,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         return "doctype";
       } else if (xml && token?.next?.next?.text === "[") {
         state.commentState = "cdata";
-        return "comment-cdata";
+        return "comment cdata";
       } else {
         state.commentState = "comment";
         return "comment";
@@ -110,7 +111,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       lookaheadText(token, ["]", ">"])
     ) {
       state.commentState = false;
-      return ["comment-cdata", "comment-cdata", "comment-cdata"];
+      return ["comment cdata", "comment cdata", "comment cdata"];
     }
     // exit regular comment state
     if (
@@ -125,7 +126,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       return "comment";
     }
     if (state.commentState === "cdata") {
-      return "comment-cdata";
+      return "comment cdata";
     }
     if (state.commentState === "comment") {
       return "comment";
@@ -171,8 +172,8 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     }
     // handle tag contents
     if (state.tagState) {
-      // Continue after namespace operator
-      if (xml && token.prev?.type === "operator-namespace") {
+      // Continue after namespace operator in XML mode
+      if (xml && token.prev?.type?.match(/\snamespace/)) {
         if (token?.prev.prev) {
           return token?.prev.prev.type;
         }
@@ -182,7 +183,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       if (token.text === state.attrValueState) {
         state.attrState = false;
         state.attrValueState = false;
-        return "value";
+        if (state.tagState === "__XML_DECLARATION__") {
+          return "value-xml";
+        } else {
+          return "value";
+        }
       }
 
       // enter attribute value state
@@ -196,12 +201,20 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         ) {
           return ["value", processInlineCss(token.next, token.text)];
         }
-        return "value";
+        if (state.tagState === "__XML_DECLARATION__") {
+          return "value-xml";
+        } else {
+          return "value";
+        }
       }
 
       // are we in attribute value state?
       if (state.attrValueState) {
-        return "value";
+        if (state.tagState === "__XML_DECLARATION__") {
+          return "value-xml";
+        } else {
+          return "value";
+        }
       }
 
       // custom element tags contain dashes
@@ -216,12 +229,21 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
 
       // Namespace
       if (xml && token.text === ":") {
-        return "operator-namespace";
+        const namespaceFor = token.prev?.type || "none";
+        if (state.tagState === "__XML_DECLARATION__") {
+          return `operator-xml namespace-${namespaceFor}`;
+        } else {
+          return `operator namespace-${namespaceFor}`;
+        }
       }
 
       // Attribute value coming up
       if (token.text === "=") {
-        return "operator";
+        if (state.tagState === "__XML_DECLARATION__") {
+          return "operator-xml";
+        } else {
+          return "operator";
+        }
       }
 
       // Attribute value
@@ -231,8 +253,13 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         token.prev.text === "=" &&
         token.prev.type === "operator"
       ) {
-        return "value";
+        if (state.tagState === "__XML_DECLARATION__") {
+          return "value-xml";
+        } else {
+          return "value";
+        }
       }
+
       // Consume actual tag name. The tag state must be modified to, at the end
       // of the tag, include the whole tag name so that we can determine when to
       // switch to another language (eg. CSS, JS).
@@ -251,7 +278,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         state.attrState = state.attrState
           ? state.attrState + token.text
           : token.text;
-        return "attribute";
+        if (state.tagState === "__XML_DECLARATION__") {
+          return "attribute-xml";
+        } else {
+          return "attribute";
+        }
       }
     }
 
@@ -275,8 +306,8 @@ function glueHTML(token: TypedToken): boolean {
   }
   // Fuse attribute names
   if (
-    token.type === "attribute" &&
-    token?.prev?.type === "attribute" &&
+    token.type.startsWith("attribute") &&
+    token?.prev?.type === token.type &&
     isAdjacent(token, token.prev)
   ) {
     return true;
@@ -305,7 +336,7 @@ function glueHTML(token: TypedToken): boolean {
       return true;
     }
     if (
-      token?.prev?.prev?.type === "operator-namespace" &&
+      token?.prev?.prev?.type?.startsWith("operator namespace") &&
       token?.prev?.prev?.prev?.text.startsWith("</")
     ) {
       return true;
@@ -315,7 +346,7 @@ function glueHTML(token: TypedToken): boolean {
   if (token.type === "tag" && token?.prev?.text === "<") {
     return true;
   }
-  if (token.type === "comment" && isAdjacent(token, token.prev)) {
+  if (token.type.startsWith("comment") && isAdjacent(token, token.prev)) {
     if (token.text === "!" && token?.prev?.text === "<") {
       return true;
     }
@@ -336,10 +367,10 @@ function glueHTML(token: TypedToken): boolean {
   }
   // Fuse non-quote bits of attribute values
   if (
-    token.type === "value" &&
+    token.type.startsWith("value") &&
     !QUOTES.includes(token.text) &&
     token.prev &&
-    token.prev.type === "value" &&
+    token.prev.type === token.type &&
     !QUOTES.includes(token.prev.text)
   ) {
     return true;
@@ -347,7 +378,39 @@ function glueHTML(token: TypedToken): boolean {
   return false;
 }
 
-const theme = {};
+const theme: Theme = {
+  doctype: {
+    color: themeColors.comment,
+    "font-weight": "bold",
+  },
+  tag: {
+    color: themeColors.tag,
+    "font-weight": "bold",
+  },
+  attribute: {
+    color: themeColors.number,
+  },
+  value: {
+    color: themeColors.string,
+  },
+  "tag-xml": {
+    color: themeColors.type,
+    "font-weight": "bold",
+    "font-style": "italic",
+  },
+  "attribute-xml": {
+    color: themeColors.type,
+    "font-style": "italic",
+  },
+  "value-xml": {
+    color: themeColors.type,
+    "font-style": "italic",
+  },
+  comment: {
+    color: themeColors.comment,
+    "font-style": "italic",
+  }
+};
 
 export const languageDefinition: LanguageDefinition<Flags> = {
   name: "html",

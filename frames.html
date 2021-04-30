@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Document</title>
+</head>
+<body>
+
+<pre class="language-jsonc">// JSONC
+{}</pre>
+<pre class="language-jsonc">// JSONC
+{ "hello": 42 }</pre>
+<pre class="language-jsonc">// JSONC
+{ "hello": 42, "world": 42 }</pre>
+<pre class="language-jsonc">// JSONC
+{
+  "hello": 42,
+  "world": 42
+}</pre>
+<pre class="language-jsonc">// JSONC
+{
+  "hello": 42,
+  "world": [42, 23]
+}</pre>
+<pre class="language-jsonc">// JSONC
+{
+  "hello": 42,
+  "world": {
+    "wee": [42, 23]
+  }
+}</pre>
+
+<style>
+pre { display: none }
+canvas { border: 1px solid #CCC; display: inline-block; margin: 0.5em; }
+</style>
+<script src="dist/min/index.js"></script>
+<script type="module">
+const renderData = DiffMorph.fromDom(
+  Array.from(document.querySelectorAll("pre"))
+);
+const [width, height, frameGen] = DiffMorph.toFrames(renderData, 4);
+
+import { GIFEncoder, quantize, applyPalette } from "https://unpkg.com/gifenc";
+
+const frames = Array.from(frameGen());
+const numAllPixels = frames.reduce((sum, { data }) => sum + data.length, 0);
+const allPixels = new Uint8ClampedArray(numAllPixels);
+
+let offset = 0;
+for (const frame of frames) {
+  allPixels.set(frame.data, offset);
+  offset += frame.data.length;
+}
+
+const palette = quantize(allPixels, 256);
+const gif = GIFEncoder();
+
+for(let i = 0; i < frames.length; i++) {
+  const frame = frames[i];
+  const delay = i % 4 === 0 ? 1000 : 0;
+  const index = applyPalette(frame.data, palette);
+  gif.writeFrame(index, width, height, { palette, delay });
+}
+
+gif.finish();
+const output = gif.bytesView();
+
+const blob = new Blob([output], { type: "image/gif" });
+const url = window.URL.createObjectURL(blob);
+const element = document.createElement("img");
+element.src = url;
+document.body.append(element);
+
+</script>
+
+</body>
+</html>

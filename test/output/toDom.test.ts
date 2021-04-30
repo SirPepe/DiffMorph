@@ -51,6 +51,7 @@ describe("toDom", () => {
     expect(a).toMatchObject({ tagName: "SPAN", innerHTML: "[" });
     expect(b).toMatchObject({ tagName: "SPAN", innerHTML: "]" });
     expect(c).toMatchObject({ className: expect.stringContaining("asdf1") });
+    expect(c).toMatchObject({ className: expect.stringContaining("dm-box") });
     expect(c.children.length).toBe(1);
     expect(c.children[0]).toMatchObject({ tagName: "SPAN", innerHTML: "null" });
   });

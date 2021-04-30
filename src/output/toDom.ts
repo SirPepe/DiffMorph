@@ -8,23 +8,27 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { createIdGenerator } from "../lib/util";
+import { DEFAULT_COLORS, Theme } from "../lib/theme";
 
 const nextId = createIdGenerator();
 
 const DEFAULT_STYLES = `
 .dm-code {
+  --foreground: var(--dm-foreground, ${DEFAULT_COLORS.foreground});
+  --background: var(--dm-background, ${DEFAULT_COLORS.background});
+  --line-height: var(--dm-line-height, 2.5ch);
+  --string: var(--dm-string, ${DEFAULT_COLORS.string});
+  --number: var(--dm-number, ${DEFAULT_COLORS.number});
+  --comment: var(--dm-comment, ${DEFAULT_COLORS.comment});
+  --global: var(--dm-global, ${DEFAULT_COLORS.global});
+  --type: var(--dm-type, ${DEFAULT_COLORS.type});
+  --tag: var(--dm-tag, ${DEFAULT_COLORS.tag});
+  --value: var(--dm-value, ${DEFAULT_COLORS.value});
+  --literal: var(--dm-literal, ${DEFAULT_COLORS.literal});
+  --punctuation: var(--dm-punctuation, ${DEFAULT_COLORS.punctuation});
   transition: transform var(--dm-transition-time, 500ms);
   position: relative;
-  --line-height: var(--dm-line-height, 2.5ch);
-  --string: var(--dm-string, hsl(340, 95%, 38%));
-  --number: var(--dm-number, hsl(170, 100%, 25%));
-  --comment: var(--dm-comment, hsl(0, 0%, 50%));
-  --global: var(--dm-global, hsl(215, 100%, 40%));
-  --type: var(--dm-type, hsl(207, 75%, 25%));
-  --tag: var(--dm-tag, hsl(185, 100%, 17.5%));
-  --value: var(--dm-value, hsl(135, 100%, 28%));
-  --literal: var(--dm-literal, hsl(280, 70%, 50%));
-  --punctuation: var(--dm-punctuation, hsl(0, 0%, 25%));
+  color: var(--foreground);
 }
 .dm-token, .dm-decoration, .dm-box {
   overflow: visible;
@@ -40,15 +44,21 @@ const DEFAULT_STYLES = `
 .dm-token, .dm-decoration {
   transition: transform var(--dm-transition-time, 500ms),
               opacity var(--dm-transition-time, 500ms);
+}
+.dm-box {
+  transition: transform var(--dm-transition-time, 500ms);
 }`;
 
 function generateTextCss(
   { id, x, y, alpha }: DecorationPosition,
-  rootSelector: string,
-  frameIdx: number
+  baseSelector: string,
+  offsetX: number,
+  offsetY: number
 ): string[] {
+  x -= offsetX;
+  y -= offsetY;
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-token.dm-${id}`;
+  const selector = `${baseSelector} > .dm-token.dm-${id}`;
   const rules = [`transform:translate(${x}ch, calc(${y} * var(--line-height)))`];
   if (alpha === 1) {
     rules.push(`opacity:1`);
@@ -59,11 +69,14 @@ function generateTextCss(
 
 function generateDecorationCss(
   { id, x, y, width, height, alpha }: DecorationPosition,
-  rootSelector: string,
-  frameIdx: number
+  baseSelector: string,
+  offsetX: number,
+  offsetY: number
 ): string[] {
+  x -= offsetX;
+  y -= offsetY;
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-decoration.dm-${id}`;
+  const selector = `${baseSelector} > .dm-decoration.dm-${id}`;
   const rules = [
     `transform:translate(${x}ch,calc(${y} * var(--line-height)))`,
     `width:${width}ch`,
@@ -76,42 +89,48 @@ function generateDecorationCss(
   return styles;
 }
 
+// In DOM, boxes are actual objects that create a relative coordinate system for
+// their contents. Said contents has absolute coordinates, which we must
+// compensate for with extra offsets.
 function generateBoxCss(
-  { id, x, y, width, height, alpha: isVisible, frame }: RenderPositions,
-  rootSelector: string,
-  frameIdx: number
+  { id, x, y, width, height, alpha, frame }: RenderPositions,
+  baseSelector: string,
+  offsetX: number,
+  offsetY: number
 ): string[] {
   const styles = [];
-  const selector = `${rootSelector}.frame${frameIdx} .dm-box.dm-${id}`;
+  const selector = `${baseSelector} > .dm-box.dm-${id}`;
   const rules = [
     `transform:translate(${x}ch,calc(${y} * var(--line-height)))`,
     `width:${width}ch`,
     `height:calc(${height} * var(--line-height))`,
   ];
-  if (isVisible) {
+  if (alpha) {
     rules.push(`opacity:1`);
   }
   styles.push(`${selector}{${rules.join(";")}}`);
   for (const position of frame.text.values()) {
-    styles.push(...generateTextCss(position, rootSelector, frameIdx));
+    styles.push(...generateTextCss(position, selector, x - offsetX, y - offsetY));
   }
   for (const position of frame.decorations.values()) {
-    styles.push(...generateDecorationCss(position, rootSelector, frameIdx));
+    styles.push(...generateDecorationCss(position, selector, x - offsetX, y - offsetY));
   }
   for (const position of frame.boxes.values()) {
-    styles.push(...generateBoxCss(position, rootSelector, frameIdx));
+    styles.push(...generateBoxCss(position, selector, x - offsetX, y - offsetY));
   }
   return styles;
 }
 
-function themeToCss(
-  prefix: string,
-  theme: Record<string, Record<string, string>>
-): string {
+function themeToCss(prefix: string, theme: Theme): string {
   return Object.entries(theme).map(([type, props]) => {
     const selector = `${prefix} .` + type.split(/\s+/).join(".");
     const declarations = Object.entries(props).map(([property, value]) => {
-      return `${property}:${value}`;
+      if (value) {
+        if (property === "color") {
+          value = `var(--${value})`;
+        }
+        return `${property}:${value}`;
+      }
     }).join(";");
     return `${selector}{${declarations}}`;
   }).join("\n");
@@ -132,11 +151,12 @@ function getDefaultStyles(langs: Set<string>): string {
 function generateStyle(
   rootFrames: Map<number, RenderPositions>,
   languages: Set<string>,
-  classPrefix: string
+  rootSelector: string
 ): HTMLStyleElement {
   const styles = [];
   for (const [frameIdx, rootFrame] of rootFrames) {
-    styles.push(...generateBoxCss(rootFrame, classPrefix, frameIdx));
+    const baseSelector = `${rootSelector}.frame${frameIdx} .dm-code`;
+    styles.push(...generateBoxCss(rootFrame, baseSelector, 0, 0));
   }
   const css = getDefaultStyles(languages) + styles.join("\n");
   const element = document.createElement("style");
@@ -161,17 +181,19 @@ function generateDecoration({ id, data }: RenderDecoration): HTMLElement {
   return element;
 }
 
-function generateDom(root: RenderRoot): [HTMLElement, Set<string>] {
+function generateDom(
+  root: RenderRoot<RenderText, RenderDecoration>
+): [HTMLElement, Set<string>] {
   const languages = new Set<string>();
   if (root.language) {
     languages.add(root.language);
   }
   const { tagName = "span", attributes = [] } = root.data;
   const element = document.createElement(tagName);
-  element.className = `dm-box dm-${root.id} language-${root.language}`;
   for (const [attribute, value] of attributes) {
     element.setAttribute(attribute, value);
   }
+  element.classList.add("dm-box", `dm-${root.id}`, `language-${root.language}`);
   for (const text of root.content.text.values()) {
     element.append(generateText(text));
   }
@@ -189,7 +211,7 @@ function generateDom(root: RenderRoot): [HTMLElement, Set<string>] {
 }
 
 export function toDom(
-  renderData: RenderData
+  renderData: RenderData<RenderText, RenderDecoration>
 ): [Wrapper: HTMLElement, MaxWidth: number, MaxHeight: number] {
   const wrapper = document.createElement("div");
   const code = document.createElement("pre");

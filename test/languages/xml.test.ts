@@ -7,11 +7,11 @@ describe("XML features", () => {
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "tag-xml",
-      "attribute",
-      "operator",
-      "value",
-      "value",
-      "value",
+      "attribute-xml",
+      "operator-xml",
+      "value-xml",
+      "value-xml",
+      "value-xml",
       "tag-xml",
     ]);
   });
@@ -27,12 +27,12 @@ describe("XML features", () => {
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "tag",
-      "operator-namespace",
+      "operator namespace-tag",
       "tag",
       "tag",
       "token",
       "tag",
-      "operator-namespace",
+      "operator namespace-tag",
       "tag",
     ]);
   });
@@ -43,7 +43,7 @@ describe("XML features", () => {
     expect(types).toEqual([
       "tag",
       "attribute",
-      "operator-namespace",
+      "operator namespace-attribute",
       "attribute",
       "operator",
       "value",
@@ -62,15 +62,14 @@ describe("XML features", () => {
       "tag",
       "tag",
       "token",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
-      "comment-cdata",
+      "comment cdata",
+      "comment cdata",
+      "comment cdata",
+      "comment cdata",
+      "comment cdata",
+      "comment cdata",
+      "comment cdata",
+      "comment cdata",
       "tag",
     ]);
   });

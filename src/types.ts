@@ -7,6 +7,8 @@
 // do not; highlights are intended to be rendered in the final output to create
 // squiggly lines or other text decorations.
 
+import { Theme } from "./lib/theme";
+
 // Represents a bit of code
 export type Code = string | CodeContainer;
 
@@ -127,14 +129,14 @@ export type RenderPositions = BasePosition & { frame: Frame };
 
 export type RenderText = { id: string; text: string; type: string };
 export type RenderDecoration = { id: string; data: Record<string, any> };
-export type RenderRoot = {
+export type RenderRoot<T, D> = {
   id: string;
   data: Record<string, any>;
   language: string | undefined;
   content: {
-    text: Map<string, RenderText>;
-    decorations: Map<string, RenderDecoration>;
-    boxes: Map<string, RenderRoot>;
+    text: Map<string, T>;
+    decorations: Map<string, D>;
+    boxes: Map<string, RenderRoot<T, D>>;
   };
 };
 
@@ -146,8 +148,8 @@ export type Frame = {
 
 // Object graph that describes the items to render (content) and when and
 // where to render them (frame)
-export type RenderData = {
-  objects: RenderRoot;
+export type RenderData<T, D> = {
+  objects: RenderRoot<T, D>;
   frames: Map<number, RenderPositions>; // root frames
   maxWidth: number;
   maxHeight: number;
@@ -172,7 +174,7 @@ type LanguageFunctionFactory<Flags extends Record<string, any>> = (
 
 export type LanguageDefinition<Flags extends Record<string, any>> = {
   name: string;
-  theme: Record<string, Record<string, string>>;
+  theme: Theme;
   definitionFactory: LanguageFunctionFactory<Flags>;
   postprocessor: LanguagePostprocessor;
 };

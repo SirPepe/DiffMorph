@@ -18,9 +18,10 @@
   "license": "ISC",
   "dependencies": {
     "@sirpepe/shed": "^0.2.0",
+    "bezier-easing": "^2.1.0",
     "core-js": "^3.10.1",
-    "diff": "^5.0.0",
     "debounce": "^1.2.1",
+    "diff": "^5.0.0",
     "rollup": "^2.45.2"
   },
   "devDependencies": {
