@@ -1,4 +1,5 @@
 export const themeColors = {
+  foreground: "foreground",
   background: "background",
   string: "string",
   number: "number",
@@ -20,6 +21,7 @@ export type ThemeProperties = {
 export type Theme = Record<string, ThemeProperties>;
 
 export const DEFAULT_COLORS = {
+  foreground: "#000",
   background: "#FFF",
   string: "hsl(340, 95%, 38%)",
   number: "hsl(170, 100%, 25%)",

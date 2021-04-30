@@ -14,8 +14,8 @@ const nextId = createIdGenerator();
 
 const DEFAULT_STYLES = `
 .dm-code {
-  transition: transform var(--dm-transition-time, 500ms);
-  position: relative;
+  --foreground: var(--dm-foreground, ${DEFAULT_COLORS.foreground});
+  --background: var(--dm-background, ${DEFAULT_COLORS.background});
   --line-height: var(--dm-line-height, 2.5ch);
   --string: var(--dm-string, ${DEFAULT_COLORS.string});
   --number: var(--dm-number, ${DEFAULT_COLORS.number});
@@ -26,6 +26,9 @@ const DEFAULT_STYLES = `
   --value: var(--dm-value, ${DEFAULT_COLORS.value});
   --literal: var(--dm-literal, ${DEFAULT_COLORS.literal});
   --punctuation: var(--dm-punctuation, ${DEFAULT_COLORS.punctuation});
+  transition: transform var(--dm-transition-time, 500ms);
+  position: relative;
+  color: var(--foreground);
 }
 .dm-token, .dm-decoration, .dm-box {
   overflow: visible;
