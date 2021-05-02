@@ -2,9 +2,10 @@
 // of equivalent tokens into movements. There is no real high-level concept to
 // this - it's just a bunch of heuristics applied in a brute-force manner.
 
+import { mapBy } from "@sirpepe/shed";
 import { Box, Token } from "../types";
 import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
-import { findMaxValue, findMin } from "./util";
+import { pickAlternative } from "./heuristics";
 
 export type Optimizable = Token & { parent: Box<any, any> };
 
@@ -65,112 +66,35 @@ function optimizeOperations<T extends Optimizable, D extends Optimizable>(
 }
 
 // Note that the input sets "additions" and "deletions" get both mutated by this
-// function
+// function and also note that this function is quite inefficient - all this
+// converting of data structures stems from a refactoring that generalized
+// pickAlternative() to make it work with the Pattern data structure in the diff
+// module. This function (or rather this entire module) should be updated to
+// bring it more into line with the new pickAlternative().
 function resolveOptimizations<T extends Optimizable>(
   additions: Set<ADD<T>>,
   deletions: Set<DEL<T>>
 ): DiffOp<T>[] {
   const movements: MOV<T>[] = [];
+  const additionsByItem = mapBy(additions, "item");
   for (const deletion of deletions) {
-    const alternative = pickAlternative(deletion, additions);
+    const alternative = pickAlternative(
+      deletion.item,
+      Array.from(additions, (op) => op.item)
+    );
     if (alternative) {
       movements.push({
         kind: "MOV",
-        item: alternative.item,
+        item: alternative,
         from: deletion.item,
       });
-      additions.delete(alternative);
+      additions.delete(additionsByItem.get(alternative) as ADD<T>);
       deletions.delete(deletion);
+      if (additions.size === 0) {
+        break;
+      }
       continue;
-    }
-    if (additions.size === 0) {
-      break;
     }
   }
   return [...additions, ...deletions, ...movements];
-}
-
-type Offset = {
-  top: number;
-  left: number;
-  bottom: number;
-  right: number;
-};
-
-function getOffset(
-  item: Optimizable,
-  referenceWidth: number,
-  referenceHeight: number
-): Offset {
-  const { x: left, y: top, width, height } = item;
-  const right = referenceWidth - left - width;
-  const bottom = referenceHeight - top - height;
-  const offset = { top, left, bottom, right };
-  return offset;
-}
-
-function pickAlternative<T extends Optimizable>(
-  deletion: DEL<T>,
-  additions: Set<ADD<T>>
-): ADD<T> | null {
-  // Too easy
-  if (additions.size === 1) {
-    return Array.from(additions)[0];
-  }
-  // Setup and pre-calculate data for picking the best alternative. Compute all
-  // offsets based on the largest possible parent box, otherwise right and
-  // bottom offsets may not be comparable.
-  const refWidth = findMaxValue(
-    [deletion, ...additions],
-    ({ item }) => item.parent.width
-  );
-  const refHeight = findMaxValue(
-    [deletion, ...additions],
-    ({ item }) => item.parent.height
-  );
-  const deletionOffset = getOffset(deletion.item, refWidth, refHeight);
-  const sameLineCandidates = new Map<ADD<T>, Offset>();
-  const allCandidates = new Map<ADD<T>, Offset>();
-  for (const addition of additions) {
-    const additionOffset = getOffset(addition.item, refWidth, refHeight);
-    if (additionOffset.top === deletionOffset.top) {
-      sameLineCandidates.set(addition, additionOffset);
-    }
-    allCandidates.set(addition, additionOffset);
-  }
-  // If there is exactly one alternative on the same line, just pick that
-  if (sameLineCandidates.size === 1) {
-    return Array.from(sameLineCandidates.keys())[0];
-  }
-  // Try to find an alternative with the same offset from right of the same line
-  for (const [candidate, { right }] of sameLineCandidates) {
-    if (deletionOffset.right === right) {
-      return candidate;
-    }
-  }
-  // Try to find something the the same offset from the right somewhere. This
-  // helps to keep commas, brackets and curly braces in line when something gets
-  // inserted in the middle of a dictionary-like structure
-  for (const [candidate, { bottom, right }] of allCandidates) {
-    if (deletionOffset.right === right && deletionOffset.bottom === bottom) {
-      return candidate;
-    }
-  }
-  // Try to find an alternative that's the closest on the same line (if there is
-  // anything left)
-  if (sameLineCandidates.size > 0) {
-    const [closest] = findMin(sameLineCandidates, ([, candidateOffset]) => {
-      return Math.abs(candidateOffset.left - deletionOffset.left);
-    });
-    return closest;
-  }
-  // Last attempt: take whatever is closest (if there is anything left)
-  if (allCandidates.size > 0) {
-    return findMin(allCandidates, ([, candidateOffset]) => {
-      const deltaX = Math.abs(candidateOffset.left - deletionOffset.left);
-      const deltaY = Math.abs(candidateOffset.top - deletionOffset.top);
-      return deltaX + deltaY;
-    })[0];
-  }
-  return null;
 }
