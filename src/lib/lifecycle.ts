@@ -50,7 +50,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
         const oldPosition = toPosition(operation.item);
         const currentLifecycle = lifecycles.get(oldPosition);
         if (!currentLifecycle) {
-          throw new Error();
+          throw new Error(`DEL @ ${i}: no lifecycle at ${oldPosition}!`);
         }
         currentLifecycle.set(frameIdx, operation);
         finished.push(currentLifecycle);
@@ -59,7 +59,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
         const oldPosition = toPosition(operation.from);
         const currentLifecycle = lifecycles.get(oldPosition);
         if (!currentLifecycle) {
-          throw new Error();
+          throw new Error(`MOV @ ${i}: no lifecycle at ${oldPosition}!`);
         }
         currentLifecycle.set(frameIdx, operation);
         lifecycles.delete(oldPosition);
