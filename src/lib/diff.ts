@@ -21,7 +21,12 @@
 import { diffArrays } from "diff";
 import { groupBy } from "@sirpepe/shed";
 import { Box, Token } from "../types";
-import { createIdGenerator, isBox } from "./util";
+import { createIdGenerator, isAdjacent, isBox } from "./util";
+import { pickAlternative } from "./heuristics";
+
+// The text is only needed for pattern matching on token sequences. This type is
+// therefore only a requirement for content tokens and not for decorations.
+type DiffableContent = Token & { text: string };
 
 // ADD does not need a "from" field because it is by definition an initial
 // addition. It may get translated to a BAD + MOV pair, but there then BAD is
@@ -92,6 +97,12 @@ type Line<T extends Token> = {
   readonly items: T[];
 };
 
+// Compatible to the type Optimizable used in optimizer and heuristics
+type Pattern<T extends DiffableContent> = Token & {
+  items: T[];
+  parent: Box<any, any>;
+};
+
 // Create a hash of a list of tokens by concatenating the token's hashes and
 // their *relative* distance on the x axis. The allover level of indentation is
 // not reflected in the hash - two lines containing the same characters the same
@@ -120,8 +131,8 @@ function asLines<T extends Token>(tokens: T[]): Line<T>[] {
 function diffLines<T extends Token>(
   from: Line<T>[],
   to: Line<T>[]
-): { result: DiffOp<T>[]; restFrom: T[]; restTo: T[] } {
-  const result: DiffOp<T>[] = [];
+): { result: MOV<T>[]; restFrom: T[]; restTo: T[] } {
+  const result: MOV<T>[] = [];
   const toById = new Map(to.map((line) => [line.id, line]));
   const fromById = new Map(from.map((line) => [line.id, line]));
   const changes = diffArrays(from, to, {
@@ -164,6 +175,128 @@ function diffLines<T extends Token>(
     restTo: Array.from(toById.values()).flatMap(({ items }) => items),
     restFrom: Array.from(fromById.values()).flatMap(({ items }) => items),
   };
+}
+
+// Organize items into pattern objects
+function asPattern<T extends DiffableContent>(
+  items: T[],
+  parent: Box<T, any>
+): Pattern<T> {
+  let [{x, y}] = items;
+  const hash = items.map((item, idx) => {
+    const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
+    return item.hash + String(xDelta);
+  }).join("");
+  return {
+    x,
+    y,
+    hash,
+    width: 0, // irrelevant for patterns, only required for type compatibility
+    height: 0, // irrelevant for patterns, only required for type compatibility
+    items,
+    parent,
+  };
+}
+
+// Take items from "items", starting at index "from" until "done" returns either
+// true or null (the latter signalling an abort)
+function consume<T extends DiffableContent>(
+  items: T[],
+  from: number,
+  done: (item: T) => boolean | null // null = abort
+): { result: T[], position: number } {
+  const consumed = [];
+  for (let i = from; i < items.length; i++) {
+    const result = done(items[i]);
+    if (result === null) {
+      return { result: [], position: i }
+    } else {
+      consumed.push(items[i]);
+      if (result === true) {
+        return { result: consumed, position: i }
+      }
+    }
+  }
+  return { result: [], position: items.length };
+}
+
+// Find generic patterns that are common to many languages:
+//   * tokens separated by : or - (eg. namespaced tags in xml)
+//   * string sequences wrapped in ", ', or `
+// Only exported for unit tests
+export function findPatterns<T extends DiffableContent>(
+  items: T[],
+  parent: Box<T, any>
+): Pattern<T>[] {
+  const patterns = [];
+  for (let i = 0; i < items.length; i++) {
+    if (
+      (items[i].text === ":" || items[i].text === "-") &&
+      isAdjacent(items[i], items[i - 1]) &&
+      isAdjacent(items[i], items[i + 1])
+    ) {
+      patterns.push(asPattern([items[i - 1], items[i], items[i + 1]], parent));
+      i += 2;
+      continue;
+    }
+    if (['"', "'", "`"].includes(items[i].text)) {
+      const { result, position } = consume(items, i + 1, (curr) => {
+        if (curr.y !== items[i].y) {
+          return null; // abort on new line
+        }
+        return (curr.text === items[i].text);
+      });
+      if (result.length > 0) {
+        patterns.push(asPattern([items[i], ...result], parent));
+      }
+      i += position;
+    }
+  }
+  return patterns;
+}
+
+// This should work now
+function diffPatterns<T extends DiffableContent>(
+  from: T[],
+  fromParent: Box<T, any> | undefined,
+  to: T[],
+  toParent: Box<T, any> | undefined
+): { result: MOV<T>[]; restFrom: T[]; restTo: T[] } {
+  // This does never happen in practice, probably
+  if (!fromParent || !toParent) {
+    return { result: [], restFrom: from, restTo: to };
+  }
+  const fromPatternsByHash = groupBy(findPatterns(from, fromParent), "hash");
+  const toPatternsByHash = groupBy(findPatterns(to, toParent), "hash");
+  const result: MOV<T>[] = [];
+  for (const [hash, fromPatterns] of fromPatternsByHash) {
+    const toPatterns = new Set(toPatternsByHash.get(hash) ?? []);
+    for (const fromPattern of fromPatterns) {
+      const match = pickAlternative(fromPattern, toPatterns);
+      if (match) {
+        toPatterns.delete(match);
+        // Remove the matching items from the source lists as the are definitely
+        // taken care of, no matter if they do or don't change.
+        from = from.filter((item) => !fromPattern.items.includes(item));
+        to = to.filter((item) => !match.items.includes(item));
+        // If coordinates don't match, turn the removed items into a bunch of
+        // movement ops
+        if (match.x !== fromPattern.x || match.y !== fromPattern.y) {
+          for (let i = 0; i < match.items.length; i++) {
+            result.push({
+              kind: "MOV",
+              item: match.items[i],
+              from: fromPattern.items[i],
+            });
+          }
+        }
+        if (toPatterns.size === 0) {
+          break;
+        }
+      }
+    }
+  }
+  return { result, restFrom: from, restTo: to };
 }
 
 // Diff individual tokes by their hash and x/y positions
@@ -267,7 +400,7 @@ function partitionTokens<T extends Token, D extends Token>(
   return [boxes, textTokens, source.decorations];
 }
 
-function diffBoxes<T extends Token, D extends Token>(
+function diffBoxes<T extends DiffableContent, D extends Token>(
   from: Box<T, D> | undefined,
   to: Box<T, D> | undefined
 ): DiffTree<T, D> {
@@ -280,9 +413,22 @@ function diffBoxes<T extends Token, D extends Token>(
   const boxOps: DiffTree<T, D>[] = [];
   const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
   const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
+  // First pass: diff entire lines
   const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
   textOps.push(...lineDiff.result);
-  textOps.push(...diffTokens(lineDiff.restFrom, lineDiff.restTo));
+  // Second pass: diff common patterns. This is less of a traditional diff but
+  // rather a shortcut directly to optimizing heuristics.
+  const patternDiff = diffPatterns(
+    lineDiff.restFrom,
+    from,
+    lineDiff.restTo,
+    to
+  );
+  textOps.push(...patternDiff.result);
+  // Final pass: diff the remaining tokens on an individual basis
+  textOps.push(...diffTokens(patternDiff.restFrom, patternDiff.restTo));
+  // Decorations are less numerous than text token and thus can probably do with
+  // just a single pass.
   decoOps.push(...diffDecorations(fromDecorations, toDecorations));
   const boxIds = new Set([...fromBoxesById.keys(), ...toBoxesById.keys()]);
   for (const id of boxIds) {
@@ -298,7 +444,7 @@ function diffBoxes<T extends Token, D extends Token>(
   };
 }
 
-export const diff = <T extends Token, D extends Token>(
+export const diff = <T extends DiffableContent, D extends Token>(
   roots: Box<T, D>[]
 ): DiffTree<T, D>[] => {
   if (roots.length === 0) {

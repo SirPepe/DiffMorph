@@ -1,5 +1,74 @@
-import { diff } from "../../src/lib/diff";
+import { diff, findPatterns } from "../../src/lib/diff";
+import { Box } from "../../src/types";
 import { stubBox } from "../helpers";
+
+describe("finding patterns", () => {
+  const rootBox: Box<any, any> = {
+    kind: "BOX",
+    hash: "root",
+    id: "root0",
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+    data: {},
+    language: "none",
+    content: [],
+    decorations: [],
+    parent: undefined,
+  }
+
+  test("directly adjacent tokens separated by : or -", () => {
+    const input = [
+      { x: 0, y: 0, width: 1, height: 1, hash: "a0", text: "x" },
+      { x: 2, y: 0, width: 1, height: 1, hash: "a0", text: "a" },
+      { x: 3, y: 0, width: 1, height: 1, hash: "a1", text: "-" },
+      { x: 4, y: 0, width: 1, height: 1, hash: "b0", text: "b" },
+    ];
+    const actual = findPatterns(input, rootBox);
+    expect(actual).toEqual([{
+      x: 2,
+      y: 0,
+      width: 0,
+      height: 0,
+      hash: "a00a11b01",
+      items: [ input[1], input[2], input[3] ],
+      parent: rootBox,
+    }])
+  });
+
+  test("string sequence", () => {
+    const input = [
+      { x: 0, y: 0, width: 1, height: 1, hash: "a0", text: "x" },
+      { x: 2, y: 0, width: 1, height: 1, hash: "a0", text: "=" },
+      { x: 4, y: 0, width: 1, height: 1, hash: "a1", text: "'" },
+      { x: 5, y: 0, width: 1, height: 1, hash: "b0", text: "h" },
+      { x: 6, y: 0, width: 1, height: 1, hash: "a1", text: "i" },
+      { x: 7, y: 0, width: 1, height: 1, hash: "b0", text: "'" },
+    ];
+    const actual = findPatterns(input, rootBox);
+    expect(actual).toEqual([{
+      x: 4,
+      y: 0,
+      width: 0,
+      height: 0,
+      hash: "a10b01a11b01",
+      items: [ input[2], input[3], input[4], input[5] ],
+      parent: rootBox,
+    }]);
+  });
+
+  test("no patterns", () => {
+    const input = [
+      { x: 0, y: 0, width: 1, height: 1, hash: "a0", text: "x" },
+      { x: 2, y: 0, width: 1, height: 1, hash: "a0", text: "a" },
+      { x: 3, y: 0, width: 1, height: 1, hash: "a1", text: "g" },
+      { x: 4, y: 0, width: 1, height: 1, hash: "b0", text: "b" },
+    ];
+    const actual = findPatterns(input, rootBox);
+    expect(actual).toEqual([])
+  });
+});
 
 describe("diffing lines", () => {
   test("diffing lines (addition at end)", () => {

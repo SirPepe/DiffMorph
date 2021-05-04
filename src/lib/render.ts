@@ -1,3 +1,7 @@
+// Assigns concrete render tokens based on lifecycles. The outcome of this
+// module could be vastly improved by prioritizing MOV ops over all other
+// operations.
+
 import {
   Decoration,
   DecorationPosition,
