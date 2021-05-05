@@ -37,6 +37,10 @@ function createStyles(): HTMLStyleElement {
   element.innerHTML = `
   :host {
     display: block;
+    box-sizing: border-box;
+  }
+  :host * {
+    box-sizing: inherit;
   }
   .dm-wrapper {
     display: flex;
@@ -53,6 +57,8 @@ function createStyles(): HTMLStyleElement {
   }
   .dm {
     margin: 0;
+    font-size: 1em;
+    font-family: monospace;
     --line-height: var(--dm-line-height, 2.5ch);
     line-height: var(--line-height);
     height: calc(var(--max-height) * var(--line-height));

@@ -31,6 +31,7 @@ const DEFAULT_STYLES = `
   color: var(--foreground);
 }
 .dm-token, .dm-decoration, .dm-box {
+  transform-origin: top left;
   overflow: visible;
   position: absolute;
   top: 0;
