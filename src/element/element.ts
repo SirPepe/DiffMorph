@@ -129,15 +129,22 @@ export class DiffMorph extends HTMLElement {
   }
 
   static get observedAttributes(): string[] {
-    return ["class", "autoplay"];
+    return ["class", "autoplay", "index"];
   }
 
-  public attributeChangedCallback(name: string): void {
+  public attributeChangedCallback(
+    name: string,
+    oldValue: string,
+    newValue: string
+  ): void {
     if (name === "class") {
       this.init();
     }
     if (name === "autoplay") {
       this.toggleAutoplay(this.hasAttribute("autoplay"));
+    }
+    if (name === "index") {
+      this.index = Number(newValue);
     }
   }
 
