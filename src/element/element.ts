@@ -1,6 +1,7 @@
 import debounce from "debounce";
 import { fromDom } from "../input/fromDom";
 import { toDom } from "../output/toDom";
+import { RenderData, RenderDecoration, RenderText } from "../types";
 
 function isElement(x: any): x is Element {
   if (!x || typeof x !== "object") {
@@ -85,29 +86,30 @@ function createShadowDom(): [
 }
 
 export class DiffMorph extends HTMLElement {
-  private maxWidth = 0;
-  private maxHeight = 0;
-  private numFrames = 0;
-  private currentFrame = -1;
-  private shadow: ShadowRoot;
-  private source: HTMLSlotElement;
-  private content: HTMLElement;
-  private updater: (curr: number, total: number) => void;
-  private autoplayTimeout: any;
+  #maxWidth = 0;
+  #maxHeight = 0;
+  #numFrames = 0;
+  #currentFrame = -1;
+  #shadow: ShadowRoot;
+  #source: HTMLSlotElement;
+  #content: HTMLElement;
+  #updater: (curr: number, total: number) => void;
+  #autoplayTimeout: any;
+  #renderData: RenderData<RenderText, RenderDecoration> | null = null;
 
   constructor() {
     super();
-    this.shadow = this.attachShadow({ mode: "open" });
+    this.#shadow = this.attachShadow({ mode: "open" });
     const [wrapper, content, styles, source, updater] = createShadowDom();
-    this.content = content;
-    this.source = source;
-    this.updater = updater;
-    this.shadow.append(source, wrapper, styles);
+    this.#content = content;
+    this.#source = source;
+    this.#updater = updater;
+    this.#shadow.append(source, wrapper, styles);
   }
 
   public connectedCallback(): void {
-    this.source.addEventListener("slotchange", () => this.init());
-    this.shadow.addEventListener("click", ({ target }) => {
+    this.#source.addEventListener("slotchange", () => this.init());
+    this.#shadow.addEventListener("click", ({ target }) => {
       if (!isElement(target)) {
         return;
       }
@@ -138,44 +140,48 @@ export class DiffMorph extends HTMLElement {
     if (!value || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
       value = 0;
     }
-    if (value > this.numFrames - 1) {
-      value = this.numFrames - 1;
+    if (value > this.#numFrames - 1) {
+      value = this.#numFrames - 1;
     }
     return value;
   }
 
   private toggleAutoplay(enable: boolean): void {
-    window.clearTimeout(this.autoplayTimeout);
+    window.clearTimeout(this.#autoplayTimeout);
     if (enable) {
       const self = this; // eslint-disable-line
-      this.autoplayTimeout = window.setTimeout(function doNext() {
+      this.#autoplayTimeout = window.setTimeout(function doNext() {
         self.next();
-        self.autoplayTimeout = window.setTimeout(doNext, 1000);
+        self.#autoplayTimeout = window.setTimeout(doNext, 1000);
       }, 1000);
     }
   }
 
+  public get renderData(): RenderData<RenderText, RenderDecoration> | null {
+    return this.renderData;
+  }
+
   public init = debounce(this._init);
   private _init(): void {
-    const sources = this.source.assignedElements().filter((element: any) => {
+    const sources = this.#source.assignedElements().filter((element: any) => {
       return element[Symbol.toStringTag] === "DiffMorphFrameElement";
     });
-    this.numFrames = sources.length;
-    const inputData = fromDom(sources, this.language);
-    inputData.objects.data.tagName = "code";
-    const [newContent, maxWidth, maxHeight] = toDom(inputData);
-    if (!this.content.parentElement) {
+    this.#numFrames = sources.length;
+    this.#renderData = fromDom(sources, this.language);
+    this.#renderData.objects.data.tagName = "code";
+    const [newContent, maxWidth, maxHeight] = toDom(this.#renderData);
+    if (!this.#content.parentElement) {
       throw new Error();
     }
-    this.maxWidth = maxWidth;
-    this.maxHeight = maxHeight;
-    this.content.parentElement.setAttribute(
+    this.#maxWidth = maxWidth;
+    this.#maxHeight = maxHeight;
+    this.#content.parentElement.setAttribute(
       "style",
       `--max-width:${maxWidth}; --max-height:${maxHeight}`
     );
-    this.content.parentElement.replaceChild(newContent, this.content);
-    this.content = newContent;
-    if (this.currentFrame === -1 || this.currentFrame > this.numFrames - 1) {
+    this.#content.parentElement.replaceChild(newContent, this.#content);
+    this.#content = newContent;
+    if (this.#currentFrame === -1 || this.#currentFrame > this.#numFrames - 1) {
       this.index = 0;
     } else {
       // triggers reset of the frame attribute in the shadow dom
@@ -201,27 +207,27 @@ export class DiffMorph extends HTMLElement {
   }
 
   get index(): number {
-    return this.currentFrame;
+    return this.#currentFrame;
   }
 
   set index(input: number) {
     const value = this.computeFrame(input);
-    this.content.classList.remove(`frame${this.currentFrame}`);
-    this.content.classList.add(`frame${value}`);
-    this.updater(value + 1, this.size);
-    this.currentFrame = value;
+    this.#content.classList.remove(`frame${this.#currentFrame}`);
+    this.#content.classList.add(`frame${value}`);
+    this.#updater(value + 1, this.size);
+    this.#currentFrame = value;
   }
 
   get size(): number {
-    return this.numFrames;
+    return this.#numFrames;
   }
 
   get width(): number {
-    return this.maxWidth;
+    return this.#maxWidth;
   }
 
   get height(): number {
-    return this.maxHeight;
+    return this.#maxHeight;
   }
 
   get language(): string {
