@@ -93,6 +93,38 @@ describe("Optimizer", () => {
       from: { x: 2, y: 0 },
     });
   });
+
+  test("Keep JSON commas at their respective curly (smaller delta)", () => {
+    const res = optimizeDiffs(
+      diff([
+        tokenizeJSON(`{
+  "a": {},
+
+}`),
+        tokenizeJSON(`{
+  "a": {
+    "b": 1,
+  },
+}`)
+      ])
+    );
+    expect(res.length).toBe(2);
+    expect(res[0].content.map((op) => op.kind)).toEqual([
+      "ADD",
+      "ADD",
+      "ADD",
+      "ADD",
+      "ADD",
+      "ADD",
+      "ADD"
+    ]);
+    // Stay with the closing curly brace
+    expect(res[1].content[3]).toMatchObject({
+      kind: "MOV",
+      item: { x: 3, y: 3, text: ","  },
+      from: { x: 9, y: 1 },
+    });
+  });
 });
 
 describe("Optimizer on decorations", () => {
