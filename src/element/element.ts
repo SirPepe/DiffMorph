@@ -252,5 +252,9 @@ export class DiffMorph extends HTMLElement {
   }
 }
 
-window.customElements.define("dm-frame", DMFrame);
-window.customElements.define("diff-morph", DiffMorph);
+if (!window.customElements.get("dm-frame")) {
+  window.customElements.define("dm-frame", DMFrame);
+}
+if (!window.customElements.get("diff-morph")) {
+  window.customElements.define("diff-morph", DiffMorph);
+}
