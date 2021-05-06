@@ -283,11 +283,32 @@ function setupContext(
   return [ctx, cellSize];
 }
 
+class ColorIndex {
+  #map = new Map<string, [number, number, number, number]>();
+  public storeColors(colors: Uint8ClampedArray): void {
+    for (let i = 0; i < colors.length; i+=4) {
+      const rgba: [number, number, number, number] = [
+        colors[i],
+        colors[i + 1],
+        colors[i + 2],
+        colors[i + 3],
+      ];
+      const hash = rgba.join("/");
+      if (!this.#map.has(hash)) {
+        this.#map.set(hash, rgba);
+      }
+    }
+  }
+  public getColors(): Uint8ClampedArray {
+    return new Uint8ClampedArray([...this.#map.values()].flat());
+  }
+}
+
 // Generate lazily for hopefully some resemblance of efficiency
 export function toFrames(
   renderData: RenderData<RenderText, RenderDecoration>,
   steps = 30 // 500ms @ 60fps
-): [number, number, () => Generator<ImageData, void, unknown>] {
+): [number, number, () => Generator<ImageData, Uint8ClampedArray, unknown>] {
   const lineHeight = 2.5;
   const [ctx, cellSize] = setupContext(
     lineHeight,
@@ -296,6 +317,7 @@ export function toFrames(
   );
   const frames = tweenFrames(renderData.frames, steps);
   const nodes = toRenderNodes(renderData.objects, ctx, cellSize, lineHeight);
+  const colors = new ColorIndex();
   return [ctx.canvas.width, ctx.canvas.height, function * () {
     for (const frame of frames.values()) {
       ctx.save();
@@ -303,7 +325,10 @@ export function toFrames(
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.restore();
       renderNodes(nodes, ctx, frame, 0, 0);
-      yield ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height)
+      const data = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+      colors.storeColors(data.data);
+      yield data;
     }
+    return colors.getColors();
   }];
 }
