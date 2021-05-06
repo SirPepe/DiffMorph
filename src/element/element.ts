@@ -171,7 +171,7 @@ export class DiffMorph extends HTMLElement {
   }
 
   public get renderData(): RenderData<RenderText, RenderDecoration> | null {
-    return this.renderData;
+    return this.#renderData;
   }
 
   public init = debounce(this._init);
