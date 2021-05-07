@@ -307,11 +307,30 @@ class ColorIndex {
   }
 }
 
+function renderWatermark(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  padding: number
+): void {
+  ctx.save();
+  ctx.font = `9px Arial, sans-serif`;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "bottom";
+  ctx.fillStyle = "#999";
+  ctx.fillText(
+    text.toUpperCase(),
+    ctx.canvas.width - padding - 4, // compensate for descenders
+    ctx.canvas.height - padding
+  );
+  ctx.restore();
+}
+
 // Generate lazily for hopefully some resemblance of efficiency
 export function toFrames(
   renderData: RenderData<RenderText, RenderDecoration>,
   steps = 30, // 500ms @ 60fps
   padding = 16,
+  watermarkText = "",
 ): [number, number, () => Generator<ImageData, Uint8ClampedArray, unknown>] {
   const lineHeight = 2.5;
   const [ctx, cellSize] = setupContext(
@@ -331,6 +350,9 @@ export function toFrames(
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.restore();
       renderNodes(nodes, ctx, frame, 0, 0);
+      if (watermarkText) {
+        renderWatermark(ctx, watermarkText, padding);
+      }
       const data = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
       colors.storeColors(data.data);
       yield data;

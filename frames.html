@@ -39,7 +39,12 @@ canvas { border: 1px solid #CCC; display: inline-block; margin: 0.5em; }
 const renderData = DiffMorph.fromDom(
   Array.from(document.querySelectorAll("pre"))
 );
-const [width, height, frameGen] = DiffMorph.toFrames(renderData, 4);
+const [width, height, frameGen] = DiffMorph.toFrames(
+  renderData,
+  4,
+  8,
+  "diff2gif.com",
+);
 const generate = frameGen();
 
 import { GIFEncoder, quantize, applyPalette } from "https://unpkg.com/gifenc";
