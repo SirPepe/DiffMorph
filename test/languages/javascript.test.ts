@@ -39,18 +39,30 @@ describe("Basic statements", () => {
   });
 
   test("Variable initialization", () => {
-    const tokens = javascript(`var foo = 42n; let bar = true;`);
+    const tokens = javascript(`
+      var foo = 42n;
+      let bar = true;
+      let baz = 123_000_000;
+    `);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
+      // foo
       "keyword",
       "token",
       "operator assignment",
       "number",
       "punctuation",
+      // bar
       "keyword",
       "token",
       "operator assignment",
       "value",
+      "punctuation",
+      // baz
+      "keyword",
+      "token",
+      "operator assignment",
+      "number",
       "punctuation",
     ]);
   });
@@ -111,16 +123,18 @@ describe("Basic statements", () => {
   });
 
   test("nested object destructuring", () => {
-    const tokens = javascript(`var { foo: { etc }, bar = 42, baz: asdf } = source;`);
+    const tokens = javascript(
+      `var { foo: { etc }, bar = 42, baz: asdf } = source;
+    `);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
       "punctuation destruct-start-0",
       "token",
       "punctuation",
-      "punctuation curly-start-0", // should really be destruct-1
+      "punctuation destruct-start-1",
       "token",
-      "punctuation curly-end-0", // should really be destruct-1
+      "punctuation destruct-end-1",
       "punctuation",
       "token",
       "operator assignment",
@@ -133,6 +147,32 @@ describe("Basic statements", () => {
       "operator assignment",
       "token",
       "punctuation",
+    ]);
+  });
+
+  test("nested object destructuring with object initalizers", () => {
+    const tokens = javascript(
+      `var { foo: { etc = { bar: null } } } = source;
+    `);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "keyword",
+      "punctuation destruct-start-0",
+      "token",
+      "punctuation",
+      "punctuation destruct-start-1",
+      "token",
+      "operator assignment",
+      "punctuation object-start-0",
+      "token",
+      "punctuation",
+      "value",
+      "punctuation object-end-0",
+      "punctuation destruct-end-1",
+      "punctuation destruct-end-0",
+      "operator assignment",
+      "token",
+      "punctuation"
     ]);
   });
 

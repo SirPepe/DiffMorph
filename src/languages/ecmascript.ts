@@ -2,6 +2,7 @@
 // TS features are controlled by a flag, which the TypeScript language
 // definition binds to true.
 
+import { Theme, themeColors } from "../lib/theme";
 import { isNewLine, lookbehindType } from "../lib/util";
 import {
   LanguageDefinition,
@@ -229,11 +230,11 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       token?.next?.text === "/"
     ) {
       state.lineCommentState = true;
-      return "comment-line";
+      return "comment line";
     }
     // are we in line comment state?
     if (state.lineCommentState) {
-      return "comment-line";
+      return "comment line";
     }
 
     // Assorted keywords
@@ -314,6 +315,10 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         const { before } = state.curlyStack.push("object");
         return `punctuation object-start-${before}`;
       }
+      if (state.curlyStack.peek().value === "destruct") { // nested destruct?
+        const { before } = state.curlyStack.push("destruct");
+        return `punctuation destruct-start-${before}`;
+      }
       const { before } = state.curlyStack.push("curly");
       return `punctuation curly-start-${before}`;
     }
@@ -357,6 +362,32 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
   };
 }
 
+const theme: Theme = {
+  value: {
+    color: themeColors.literal,
+  },
+  number: {
+    color: themeColors.value,
+  },
+  keyword: {
+    "font-weight": "bold",
+  },
+  declaration: {
+    color: themeColors.string,
+    "font-weight": "bold",
+  },
+  operator: {
+    color: themeColors.string,
+  },
+  punctuation: {
+    color: themeColors.punctuation,
+  },
+  comment: {
+    color: themeColors.comment,
+    "font-style": "italic",
+  }
+};
+
 function postprocessECMAScript(token: TypedToken): boolean {
   if (token.type === "operator arrow" && token?.prev?.type === token.type) {
     return true;
@@ -366,7 +397,7 @@ function postprocessECMAScript(token: TypedToken): boolean {
 
 export const languageDefinition: LanguageDefinition<Flags> = {
   name: "ecmascript",
-  theme: {},
+  theme,
   definitionFactory: defineECMAScript,
   postprocessor: postprocessECMAScript,
 };
