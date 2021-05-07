@@ -40,7 +40,7 @@ describe("finding patterns", () => {
   test("string sequence", () => {
     const input = [
       { x: 0, y: 0, width: 1, height: 1, hash: "a0", text: "x" },
-      { x: 2, y: 0, width: 1, height: 1, hash: "a0", text: "=" },
+      { x: 2, y: 0, width: 1, height: 1, hash: "a0", text: ":" },
       { x: 4, y: 0, width: 1, height: 1, hash: "a1", text: "'" },
       { x: 5, y: 0, width: 1, height: 1, hash: "b0", text: "h" },
       { x: 6, y: 0, width: 1, height: 1, hash: "a1", text: "i" },
@@ -56,6 +56,56 @@ describe("finding patterns", () => {
       items: [ input[2], input[3], input[4], input[5] ],
       parent: rootBox,
     }]);
+  });
+
+  test("identifier/assignment pair", () => {
+    const input = [
+      { x: 0, y: 0, width: 1, height: 1, hash: "a0", text: "x" },
+      { x: 2, y: 0, width: 1, height: 1, hash: "a1", text: "=" },
+      { x: 4, y: 0, width: 1, height: 1, hash: "a2", text: "42" },
+    ];
+    const actual = findPatterns(input, rootBox);
+    expect(actual).toEqual([{
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      hash: "a00a12",
+      items: [ input[0], input[1] ],
+      parent: rootBox,
+    }]);
+  });
+
+  test("string sequence and identifier/operator pair", () => {
+    const input = [
+      { x: 0, y: 0, width: 1, height: 1, hash: "a0", text: "x" },
+      { x: 2, y: 0, width: 1, height: 1, hash: "a0", text: "=" },
+      { x: 4, y: 0, width: 1, height: 1, hash: "a1", text: "'" },
+      { x: 5, y: 0, width: 1, height: 1, hash: "b0", text: "h" },
+      { x: 6, y: 0, width: 1, height: 1, hash: "a1", text: "i" },
+      { x: 7, y: 0, width: 1, height: 1, hash: "b0", text: "'" },
+    ];
+    const actual = findPatterns(input, rootBox);
+    expect(actual).toEqual([
+      {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        hash: "a00a02",
+        items: [ input[0], input[1] ],
+        parent: rootBox,
+      },
+      {
+        x: 4,
+        y: 0,
+        width: 0,
+        height: 0,
+        hash: "a10b01a11b01",
+        items: [ input[2], input[3], input[4], input[5] ],
+        parent: rootBox,
+      }
+    ]);
   });
 
   test("no patterns", () => {

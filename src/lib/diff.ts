@@ -223,6 +223,7 @@ function consume<T extends DiffableContent>(
 // Find generic patterns that are common to many languages:
 //   * tokens separated by : or - (eg. namespaced tags in xml)
 //   * string sequences wrapped in ", ', or `
+//   * some variable-name-like text followed by =
 // Only exported for unit tests
 export function findPatterns<T extends DiffableContent>(
   items: T[],
@@ -250,6 +251,15 @@ export function findPatterns<T extends DiffableContent>(
         patterns.push(asPattern([items[i], ...result], parent));
       }
       i += position;
+      continue;
+    }
+    if (
+      items[i].text?.match(/^[$_a-z][$_a-z0-9]*$/i) &&
+      items[i + 1]?.text === "="
+    ) {
+      patterns.push(asPattern([items[i], items[i + 1]], parent));
+      i++;
+      continue;
     }
   }
   return patterns;
