@@ -3,13 +3,18 @@ const javascript = type("javascript");
 
 describe("Basic statements", () => {
   test("Variable declaration", () => {
-    const tokens = javascript(`var foo_var;`);
-    const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["keyword", "token", "punctuation"]);
+    expect(javascript(`var foo;`).map((token) => token.type))
+      .toEqual(["keyword", "token", "punctuation"]);
+    expect(javascript(`var _;`).map((token) => token.type))
+      .toEqual(["keyword", "token", "punctuation"]);
+    expect(javascript(`var $;`).map((token) => token.type))
+      .toEqual(["keyword", "token", "punctuation"]);
+    expect(javascript(`var foo_var;`).map((token) => token.type))
+      .toEqual(["keyword", "token", "punctuation"]);
   });
 
   test("Multi-variable declaration", () => {
-    const tokens = javascript(`const foo, bar;`);
+    const tokens = javascript(`let foo, bar;`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
@@ -34,13 +39,18 @@ describe("Basic statements", () => {
   });
 
   test("Variable initialization", () => {
-    const tokens = javascript(`var foo = 42n;`);
+    const tokens = javascript(`var foo = 42n; let bar = true;`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
       "token",
-      "operator-assignment",
+      "operator assignment",
       "number",
+      "punctuation",
+      "keyword",
+      "token",
+      "operator assignment",
+      "value",
       "punctuation",
     ]);
   });
@@ -51,12 +61,12 @@ describe("Basic statements", () => {
     expect(types).toEqual([
       "keyword",
       "token",
-      "operator-assignment",
-      "punctuation-object-start-0",
+      "operator assignment",
+      "punctuation object-start-0",
       "token",
       "punctuation",
       "number",
-      "punctuation-object-end-0",
+      "punctuation object-end-0",
     ]);
   });
 
@@ -65,14 +75,14 @@ describe("Basic statements", () => {
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
-      "punctuation-destruct-start-0",
+      "punctuation destruct-start-0",
       "token",
       "punctuation",
       "token",
-      "operator-assignment",
+      "operator assignment",
       "number",
-      "punctuation-destruct-end-0",
-      "operator-assignment",
+      "punctuation destruct-end-0",
+      "operator assignment",
       "token",
       "punctuation",
     ]);
@@ -83,18 +93,18 @@ describe("Basic statements", () => {
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
-      "punctuation-destruct-start-0",
+      "punctuation destruct-start-0",
       "token",
       "punctuation",
       "token",
-      "operator-assignment",
+      "operator assignment",
       "number",
       "punctuation",
       "token",
       "punctuation",
       "token",
-      "punctuation-destruct-end-0",
-      "operator-assignment",
+      "punctuation destruct-end-0",
+      "operator assignment",
       "token",
       "punctuation",
     ]);
@@ -105,25 +115,68 @@ describe("Basic statements", () => {
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
-      "punctuation-destruct-start-0",
+      "punctuation destruct-start-0",
       "token",
       "punctuation",
-      "punctuation-curly-start-0", // should really be destruct-1
+      "punctuation curly-start-0", // should really be destruct-1
       "token",
-      "punctuation-curly-end-0", // should really be destruct-1
+      "punctuation curly-end-0", // should really be destruct-1
       "punctuation",
       "token",
-      "operator-assignment",
+      "operator assignment",
       "number",
       "punctuation",
       "token",
       "punctuation",
       "token",
-      "punctuation-destruct-end-0",
-      "operator-assignment",
+      "punctuation destruct-end-0",
+      "operator assignment",
       "token",
       "punctuation",
     ]);
+  });
+
+  test("function declaration", () => {
+    expect(javascript(`function foo() { return 42; }`).map((token) => token.type))
+      .toEqual([
+        "keyword function",
+        "declaration function",
+        "punctuation arguments-start-0",
+        "punctuation arguments-end-0",
+        "punctuation function-start-0",
+        "keyword",
+        "number",
+        "punctuation",
+        "punctuation function-end-0",
+      ]);
+  });
+
+  test("function expression", () => {
+    expect(javascript(`const foo = function () {}`).map((token) => token.type))
+      .toEqual([
+        "keyword",
+        "token",
+        "operator assignment",
+        "keyword function",
+        "punctuation arguments-start-0",
+        "punctuation arguments-end-0",
+        "punctuation function-start-0",
+        "punctuation function-end-0"
+      ]);
+  });
+
+  test("arrow function expression", () => {
+    expect(javascript(`const foo = () => {}`).map((token) => token.type))
+      .toEqual([
+        "keyword",
+        "token",
+        "operator assignment",
+        "punctuation parens-start-0", // should really be arguments-start-0
+        "punctuation parens-end-0", // should really be arguments-end-0
+        "operator arrow",
+        "punctuation function-start-0",
+        "punctuation function-end-0"
+      ]);
   });
 });
 
@@ -131,11 +184,31 @@ describe("Broken statements", () => {
   test("Incomplete variable declaration", () => {
     const tokens = javascript(`var ... = 42`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["keyword", "punctuation", "punctuation", "punctuation", "operator-assignment", "number"]);
+    expect(types).toEqual([
+      "keyword",
+      "punctuation",
+      "punctuation",
+      "punctuation",
+      "operator assignment",
+      "number"
+    ]);
   });
   test("Two incomplete variable declarations", () => {
     const tokens = javascript("var foo = ...\nvar bar = ...");
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["keyword", "token", "operator-assignment", "punctuation", "punctuation", "punctuation", "keyword", "token", "operator-assignment", "punctuation", "punctuation", "punctuation"]);
+    expect(types).toEqual([
+      "keyword",
+      "token",
+      "operator assignment",
+      "punctuation",
+      "punctuation",
+      "punctuation",
+      "keyword",
+      "token",
+      "operator assignment",
+      "punctuation",
+      "punctuation",
+      "punctuation"
+    ]);
   });
 });

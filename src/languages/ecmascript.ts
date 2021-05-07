@@ -42,8 +42,7 @@ type ParenType =
 
 type JSXTagType = "tag" | "component" | "fragment" | "none";
 
-const VALUES = ["false", "true", "null", "undefined"];
-const NUMBERS = ["Infinity", "NaN"];
+const VALUES = new Set(["false", "true", "null", "undefined"]);
 const OPERATORS = ["!", "=", "&", "|", "+", "-", "<", ">", "/"];
 const PUNCTUATION = [".", ":", ",", ";"];
 const STRINGS = ["'", '"', "`"];
@@ -53,12 +52,11 @@ const IDENT_RE = /^[$_a-z][$_a-z0-9]*$/i; // accepts REASONABLE identifiers
 
 const TYPE_KEYWORDS = ["type", "enum", "interface", "infer"];
 
-const KEYWORDS = [
+const OTHER_KEYWORDS = new Set([
   "async",
   "await",
   "catch",
   "for",
-  "function",
   "if",
   "return",
   "super",
@@ -82,7 +80,6 @@ const KEYWORDS = [
   "eval",
   "extends",
   "finally",
-  "implements",
   "in",
   "instanceof",
   "new",
@@ -96,7 +93,7 @@ const KEYWORDS = [
   "typeof",
   "void",
   "yield",
-];
+]);
 
 const GLOBALS = [
   "Array",
@@ -170,6 +167,7 @@ type State = {
   stringState: false | string; // string indicates the type of quotes used
   bracketStack: Stack<BracketType>;
   curlyStack: Stack<CurlyType>;
+  parenStack: Stack<ParenType>;
 };
 
 function defaultState(): State {
@@ -180,6 +178,7 @@ function defaultState(): State {
     stringState: false,
     bracketStack: new Stack<BracketType>("bracket"),
     curlyStack: new Stack<CurlyType>("curly"),
+    parenStack: new Stack<ParenType>("parens"),
   };
 }
 
@@ -205,7 +204,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       token?.prev?.text === "*"
     ) {
       state.blockCommentState = false;
-      return "comment-block";
+      return "comment block";
     }
     // enter block comment state
     if (
@@ -215,11 +214,11 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       token?.next?.text === "*"
     ) {
       state.blockCommentState = true;
-      return "comment-block";
+      return "comment block";
     }
     // are we in block comment state?
     if (state.blockCommentState) {
-      return "comment-block";
+      return "comment block";
     }
 
     // enter line comment state
@@ -237,15 +236,23 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       return "comment-line";
     }
 
+    // Assorted keywords
     if (["var", "let", "const"].includes(token.text)) {
       return "keyword";
     }
+    if (token.text === "function") {
+      return "keyword function";
+    }
 
     // Identifiers
-    if (token.text.match(IDENT_RE)) {
+    if (token.text.match(IDENT_RE) && token.prev) {
       // Regular identifier
-      if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
+      if (["var", "let", "const"].includes(token.prev.text)) {
         return "token";
+      }
+      // Declarations
+      if (token.prev.type === "keyword function") {
+        return "declaration function";
       }
       // Identifier in a list
       if (lookbehindType<RawToken | TypedToken>(token, ["punctuation", "token"])) {
@@ -254,43 +261,88 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     }
 
     if (token.text === "=") {
-      return "operator-assignment";
+      if (token?.next?.text === ">") {
+        return ["operator arrow", "operator arrow"];
+      }
+      return "operator assignment";
+    }
+
+    if (token.text === "(") {
+      if (
+        token?.prev?.type === "declaration function" ||
+        token?.prev?.type === "keyword function"
+      ) {
+        const { before } = state.parenStack.push("arguments");
+        return `punctuation arguments-start-${before}`;
+      }
+      const { before } = state.parenStack.push("parens");
+      return `punctuation parens-start-${before}`;
+    }
+
+    if (token.text === ")") {
+      const { after, value } = state.parenStack.pop();
+      return `punctuation ${value}-end-${after}`;
     }
 
     if (token.text === "[") {
       if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
         const { before } = state.bracketStack.push("destruct");
-        return `punctuation-destruct-start-${before}`;
+        return `punctuation destruct-start-${before}`;
       }
       const { before } = state.bracketStack.push("bracket");
-      return `punctuation-bracket-start-${before}`;
+      return `punctuation bracket-start-${before}`;
     }
 
     if (token.text === "]") {
       const { after, value } = state.bracketStack.pop();
-      return `punctuation-${value}-end-${after}`;
+      return `punctuation ${value}-end-${after}`;
     }
 
     if (token.text === "{") {
       if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
         const { before } = state.curlyStack.push("destruct");
-        return `punctuation-destruct-start-${before}`;
+        return `punctuation destruct-start-${before}`;
       }
-      if (token?.prev?.type === "operator-assignment") {
+      if (
+        token?.prev?.type?.match(/arguments-end/) ||
+        token?.prev?.type === "operator arrow"
+      ) {
+        const { before } = state.curlyStack.push("function");
+        return `punctuation function-start-${before}`;
+      }
+      if (token?.prev?.type === "operator assignment") {
         const { before } = state.curlyStack.push("object");
-        return `punctuation-object-start-${before}`;
+        return `punctuation object-start-${before}`;
       }
       const { before } = state.curlyStack.push("curly");
-      return `punctuation-curly-start-${before}`;
+      return `punctuation curly-start-${before}`;
     }
 
     if (token.text === "}") {
       const { after, value } = state.curlyStack.pop();
-      return `punctuation-${value}-end-${after}`;
+      return `punctuation ${value}-end-${after}`;
     }
 
     if (PUNCTUATION.includes(token.text)) {
       return "punctuation";
+    }
+
+    // Make sure to treat member expressions not as keywords
+    if (
+      OTHER_KEYWORDS.has(token.text) &&
+      token.prev?.text !== "." &&
+      !token?.prev?.type.match(/object-start/)
+    ) {
+      return "keyword";
+    }
+
+    // Make sure to treat member expressions not as values
+    if (
+      VALUES.has(token.text) &&
+      token.prev?.text !== "." &&
+      !token?.prev?.type.match(/object-start/)
+    ) {
+      return "value";
     }
 
     if (
@@ -305,7 +357,10 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
   };
 }
 
-function postprocessECMAScript(): boolean {
+function postprocessECMAScript(token: TypedToken): boolean {
+  if (token.type === "operator arrow" && token?.prev?.type === token.type) {
+    return true;
+  }
   return false;
 }
 
