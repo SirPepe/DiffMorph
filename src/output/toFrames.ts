@@ -260,7 +260,8 @@ function renderNodes(
 function setupContext(
   lineHeight: number,
   maxWidth: number,
-  maxHeight: number
+  maxHeight: number,
+  padding: number
 ): [CanvasRenderingContext2D, number] {
   const canvas = document.createElement("canvas");
   const ctx = canvas.getContext("2d");
@@ -274,12 +275,14 @@ function setupContext(
   // Figure out the equivalent of 1ch
   const { width: cellSize } = ctx.measureText(" ");
   // Resizing the canvas wipes the context state...
-  canvas.width = maxWidth * cellSize;
-  canvas.height = maxHeight * cellSize * lineHeight;
+  canvas.width = (maxWidth * cellSize) + 2 * padding;
+  canvas.height = (maxHeight * cellSize * lineHeight) + 2 * padding;
   // ... so the basic setup needs to be repeated
   ctx.font = `16px monospace`;
   ctx.textAlign = "left";
   ctx.textBaseline = "top";
+  // Adjust offset for padding
+  ctx.translate(padding, padding);
   return [ctx, cellSize];
 }
 
@@ -307,13 +310,15 @@ class ColorIndex {
 // Generate lazily for hopefully some resemblance of efficiency
 export function toFrames(
   renderData: RenderData<RenderText, RenderDecoration>,
-  steps = 30 // 500ms @ 60fps
+  steps = 30, // 500ms @ 60fps
+  padding = 16,
 ): [number, number, () => Generator<ImageData, Uint8ClampedArray, unknown>] {
   const lineHeight = 2.5;
   const [ctx, cellSize] = setupContext(
     lineHeight,
     renderData.maxWidth,
-    renderData.maxHeight
+    renderData.maxHeight,
+    padding,
   );
   const frames = tweenFrames(renderData.frames, steps);
   const nodes = toRenderNodes(renderData.objects, ctx, cellSize, lineHeight);
@@ -321,6 +326,7 @@ export function toFrames(
   return [ctx.canvas.width, ctx.canvas.height, function * () {
     for (const frame of frames.values()) {
       ctx.save();
+      ctx.setTransform(); // unset padding
       ctx.fillStyle = "white";
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.restore();
