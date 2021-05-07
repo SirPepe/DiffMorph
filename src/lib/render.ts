@@ -1,6 +1,6 @@
 // Assigns concrete render tokens based on lifecycles. The outcome of this
 // module could be vastly improved by prioritizing MOV ops over all other
-// operations.
+// operations across all lifecycles. No Idea if this is feasible.
 
 import {
   Decoration,
