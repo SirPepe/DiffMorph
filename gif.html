@@ -46,14 +46,39 @@ const [width, height, frameGen] = DiffMorph.toFrames(
   8,
   "diff2gif.com",
 );
+const generate = frameGen();
 
-for (const frame of frameGen()) {
-  const canvas = document.createElement("canvas");
-  canvas.width = frame.width;
-  canvas.height = frame.height;
-  canvas.getContext("2d").putImageData(frame, 0, 0);
-  document.body.append(canvas);
+import { GIFEncoder, quantize, applyPalette } from "https://unpkg.com/gifenc";
+
+const frames = [];
+let colors;
+while (true) {
+  const { done, value } = generate.next();
+  if (done) {
+    colors = value;
+    break;
+  } else {
+    frames.push(value);
+  }
 }
+const palette = quantize(colors, 256);
+const gif = GIFEncoder();
+
+for (let i = 0; i < frames.length; i++) {
+  const frame = frames[i];
+  const delay = i % STEPS === 0 ? 1000 : 0;
+  const index = applyPalette(frame.data, palette);
+  gif.writeFrame(index, width, height, { palette, delay });
+}
+
+gif.finish();
+const output = gif.bytesView();
+
+const blob = new Blob([output], { type: "image/gif" });
+const url = window.URL.createObjectURL(blob);
+const element = document.createElement("img");
+element.src = url;
+document.body.append(element);
 
 </script>
 
