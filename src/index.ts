@@ -4,3 +4,5 @@ export { fromDom } from "./input/fromDom";
 export { toJSON } from "./output/toJSON";
 export { toDom } from "./output/toDom";
 export { toFrames } from "./output/toFrames";
+export { DEFAULT_COLORS } from "./lib/theme";
+export type { Theme } from "./lib/theme";
