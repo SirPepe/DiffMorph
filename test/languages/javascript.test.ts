@@ -82,6 +82,18 @@ describe("Basic statements", () => {
     ]);
   });
 
+  test("Variable initialization with regex", () => {
+    const tokens = javascript(`var foo = /[a-zA-Z]/;`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "keyword",
+      "token",
+      "operator assignment",
+      "regex",
+      "punctuation",
+    ]);
+  });
+
   test("Array destructuring", () => {
     const tokens = javascript(`var [foo, bar = 42] = source;`);
     const types = tokens.map((token) => token.type);

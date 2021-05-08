@@ -3,7 +3,7 @@
 // definition binds to true.
 
 import { Theme, themeColors } from "../lib/theme";
-import { isNewLine, lookbehindText, lookbehindType } from "../lib/util";
+import { isAdjacent, isNewLine, lookbehindText, lookbehindType } from "../lib/util";
 import {
   LanguageDefinition,
   LanguageFunction,
@@ -131,6 +131,38 @@ type Flags = {
   types: boolean;
 };
 
+function startRegex (token: RawToken): boolean {
+  if (token.text !== "/") {
+    return false;
+  }
+  // To have a regex start, the next token must be adjacent
+  if (!isAdjacent(token, token.next)) {
+    return false;
+  }
+  // Check that this is not the start of a comment
+  if (token.prev?.text === "/" || token.prev?.text === "*") {
+    return false;
+  }
+  // Check that we don't take a division as the start of a regex literal
+  if (token.prev?.type === "number") {
+    return false;
+  }
+  // Check that this is not divide-equals
+  if (token.next?.text === "=") {
+    return false;
+  }
+  return true;
+}
+
+function endRegex (token: RawToken): boolean {
+  const endWithFlag = token.prev?.text === "/" && token.text.match(RE_FLAGS_RE);
+  const endWithPunctuation = token.text === "/" && token.next?.text === ";";
+  if (endWithFlag || endWithPunctuation) {
+    return true;
+  }
+  return false;
+}
+
 class Stack<T extends string> {
   private data: T[] = [];
   constructor(private defaultValue: T){}
@@ -235,6 +267,21 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // are we in line comment state?
     if (state.lineCommentState) {
       return "comment line";
+    }
+
+    // exit re state
+    if (state.regexState === true && endRegex(token)) {
+      state.regexState = false;
+      return "regex";
+    }
+    // enter re state
+    if (state.regexState === false && startRegex(token)) {
+      state.regexState = true;
+      return "regex";
+    }
+    // are we in re state?
+    if (state.regexState === true) {
+      return "regex";
     }
 
     // Assorted keywords
@@ -423,6 +470,10 @@ function postprocessECMAScript(token: TypedToken): boolean {
     token.text === "." &&
     (token.prev?.text === "." || token.prev?.text === "..")
   ) {
+    return true;
+  }
+  // Join regular expressions
+  if (token.type === "regex" && token?.prev?.type === token.type) {
     return true;
   }
   // Join arrows
