@@ -3,7 +3,12 @@
 // definition binds to true.
 
 import { Theme, themeColors } from "../lib/theme";
-import { isAdjacent, isNewLine, lookbehindText, lookbehindType } from "../lib/util";
+import {
+  isAdjacent,
+  isNewLine,
+  lookbehindText,
+  lookbehindType
+} from "../lib/util";
 import {
   LanguageDefinition,
   LanguageFunction,
@@ -96,7 +101,7 @@ const OTHER_KEYWORDS = new Set([
   "yield",
 ]);
 
-const GLOBALS = [
+const GLOBALS = new Set([
   "Array",
   "window",
   "setTimeout",
@@ -125,7 +130,7 @@ const GLOBALS = [
   "unescape",
   "Object",
   "Boolean",
-];
+]);
 
 type Flags = {
   types: boolean;
@@ -293,17 +298,34 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     }
 
     // Identifiers
-    if (token.text.match(IDENT_RE) && token.prev) {
+    if (token.text.match(IDENT_RE)) {
+      // "Looks like a class" sort of identifier (that's not a function call)
+      if (
+        /[A-Z]/.test(token.text[0]) &&
+        token.next?.text !== "(" &&
+        token.prev?.text !== "new"
+      ) {
+        return "class";
+      }
+      // Known global (that's not a function call)
+      if (
+        GLOBALS.has(token.text) &&
+        token.prev?.text !== "." &&
+        token.next?.text !== "(" &&
+        token.prev?.text !== "new"
+      ) {
+        return "global";
+      }
       // Regular identifier
-      if (["var", "let", "const"].includes(token.prev.text)) {
+      if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
         return "token";
       }
       // Declarations
-      if (token.prev.type === "keyword function") {
+      if (token.prev?.type === "keyword function") {
         return "declaration function";
       }
       // Function and constructor calls
-      if (token.prev.type === "keyword" && token.prev.text === "new") {
+      if (token.prev?.type === "keyword" && token.prev.text === "new") {
         return "call constructor";
       }
       if (token.next?.text === "(") {

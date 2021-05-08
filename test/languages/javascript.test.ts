@@ -230,6 +230,19 @@ describe("Basic statements", () => {
         "punctuation function-end-0"
       ]);
   });
+
+  test("Use of globals", () => {
+    const tokens = javascript(`window.setTimeout();`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "global",
+      "punctuation",
+      "call",
+      "punctuation call-start-0",
+      "punctuation call-end-0",
+      "punctuation",
+    ]);
+  });
 });
 
 describe("Bonkers syntax", () => {
