@@ -3,7 +3,7 @@
 // definition binds to true.
 
 import { Theme, themeColors } from "../lib/theme";
-import { isNewLine, lookbehindType } from "../lib/util";
+import { isNewLine, lookbehindText, lookbehindType } from "../lib/util";
 import {
   LanguageDefinition,
   LanguageFunction,
@@ -255,6 +255,13 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       if (token.prev.type === "keyword function") {
         return "declaration function";
       }
+      // Function and constructor calls
+      if (token.prev.type === "keyword" && token.prev.text === "new") {
+        return "call constructor";
+      }
+      if (token.next?.text === "(") {
+        return "call";
+      }
       // Identifier in a list
       if (lookbehindType<RawToken | TypedToken>(token, ["punctuation", "token"])) {
         return "token";
@@ -269,6 +276,10 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     }
 
     if (token.text === "(") {
+      if (token.prev?.type.startsWith("call")) {
+        const { before } = state.parenStack.push("call");
+        return `punctuation call-start-${before}`;
+      }
       if (
         token?.prev?.type === "declaration function" ||
         token?.prev?.type === "keyword function"
@@ -289,6 +300,13 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
         const { before } = state.bracketStack.push("destruct");
         return `punctuation destruct-start-${before}`;
+      }
+      if (
+        token?.prev?.type === "operator assignment" ||
+        token?.prev?.text === ":"
+      ) {
+        const { before } = state.bracketStack.push("array");
+        return `punctuation array-start-${before}`;
       }
       const { before } = state.bracketStack.push("bracket");
       return `punctuation bracket-start-${before}`;
@@ -311,6 +329,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         const { before } = state.curlyStack.push("function");
         return `punctuation function-start-${before}`;
       }
+      // Must be before nested destruct
       if (token?.prev?.type === "operator assignment") {
         const { before } = state.curlyStack.push("object");
         return `punctuation object-start-${before}`;
@@ -318,6 +337,11 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       if (state.curlyStack.peek().value === "destruct") { // nested destruct?
         const { before } = state.curlyStack.push("destruct");
         return `punctuation destruct-start-${before}`;
+      }
+      // Must be after nested destruct
+      if (token?.prev?.text === ":") {
+        const { before } = state.curlyStack.push("object");
+        return `punctuation object-start-${before}`;
       }
       const { before } = state.curlyStack.push("curly");
       return `punctuation curly-start-${before}`;
@@ -332,10 +356,15 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       return "punctuation";
     }
 
-    // Make sure to treat member expressions not as keywords
+    // Make sure to treat member expressions not as keywords, but also take care
+    // that keywords like "new" are indeed keywords when following a spread
+    // operator
     if (
       OTHER_KEYWORDS.has(token.text) &&
-      token.prev?.text !== "." &&
+      (
+        token.prev?.text !== "." ||
+        lookbehindText<RawToken | TypedToken>(token, [".", ".", "."])
+      ) &&
       !token?.prev?.type.match(/object-start/)
     ) {
       return "keyword";
@@ -389,6 +418,14 @@ const theme: Theme = {
 };
 
 function postprocessECMAScript(token: TypedToken): boolean {
+  // Join rest/spread
+  if (
+    token.text === "." &&
+    (token.prev?.text === "." || token.prev?.text === "..")
+  ) {
+    return true;
+  }
+  // Join arrows
   if (token.type === "operator arrow" && token?.prev?.type === token.type) {
     return true;
   }

@@ -220,6 +220,42 @@ describe("Basic statements", () => {
   });
 });
 
+describe("Bonkers syntax", () => {
+  test("'new' in an array in an object is in fact a keyword!", () => {
+    expect(javascript("x = { y: [ new B() ] }").map((token) => token.type))
+      .toEqual([
+        "token",
+        "operator assignment",
+        "punctuation object-start-0",
+        "token",
+        "punctuation",
+        "punctuation array-start-0",
+        "keyword",
+        "call constructor",
+        "punctuation call-start-0",
+        "punctuation call-end-0",
+        "punctuation array-end-0",
+        "punctuation object-end-0",
+      ]);
+  });
+
+
+  test("'new' before the three spread dots is indeed a keyword!", () => {
+    expect(javascript("x = [ ...new Foo() ]").map((token) => token.type))
+      .toEqual([
+        "token",
+        "operator assignment",
+        "punctuation array-start-0",
+        "punctuation",
+        "keyword",
+        "call constructor",
+        "punctuation call-start-0",
+        "punctuation call-end-0",
+        "punctuation array-end-0",
+      ]);
+  });
+});
+
 describe("Broken statements", () => {
   test("Incomplete variable declaration", () => {
     const tokens = javascript(`var ... = 42`);
@@ -227,12 +263,11 @@ describe("Broken statements", () => {
     expect(types).toEqual([
       "keyword",
       "punctuation",
-      "punctuation",
-      "punctuation",
       "operator assignment",
       "number"
     ]);
   });
+
   test("Two incomplete variable declarations", () => {
     const tokens = javascript("var foo = ...\nvar bar = ...");
     const types = tokens.map((token) => token.type);
@@ -241,13 +276,9 @@ describe("Broken statements", () => {
       "token",
       "operator assignment",
       "punctuation",
-      "punctuation",
-      "punctuation",
       "keyword",
       "token",
       "operator assignment",
-      "punctuation",
-      "punctuation",
       "punctuation"
     ]);
   });

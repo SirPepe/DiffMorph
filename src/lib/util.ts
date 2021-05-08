@@ -251,6 +251,21 @@ export const lookaheadText = <T extends { text: string; next: T | undefined }>(
   return true;
 };
 
+export const lookbehindText = <T extends { text: string; prev: T | undefined }>(
+  token: T,
+  expected: string[]
+): boolean => {
+  while (expected.length) {
+    const nextText = expected.pop();
+    if (!token.prev || token.prev.text !== nextText) {
+      return false;
+    } else {
+      token = token.prev;
+    }
+  }
+  return true;
+};
+
 export const lookbehindType = <T extends { type?: string; prev: T | undefined }>(
   token: T,
   expected: string[]
