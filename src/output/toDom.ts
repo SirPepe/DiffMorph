@@ -29,6 +29,9 @@ const DEFAULT_STYLES = `
   transition: transform var(--dm-transition-time, 500ms);
   position: relative;
   color: var(--foreground);
+  background-color: var(--background);
+  width: 100%;
+  height: 100%;
 }
 .dm-token, .dm-decoration, .dm-box {
   transform-origin: top left;
