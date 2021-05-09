@@ -6,29 +6,53 @@
 </head>
 <body>
 
-<pre class="language-jsonc">// JSONC
-{}</pre>
-<pre class="language-jsonc">// JSONC
-{ "hello": 42 }</pre>
-<pre class="language-jsonc">// JSONC
-{ "hello": 42, "world": 42 }</pre>
-<pre class="language-jsonc">// JSONC
-{
-  "hello": 42,
-  "world": 42
+
+<pre class="language-javascript">// Work on JavaScript has started!</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+function foo() {}</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+function foo(bar) {}</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+function foo(bar) {
+  return;
 }</pre>
-<pre class="language-jsonc">// JSONC
-{
-  "hello": 42,
-  "world": [42, 23]
+<pre class="language-javascript">// Work on JavaScript has started!
+function foo(bar) {
+  return [bar, 42n];
 }</pre>
-<pre class="language-jsonc">// JSONC
-{
-  "hello": 42,
-  "world": {
-    "wee": [42, 23]
-  }
+<pre class="language-javascript">// Work on JavaScript has started!
+function foo(bar) {
+  return [bar, null, 42n];
 }</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+function foo(bar = true) {
+  return [bar, null, 42n];
+}</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+const [a, b, c] = function foo(bar = true) {
+  return [bar, null, 42n];
+}</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+const [a, b, c = 23_000_000] = function foo(bar = true) {
+  return [bar, null, 42n];
+}</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+const [a, b, c = 23_000_000] = function foo(bar = true) {
+  return [bar, null, 42n];
+}
+// It's going to take a while, the syntax is very complex</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+const [a, b, c = 23_000_000] = function foo(bar = true) {
+  return [bar, null, 42n];
+}
+// It's going to take a while, the syntax is very complex
+// Especially if you factor in JSX and TypeScript/Flow</pre>
+<pre class="language-javascript">// Work on JavaScript has started!
+const [a, b, c = 23_000_000] = function foo(bar = true) {
+  return [bar, null, 42n];
+}
+// It's going to take a while, the syntax is very complex
+// Especially if you factor in JSX and TypeScript/Flow</pre>
 
 <style>
 pre { display: none }

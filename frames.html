@@ -40,8 +40,24 @@ const STEPS = 6;
 const renderData = DiffMorph.fromDom(
   Array.from(document.querySelectorAll("pre"))
 );
+
+const colors = {
+  foreground: "#ffffff",
+  background: "#1a1919",
+  string: "#ff009f",
+  number: "#00ca99",
+  comment: "#888888",
+  global: "#0055cc",
+  type: "#104570",
+  tag: "#004f57",
+  value: "#ffc900",
+  literal: "#9d26d9",
+  punctuation: "#ffffff",
+};
+
 const [width, height, frameGen] = DiffMorph.toFrames(
   renderData,
+  colors,
   STEPS,
   8,
   "diff2gif.com",

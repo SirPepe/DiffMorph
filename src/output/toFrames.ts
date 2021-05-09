@@ -10,21 +10,22 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { assertIs } from "../lib/util";
-import { DEFAULT_COLOR_PALETTE, LanguageTheme, LanguageThemeProperties } from "../lib/theme";
+import { ColorPalette, DEFAULT_COLOR_PALETTE, LanguageTheme, LanguageThemeProperties } from "../lib/theme";
 
 // Translate language theme into canvas styles
 function setStyles(
   ctx: CanvasRenderingContext2D,
-  styles: LanguageThemeProperties
+  languageTheme: LanguageThemeProperties,
+  colorPalette: ColorPalette
 ): void {
   const {
     color,
     "font-style": fontStyle = "normal",
     "font-weight": fontWeight = "normal"
-  } = styles;
+  } = languageTheme;
   // Text color
   if (color) {
-    const value = (DEFAULT_COLOR_PALETTE as any)[color] as string | undefined;
+    const value = (colorPalette as any)[color] as string | undefined;
     if (value) {
       ctx.fillStyle = value;
     }
@@ -165,12 +166,14 @@ class TextNode {
     private ctx: CanvasRenderingContext2D,
     private text: string,
     type: string,
-    theme: LanguageTheme,
+    languageTheme: LanguageTheme,
+    private colorPalette: ColorPalette,
     private cellSize: number,
     private lineHeight: number,
   ){
     type = type.split(/\s/)[0];
-    this.styles = theme[type];
+    this.styles = languageTheme[type];
+    console.log(this.styles);
   }
 
   public draw(x: number, y: number, alpha: number): void {
@@ -180,7 +183,7 @@ class TextNode {
     this.ctx.save();
     this.ctx.globalAlpha = alpha;
     if (this.styles) {
-      setStyles(this.ctx, this.styles);
+      setStyles(this.ctx, this.styles, this.colorPalette);
     }
     this.ctx.fillText(
       this.text,
@@ -194,7 +197,8 @@ class TextNode {
 class DecorationNode {
   constructor(
     private ctx: CanvasRenderingContext2D,
-    private styles: Record<string, string>,
+    private languageTheme: LanguageTheme,
+    private colorPalette: ColorPalette,
     private cellSize: number,
     private lineHeight: number,
   ){}
@@ -205,10 +209,11 @@ class DecorationNode {
 function toRenderNodes(
   root: RenderRoot<RenderText, RenderDecoration>,
   ctx: CanvasRenderingContext2D,
+  colorPalette: ColorPalette,
   cellSize: number,
   lineHeight: number,
 ): RenderRoot<TextNode, DecorationNode> {
-  const styles = root.language
+  const languageTheme = root.language
     ? languages[root.language]?.theme
     : {};
   return {
@@ -217,14 +222,28 @@ function toRenderNodes(
       text: new Map(Array.from(root.content.text, ([id, { text, type }]) => {
         return [
           id,
-          new TextNode(ctx, text, type, styles, cellSize, lineHeight)
+          new TextNode(
+            ctx,
+            text,
+            type,
+            languageTheme,
+            colorPalette,
+            cellSize,
+            lineHeight,
+          )
         ];
       })),
       decorations: new Map(Array.from(root.content.decorations, ([id]) => {
-        return [id, new DecorationNode(ctx, {}, cellSize, lineHeight)];
+        return [
+          id,
+          new DecorationNode(ctx, {}, colorPalette, cellSize, lineHeight),
+        ];
       })),
       boxes: new Map(Array.from(root.content.boxes, ([id, box]) => {
-        return [id, toRenderNodes(box, ctx, cellSize, lineHeight)];
+        return [
+          id,
+          toRenderNodes(box, ctx, colorPalette, cellSize, lineHeight),
+        ];
       })),
     }
   }
@@ -310,16 +329,18 @@ class ColorIndex {
 function renderWatermark(
   ctx: CanvasRenderingContext2D,
   text: string,
+  color: string,
   padding: number
 ): void {
   ctx.save();
   ctx.font = `9px Arial, sans-serif`;
   ctx.textAlign = "right";
   ctx.textBaseline = "bottom";
-  ctx.fillStyle = "#999";
+  ctx.fillStyle = color;
+  ctx.globalAlpha = 0.5;
   ctx.fillText(
     text.toUpperCase(),
-    ctx.canvas.width - padding - 4, // compensate for descenders
+    ctx.canvas.width - padding - 2, // compensate for descenders
     ctx.canvas.height - padding
   );
   ctx.restore();
@@ -328,10 +349,13 @@ function renderWatermark(
 // Generate lazily for hopefully some resemblance of efficiency
 export function toFrames(
   renderData: RenderData<RenderText, RenderDecoration>,
+  colorPalette: ColorPalette = DEFAULT_COLOR_PALETTE,
   steps = 30, // 500ms @ 60fps
   padding = 16,
   watermarkText = "",
 ): [number, number, () => Generator<ImageData, Uint8ClampedArray, unknown>] {
+  colorPalette = { ...DEFAULT_COLOR_PALETTE, ...colorPalette };
+  const { objects, frames, maxWidth, maxHeight } = renderData;
   const lineHeight = 2.5;
   const [ctx, cellSize] = setupContext(
     lineHeight,
@@ -339,24 +363,24 @@ export function toFrames(
     renderData.maxHeight,
     padding,
   );
-  const frames = tweenFrames(renderData.frames, steps);
-  const nodes = toRenderNodes(renderData.objects, ctx, cellSize, lineHeight);
-  const colors = new ColorIndex();
+  const renderFrames = tweenFrames(frames, steps);
+  const nodes = toRenderNodes(objects, ctx, colorPalette, cellSize, lineHeight);
+  const colorIndex = new ColorIndex();
   return [ctx.canvas.width, ctx.canvas.height, function * () {
-    for (const frame of frames.values()) {
+    for (const frame of renderFrames.values()) {
       ctx.save();
       ctx.setTransform(); // unset padding
-      ctx.fillStyle = "white";
+      ctx.fillStyle = colorPalette.background;
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       ctx.restore();
       renderNodes(nodes, ctx, frame, 0, 0);
       if (watermarkText) {
-        renderWatermark(ctx, watermarkText, padding);
+        renderWatermark(ctx, watermarkText, colorPalette.foreground, padding);
       }
       const data = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-      colors.storeColors(data.data);
+      colorIndex.storeColors(data.data);
       yield data;
     }
-    return colors.getColors();
+    return colorIndex.getColors();
   }];
 }
