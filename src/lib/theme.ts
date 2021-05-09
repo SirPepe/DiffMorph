@@ -12,17 +12,18 @@ export const themeColors = {
   punctuation: "punctuation",
 };
 
-export type ThemeProperties = {
+export type LanguageThemeProperties = {
   "color"?: typeof themeColors[keyof typeof themeColors];
   "font-weight"?: string;
   "font-style"?: string;
 };
 
-export type Theme = Record<string, ThemeProperties>;
+export type LanguageTheme = Record<string, LanguageThemeProperties>;
+export type ColorPalette = { [K in keyof typeof themeColors]: string };
 
 // These should be six-character hexadecimal values for compatibility with
 // color input elements
-export const DEFAULT_COLORS = {
+export const DEFAULT_COLOR_PALETTE = {
   foreground: "#000000",
   background: "#ffffff",
   string: "#bd0542",

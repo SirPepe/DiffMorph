@@ -10,12 +10,12 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { assertIs } from "../lib/util";
-import { DEFAULT_COLORS, Theme, ThemeProperties } from "../lib/theme";
+import { DEFAULT_COLOR_PALETTE, LanguageTheme, LanguageThemeProperties } from "../lib/theme";
 
 // Translate language theme into canvas styles
 function setStyles(
   ctx: CanvasRenderingContext2D,
-  styles: ThemeProperties
+  styles: LanguageThemeProperties
 ): void {
   const {
     color,
@@ -24,7 +24,7 @@ function setStyles(
   } = styles;
   // Text color
   if (color) {
-    const value = (DEFAULT_COLORS as any)[color] as string | undefined;
+    const value = (DEFAULT_COLOR_PALETTE as any)[color] as string | undefined;
     if (value) {
       ctx.fillStyle = value;
     }
@@ -160,12 +160,12 @@ export function tweenFrames(
 }
 
 class TextNode {
-  private styles: ThemeProperties | undefined;
+  private styles: LanguageThemeProperties | undefined;
   constructor(
     private ctx: CanvasRenderingContext2D,
     private text: string,
     type: string,
-    theme: Theme,
+    theme: LanguageTheme,
     private cellSize: number,
     private lineHeight: number,
   ){

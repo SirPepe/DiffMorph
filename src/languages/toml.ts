@@ -1,4 +1,4 @@
-import { Theme, themeColors } from "../lib/theme";
+import { LanguageTheme, themeColors } from "../lib/theme";
 import { isAdjacent, lookaheadText } from "../lib/util";
 import { LanguageDefinition, RawToken, TypedToken } from "../types";
 
@@ -224,7 +224,7 @@ function postprocessTOML(token: TypedToken): boolean {
   return false;
 }
 
-const theme: Theme = {
+const theme: LanguageTheme = {
   number: {
     color: themeColors.number,
   },

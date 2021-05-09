@@ -2,7 +2,7 @@
 // TS features are controlled by a flag, which the TypeScript language
 // definition binds to true.
 
-import { Theme, themeColors } from "../lib/theme";
+import { LanguageTheme, themeColors } from "../lib/theme";
 import {
   isAdjacent,
   isNewLine,
@@ -460,7 +460,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
   };
 }
 
-const theme: Theme = {
+const theme: LanguageTheme = {
   value: {
     color: themeColors.literal,
   },

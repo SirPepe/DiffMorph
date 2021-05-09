@@ -8,24 +8,24 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { createIdGenerator } from "../lib/util";
-import { DEFAULT_COLORS, Theme } from "../lib/theme";
+import { DEFAULT_COLOR_PALETTE, LanguageTheme } from "../lib/theme";
 
 const nextId = createIdGenerator();
 
 const DEFAULT_STYLES = `
 .dm-code {
-  --foreground: var(--dm-foreground, ${DEFAULT_COLORS.foreground});
-  --background: var(--dm-background, ${DEFAULT_COLORS.background});
+  --foreground: var(--dm-foreground, ${DEFAULT_COLOR_PALETTE.foreground});
+  --background: var(--dm-background, ${DEFAULT_COLOR_PALETTE.background});
   --line-height: var(--dm-line-height, 2.5ch);
-  --string: var(--dm-string, ${DEFAULT_COLORS.string});
-  --number: var(--dm-number, ${DEFAULT_COLORS.number});
-  --comment: var(--dm-comment, ${DEFAULT_COLORS.comment});
-  --global: var(--dm-global, ${DEFAULT_COLORS.global});
-  --type: var(--dm-type, ${DEFAULT_COLORS.type});
-  --tag: var(--dm-tag, ${DEFAULT_COLORS.tag});
-  --value: var(--dm-value, ${DEFAULT_COLORS.value});
-  --literal: var(--dm-literal, ${DEFAULT_COLORS.literal});
-  --punctuation: var(--dm-punctuation, ${DEFAULT_COLORS.punctuation});
+  --string: var(--dm-string, ${DEFAULT_COLOR_PALETTE.string});
+  --number: var(--dm-number, ${DEFAULT_COLOR_PALETTE.number});
+  --comment: var(--dm-comment, ${DEFAULT_COLOR_PALETTE.comment});
+  --global: var(--dm-global, ${DEFAULT_COLOR_PALETTE.global});
+  --type: var(--dm-type, ${DEFAULT_COLOR_PALETTE.type});
+  --tag: var(--dm-tag, ${DEFAULT_COLOR_PALETTE.tag});
+  --value: var(--dm-value, ${DEFAULT_COLOR_PALETTE.value});
+  --literal: var(--dm-literal, ${DEFAULT_COLOR_PALETTE.literal});
+  --punctuation: var(--dm-punctuation, ${DEFAULT_COLOR_PALETTE.punctuation});
   transition: transform var(--dm-transition-time, 500ms);
   position: relative;
   color: var(--foreground);
@@ -125,7 +125,7 @@ function generateBoxCss(
   return styles;
 }
 
-function themeToCss(prefix: string, theme: Theme): string {
+function themeToCss(prefix: string, theme: LanguageTheme): string {
   return Object.entries(theme).map(([type, props]) => {
     const selector = `${prefix} .` + type.split(/\s+/).join(".");
     const declarations = Object.entries(props).map(([property, value]) => {

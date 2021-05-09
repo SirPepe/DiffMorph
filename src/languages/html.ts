@@ -11,7 +11,7 @@ import {
   RawToken,
   TypedToken,
 } from "../types";
-import { Theme, themeColors } from "../lib/theme";
+import { LanguageTheme, themeColors } from "../lib/theme";
 
 type Flags = {
   xml: boolean;
@@ -378,7 +378,7 @@ function glueHTML(token: TypedToken): boolean {
   return false;
 }
 
-const theme: Theme = {
+const theme: LanguageTheme = {
   doctype: {
     color: themeColors.comment,
     "font-weight": "bold",
