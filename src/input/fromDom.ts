@@ -18,6 +18,7 @@ import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
 import { toLifecycle } from "../lib/lifecycle";
+import { InputOptions, withDefaults } from "./options";
 
 function isHTMLElement(arg: any): arg is HTMLElement {
   if (!arg) {
@@ -84,20 +85,22 @@ function extractCode(source: Element): CodeContainer {
 
 // Only exported for unit testing code extraction
 export function processCode(
-  source: Element
+  source: Element,
+  tabSize: number
 ): Box<TextToken, Decoration<TextToken>> {
-  return tokenize(extractCode(source));
+  return tokenize(extractCode(source), tabSize);
 }
 
 // Actual facade for dom content extraction
 export function fromDom(
   inputs: Element[],
-  languageOverride?: string
+  options: InputOptions
 ): RenderData<RenderText, RenderDecoration> {
+  const inputConfig = withDefaults(options);
   const typed = inputs.map((input) => {
-    const tokenized = processCode(input);
-    if (languageOverride) {
-      tokenized.language = languageOverride;
+    const tokenized = processCode(input, inputConfig.tabSize);
+    if (inputConfig.languageOverride) {
+      tokenized.language = inputConfig.languageOverride;
     }
     return applyLanguage(tokenized);
   });

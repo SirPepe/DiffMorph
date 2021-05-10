@@ -76,7 +76,7 @@ export const lang = (language: string) => (
       language,
       isDecoration: false,
       data: {},
-    })
+    }, 2)
   );
 };
 

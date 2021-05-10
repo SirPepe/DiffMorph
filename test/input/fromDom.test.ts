@@ -6,7 +6,7 @@ describe("processing code from a DOM source", () => {
 
   test("copying attributes from the source element", () => {
     container.setAttribute("foo", "bar");
-    const root = processCode(container);
+    const root = processCode(container, 2);
     expect(root).toMatchObject({
       data: {
         attributes: [["foo", "bar"]],
@@ -18,7 +18,7 @@ describe("processing code from a DOM source", () => {
 
   test("splitting an element's text content", () => {
     container.innerHTML = "const a = () => 42";
-    const root = processCode(container);
+    const root = processCode(container, 2);
     expect(root).toEqual({
       kind: "BOX",
       x: 0,
@@ -54,7 +54,7 @@ describe("processing code from a DOM source", () => {
     container.innerHTML = `const a = () => {
   return 42;
 };`;
-    const root = processCode(container);
+    const root = processCode(container, 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -82,9 +82,73 @@ describe("processing code from a DOM source", () => {
     ]);
   });
 
+  test("splitting multi-line code with tabs", () => {
+    container.innerHTML = `const a = () => {
+\treturn 42;
+};`;
+    const root = processCode(container, 2);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 17,
+      height: 3,
+      decorations: [],
+    });
+    const content = root.content;
+    expect(content).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, next: content[1], prev: undefined, parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, next: content[2], prev: content[0], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, next: content[3], prev: content[1], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, next: content[4], prev: content[2], parent: root },
+      { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, next: content[5], prev: content[3], parent: root },
+      { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, next: content[6], prev: content[4], parent: root },
+      { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, next: content[7], prev: content[5], parent: root },
+      { kind: "TEXT", x: 16, y: 0, text: "{", height: 1, width: 1, next: content[8], prev: content[6], parent: root },
+      { kind: "TEXT", x: 2, y: 1, text: "return", height: 1, width: 6, next: content[9], prev: content[7], parent: root },
+      { kind: "TEXT", x: 9, y: 1, text: "42", height: 1, width: 2, next: content[10], prev: content[8], parent: root },
+      { kind: "TEXT", x: 11, y: 1, text: ";", height: 1, width: 1, next: content[11], prev: content[9], parent: root },
+      { kind: "TEXT", x: 0, y: 2, text: "}", height: 1, width: 1, next: content[12], prev: content[10], parent: root },
+      { kind: "TEXT", x: 1, y: 2, text: ";", height: 1, width: 1, next: content[13], prev: content[11], parent: root },
+      /* eslint-enable */
+    ]);
+  });
+
+  test("splitting multi-line code with tabs and a custom size", () => {
+    container.innerHTML = `const a = () => {
+\treturn 42;
+};`;
+    const root = processCode(container, 4);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 17,
+      height: 3,
+      decorations: [],
+    });
+    const content = root.content;
+    expect(content).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, next: content[1], prev: undefined, parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, next: content[2], prev: content[0], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, next: content[3], prev: content[1], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, next: content[4], prev: content[2], parent: root },
+      { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, next: content[5], prev: content[3], parent: root },
+      { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, next: content[6], prev: content[4], parent: root },
+      { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, next: content[7], prev: content[5], parent: root },
+      { kind: "TEXT", x: 16, y: 0, text: "{", height: 1, width: 1, next: content[8], prev: content[6], parent: root },
+      { kind: "TEXT", x: 4, y: 1, text: "return", height: 1, width: 6, next: content[9], prev: content[7], parent: root },
+      { kind: "TEXT", x: 11, y: 1, text: "42", height: 1, width: 2, next: content[10], prev: content[8], parent: root },
+      { kind: "TEXT", x: 13, y: 1, text: ";", height: 1, width: 1, next: content[11], prev: content[9], parent: root },
+      { kind: "TEXT", x: 0, y: 2, text: "}", height: 1, width: 1, next: content[12], prev: content[10], parent: root },
+      { kind: "TEXT", x: 1, y: 2, text: ";", height: 1, width: 1, next: content[13], prev: content[11], parent: root },
+      /* eslint-enable */
+    ]);
+  });
+
   test("boxes", () => {
     container.innerHTML = "const <span foo='bar'>a</span> = () => 42";
-    const root = processCode(container);
+    const root = processCode(container, 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -152,7 +216,7 @@ describe("processing code from a DOM source", () => {
     container.innerHTML = `const a = () => <span class="a">{
   return 42;
 }</span>;`;
-    const root = processCode(container);
+    const root = processCode(container, 2);
     const textTokens = root.content.slice(0, 7);
     const box = root.content[7] as Box<TextToken, never>;
     expect(textTokens).toEqual([
@@ -195,7 +259,7 @@ describe("processing code from a DOM source", () => {
 
   test("it handles boxes inside boxes", () => {
     container.innerHTML = "const <span foo='bar'>a = <b>()</b> => 42</span>";
-    const root = processCode(container);
+    const root = processCode(container, 2);
     const content = root.content;
     const firstToken = content[0] as TextToken;
     const outerBox = content[1] as Box<TextToken, never>;
@@ -267,7 +331,7 @@ describe("processing code from a DOM source", () => {
 )</b> => [
   x
 ]</span>;`;
-    const root = processCode(container);
+    const root = processCode(container, 2);
     const firstToken = root.content[0] as TextToken;
     const outerBox = root.content[1] as Box<TextToken, never>;
     const innerBox = outerBox.content[2] as Box<TextToken, never>;
@@ -349,7 +413,7 @@ describe("processing code from a DOM source", () => {
 
   test("it handles decorations", () => {
     container.innerHTML = "const a = () => <mark>42</mark>";
-    const root = processCode(container);
+    const root = processCode(container, 2);
     const { content, decorations } = root;
     expect(content).toEqual([
       /* eslint-disable */
@@ -383,7 +447,7 @@ describe("processing code from a DOM source", () => {
   test("it handles multiple decorations", () => {
     container.innerHTML =
       "const <mark class='a'>a</mark> = () => <mark class='b'>42</mark>";
-    const root = processCode(container);
+    const root = processCode(container, 2);
     const { content, decorations } = root;
     expect(content).toEqual([
       /* eslint-disable */
@@ -431,7 +495,7 @@ describe("processing code from a DOM source", () => {
     container.innerHTML = `const a = () => <mark>{
   return 42;
 }</mark>`;
-    const root = processCode(container);
+    const root = processCode(container, 2);
     const { content, decorations } = root;
     expect(content).toEqual([
       /* eslint-disable */
@@ -469,7 +533,7 @@ describe("processing code from a DOM source", () => {
   test("it handles decorations in boxes inside boxes", () => {
     container.innerHTML =
       "const <span foo='bar'>a = <b><mark>()</mark></b> => 42</span>";
-    const root = processCode(container);
+    const root = processCode(container, 2);
     const firstToken = root.content[0] as TextToken;
     const outerBox = root.content[1] as Box<TextToken, Decoration<any>>;
     const innerBox = outerBox.content[2] as Box<TextToken, Decoration<any>>;

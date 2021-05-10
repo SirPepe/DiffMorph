@@ -72,7 +72,7 @@ describe("In-place modifications", () => {
       isDecoration: false,
       language: "json",
       data: {},
-    });
+    }, 2);
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
@@ -124,7 +124,7 @@ describe("In-place modifications", () => {
       isDecoration: false,
       language: "json",
       data: {},
-    });
+    }, 2);
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     const nested = output.content[1] as Box<any, any>;
@@ -218,7 +218,7 @@ describe("In-place modifications", () => {
       isDecoration: false,
       language: "json",
       data: {},
-    });
+    }, 2);
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
@@ -280,7 +280,7 @@ describe("In-place modifications", () => {
       language: "json",
       data: {},
     };
-    const subject = tokenize(input);
+    const subject = tokenize(input, 2);
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output.content[0]).toHaveProperty("language", "json");
@@ -304,7 +304,7 @@ describe("In-place modifications", () => {
       language: "json",
       data: {},
     };
-    const subject = tokenize(input);
+    const subject = tokenize(input, 2);
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output.content[0]).toHaveProperty("language", "html");

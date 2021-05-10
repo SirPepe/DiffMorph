@@ -129,7 +129,7 @@ export class DiffMorph extends HTMLElement {
   }
 
   static get observedAttributes(): string[] {
-    return ["class", "autoplay", "index"];
+    return ["class", "autoplay", "index", "tabsize"];
   }
 
   public attributeChangedCallback(
@@ -137,7 +137,7 @@ export class DiffMorph extends HTMLElement {
     oldValue: string,
     newValue: string
   ): void {
-    if (name === "class") {
+    if (name === "class" || name === "tabsize") {
       this.init();
     }
     if (name === "autoplay") {
@@ -180,7 +180,10 @@ export class DiffMorph extends HTMLElement {
       return element[Symbol.toStringTag] === "DiffMorphFrameElement";
     });
     this.#numFrames = sources.length;
-    this.#renderData = fromDom(sources, this.language);
+    this.#renderData = fromDom(sources, {
+      languageOverride: this.language,
+      tabSize: this.tabSize,
+    });
     this.#renderData.objects.data.tagName = "code";
     const [newContent, maxWidth, maxHeight] = toDom(this.#renderData);
     if (!this.#content.parentElement) {
@@ -203,20 +206,38 @@ export class DiffMorph extends HTMLElement {
     this.dispatchEvent(new Event("initialize"));
   }
 
-  public next(): void {
+  public next(): number {
     if (this.index < this.size - 1) {
       this.index = this.index + 1;
     } else {
       this.index = 0;
     }
+    return this.index;
   }
 
-  public prev(): void {
+  public prev(): number {
     if (this.index > 0) {
       this.index = this.index - 1;
     } else {
       this.index = this.size - 1;
     }
+    return this.index;
+  }
+
+  set tabSize(value: number) {
+    if (typeof value === "number" && Number.isFinite(value) && value < 0) {
+      this.setAttribute("tabsize", String(value));
+    }
+  }
+
+  get tabSize(): number {
+    if (this.hasAttribute("tabsize")) {
+      const value = Number(this.getAttribute("tabsize"));
+      if (Number.isFinite(value) && value < 0) {
+        return value;
+      }
+    }
+    return 2;
   }
 
   get index(): number {

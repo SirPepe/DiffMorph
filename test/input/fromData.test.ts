@@ -9,7 +9,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "base",
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toEqual({
       kind: "BOX",
       data: {},
@@ -43,7 +43,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "base",
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toEqual({
       kind: "BOX",
       data: {},
@@ -81,7 +81,7 @@ describe("processing code from a data source", () => {
       language: undefined,
     };
     /* eslint-enable */
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -96,6 +96,64 @@ describe("processing code from a data source", () => {
       { kind: "TEXT", x: 2, y: 1, text: "=", height: 1, width: 1, prev: content[1], next: content[3], parent: root },
       { kind: "TEXT", x: 4, y: 2, text: "42", height: 1, width: 2, prev: content[2], next: content[4], parent: root },
       { kind: "TEXT", x: 6, y: 2, text: ";", height: 1, width: 1, prev: content[3], next: undefined, parent: root },
+      /* eslint-enable */
+    ]);
+  });
+
+  test("multi-line code with tab characters", () => {
+    /* eslint-disable */
+    const rootContainer = {
+      content: [`const a
+\t= 42;`],
+      id: "root",
+      isDecoration: false,
+      language: undefined,
+    };
+    /* eslint-enable */
+    const root = processCode(rootContainer, 2);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 7,
+      height: 2,
+    });
+    const content = root.content;
+    expect(content).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: content[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, prev: content[0], next: content[2], parent: root },
+      { kind: "TEXT", x: 2, y: 1, text: "=", height: 1, width: 1, prev: content[1], next: content[3], parent: root },
+      { kind: "TEXT", x: 4, y: 1, text: "42", height: 1, width: 2, prev: content[2], next: content[4], parent: root },
+      { kind: "TEXT", x: 6, y: 1, text: ";", height: 1, width: 1, prev: content[3], next: undefined, parent: root },
+      /* eslint-enable */
+    ]);
+  });
+
+  test("multi-line code with tab characters and custom tab size", () => {
+    /* eslint-disable */
+    const rootContainer = {
+      content: [`const a
+\t= 42;`],
+      id: "root",
+      isDecoration: false,
+      language: undefined,
+    };
+    /* eslint-enable */
+    const root = processCode(rootContainer, 4);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 9,
+      height: 2,
+    });
+    const content = root.content;
+    expect(content).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: content[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, prev: content[0], next: content[2], parent: root },
+      { kind: "TEXT", x: 4, y: 1, text: "=", height: 1, width: 1, prev: content[1], next: content[3], parent: root },
+      { kind: "TEXT", x: 6, y: 1, text: "42", height: 1, width: 2, prev: content[2], next: content[4], parent: root },
+      { kind: "TEXT", x: 8, y: 1, text: ";", height: 1, width: 1, prev: content[3], next: undefined, parent: root },
       /* eslint-enable */
     ]);
   });
@@ -115,7 +173,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toEqual({
       kind: "BOX",
       data: {},
@@ -184,7 +242,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toEqual({
       kind: "BOX",
       data: {},
@@ -256,13 +314,13 @@ describe("processing code from a data source", () => {
       id: "root",
       isDecoration: false,
       language: "javascript",
-    });
+    }, 2);
     const bRoot = processCode({
       content: ["const ", bBox],
       id: "root",
       isDecoration: false,
       language: "javascript",
-    });
+    }, 2);
     expect(aRoot).toEqual(bRoot);
   });
 
@@ -284,7 +342,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -343,7 +401,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -418,7 +476,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -501,7 +559,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -569,7 +627,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: undefined,
     };
-    const root = processCode(rootContainer);
+    const root = processCode(rootContainer, 2);
     const { content, decorations } = root;
     expect(content).toEqual([
       /* eslint-disable */

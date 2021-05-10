@@ -19,6 +19,7 @@ import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { createIdGenerator } from "../lib/util";
 import { toLifecycle } from "../lib/lifecycle";
+import { InputOptions, withDefaults } from "./options";
 
 type Input = string | InputContainer;
 
@@ -51,20 +52,22 @@ function extractCode(source: InputContainer): CodeContainer {
 
 // Only exported for unit testing code extraction
 export function processCode(
-  source: InputContainer
+  source: InputContainer,
+  tabSize: number
 ): Box<TextToken, Decoration<TextToken>> {
-  return tokenize(extractCode(source));
+  return tokenize(extractCode(source), tabSize);
 }
 
 // Actual facade for processing data
 export function fromData(
   inputs: InputContainer[],
-  languageOverride?: string
+  options: InputOptions
 ): RenderData<RenderText, RenderDecoration> {
+  const inputConfig = withDefaults(options);
   const typed = inputs.map((input) => {
-    const tokenized = processCode(input);
-    if (languageOverride) {
-      tokenized.language = languageOverride;
+    const tokenized = processCode(input, inputConfig.tabSize);
+    if (inputConfig.languageOverride) {
+      tokenized.language = inputConfig.languageOverride;
     }
     return applyLanguage(tokenized);
   });

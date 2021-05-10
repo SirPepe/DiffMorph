@@ -33,11 +33,33 @@ function splitText(text: string): string[] {
   return tokens;
 }
 
-function measureWhitespace(text: string): { breaks: number; length: number } {
+function measureSpacesAndTabs(
+  text: string,
+  tabSize: number,
+): number {
+  let size = 0;
+  for (const char of text) {
+    if (char === " ") {
+      size += 1;
+    } else if  (char === "\t") {
+      size += tabSize;
+    } else {
+      throw new Error(`Encountered "${char}" in measureSpacesAndTabs!`);
+    }
+  }
+  return size;
+}
+
+function measureWhitespace(
+  text: string,
+  tabSize: number,
+): { breaks: number; length: number } {
   const lines = text.split(LINE_BREAK_RE);
   return {
     breaks: lines.length - 1,
-    length: Math.max(...lines.map((token) => token.length)),
+    length: Math.max(
+      ...lines.map((token) => measureSpacesAndTabs(token, tabSize))
+    ),
   };
 }
 
@@ -62,7 +84,8 @@ function tokenizeText(
   x: number,
   y: number,
   prev: TextToken | undefined,
-  parent: Box<TextToken, Decoration<TextToken>>
+  parent: Box<TextToken, Decoration<TextToken>>,
+  tabSize: number
 ): TokenizerResult<TextToken, never> {
   let maxX = x;
   let maxY = y;
@@ -70,7 +93,7 @@ function tokenizeText(
   const content: TextToken[] = [];
   for (const part of parts) {
     if (ONLY_WHITESPACE_RE.test(part)) {
-      const { breaks, length } = measureWhitespace(part);
+      const { breaks, length } = measureWhitespace(part, tabSize);
       if (breaks > 0) {
         y += breaks;
         x = length;
@@ -118,7 +141,8 @@ function tokenizeContainer(
   x: number,
   y: number,
   prev: TextToken | undefined,
-  parent: Box<TextToken, Decoration<TextToken>> | undefined
+  parent: Box<TextToken, Decoration<TextToken>> | undefined,
+  tabSize: number
 ): TokenizerResult<Box<TextToken, Decoration<TextToken>>, never> {
   const box: Box<TextToken, Decoration<TextToken>> = {
     kind: "BOX",
@@ -134,7 +158,7 @@ function tokenizeContainer(
     decorations: [], // will be updated in a few lines
     parent,
   };
-  const result = tokenizeCodes(container.content, x, y, prev, box);
+  const result = tokenizeCodes(container.content, x, y, prev, box, tabSize);
   box.width = result.maxX - x;
   box.height = result.maxY - y + 1;
   box.content = result.content;
@@ -154,9 +178,10 @@ function tokenizeDecoration(
   x: number,
   y: number,
   prev: TextToken | undefined,
-  parent: Box<TextToken, Decoration<TextToken>>
+  parent: Box<TextToken, Decoration<TextToken>>,
+  tabSize: number
 ): FullTokenizerResult {
-  const result = tokenizeCodes(container.content, x, y, prev, parent);
+  const result = tokenizeCodes(container.content, x, y, prev, parent, tabSize);
   const width = result.maxX - x;
   const height = result.maxY - y + 1;
   const content = result.content;
@@ -185,7 +210,8 @@ function tokenizeCodes(
   x: number,
   y: number,
   prev: TextToken | undefined,
-  parent: Box<TextToken, Decoration<TextToken>>
+  parent: Box<TextToken, Decoration<TextToken>>,
+  tabSize: number
 ): FullTokenizerResult {
   let maxX = x;
   let maxY = y;
@@ -193,7 +219,7 @@ function tokenizeCodes(
   const decorations = [];
   for (const code of codes) {
     if (typeof code === "string") {
-      const result = tokenizeText(code, x, y, prev, parent);
+      const result = tokenizeText(code, x, y, prev, parent, tabSize);
       if (prev) {
         prev.next = result.content[0];
       }
@@ -209,8 +235,8 @@ function tokenizeCodes(
       y = result.lastY;
     } else {
       const result = code.isDecoration
-        ? tokenizeDecoration(code, x, y, prev, parent)
-        : tokenizeContainer(code, x, y, prev, parent);
+        ? tokenizeDecoration(code, x, y, prev, parent, tabSize)
+        : tokenizeContainer(code, x, y, prev, parent, tabSize);
       if (prev) {
         prev.next = getFirstTextToken(result.content);
       }
@@ -244,7 +270,15 @@ function tokenizeCodes(
 }
 
 export function tokenize(
-  root: CodeContainer
+  root: CodeContainer,
+  tabSize: number
 ): Box<TextToken, Decoration<TextToken>> {
-  return tokenizeContainer(root, 0, 0, undefined, undefined).content[0];
+  return tokenizeContainer(
+    root,
+    0,
+    0,
+    undefined,
+    undefined,
+    tabSize
+  ).content[0];
 }
