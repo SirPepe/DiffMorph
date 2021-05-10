@@ -173,7 +173,6 @@ class TextNode {
   ){
     type = type.split(/\s/)[0];
     this.styles = languageTheme[type];
-    console.log(this.styles);
   }
 
   public draw(x: number, y: number, alpha: number): void {
