@@ -31,12 +31,9 @@ type LinkedOptimizable = Optimizable & {
 function getNeighborHashes<T extends LinkedOptimizable>(
   item: T
 ): [string | undefined, string | undefined] {
-  const left = (item.prev && item.prev.y === item.y)
-    ? item.prev.hash
-    : undefined;
-  const right = (item.next && item.next.y === item.y)
-    ? item.next.hash
-    : undefined;
+  const left = item.prev && item.prev.y === item.y ? item.prev.hash : undefined;
+  const right =
+    item.next && item.next.y === item.y ? item.next.hash : undefined;
   return [left, right];
 }
 
@@ -75,10 +72,10 @@ export function pickAlternative<T extends Optimizable>(
   fromItems: T[] | Set<T>
 ): T | null {
   // Too easy
-  if (Array.isArray(fromItems) && fromItems.length === 1){
+  if (Array.isArray(fromItems) && fromItems.length === 1) {
     return fromItems[0];
   }
-  if ((fromItems instanceof Set) && fromItems.size === 1) {
+  if (fromItems instanceof Set && fromItems.size === 1) {
     return Array.from(fromItems)[0];
   }
   // Setup and pre-calculate data for picking the best alternative. Compute all

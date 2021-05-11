@@ -4,11 +4,7 @@ import { process } from "../helpers";
 describe("rendering", () => {
   test("It turns some JSON into render data", () => {
     const { objects, frames, maxWidth, maxHeight } = toRenderData(
-      process("json")(
-        ["{}"],
-        ["  {}"],
-        ["    {\n}"],
-      ),
+      process("json")(["{}"], ["  {}"], ["    {\n}"])
     );
     expect(objects).toEqual({
       id: "root",
@@ -138,11 +134,7 @@ describe("rendering", () => {
 
   test("It works with non-changing frames", () => {
     const { objects, frames, maxWidth, maxHeight } = toRenderData(
-      process("json")(
-        ["{}"],
-        ["{}"],
-        ["  {}"],
-      )
+      process("json")(["{}"], ["{}"], ["  {}"])
     );
     expect(objects).toEqual({
       id: "root",
@@ -251,7 +243,7 @@ describe("rendering", () => {
           },
           "}",
         ],
-        ["{}"],
+        ["{}"]
       )
     );
     expect(objects).toEqual({
@@ -266,22 +258,20 @@ describe("rendering", () => {
         decorations: new Map(),
         boxes: new Map([
           [
-            "box", {
+            "box",
+            {
               id: "box",
               data: {},
               language: "json",
               content: {
                 text: new Map([
-                  [
-                    "j5gb800",
-                    { id: "j5gb800", text: "null", type: "keyword" },
-                  ],
+                  ["j5gb800", { id: "j5gb800", text: "null", type: "keyword" }],
                 ]),
                 decorations: new Map(),
                 boxes: new Map(),
-              }
-            }
-          ]
+              },
+            },
+          ],
         ]),
       },
     });
@@ -340,12 +330,12 @@ describe("rendering", () => {
                       width: 4,
                       x: 1,
                       y: 0,
-                    }
+                    },
                   ],
                 ]),
               },
-             },
-          ]
+            },
+          ],
         ]),
         decorations: new Map(),
       },
@@ -405,12 +395,12 @@ describe("rendering", () => {
                       width: 4,
                       x: 1,
                       y: 0,
-                    }
+                    },
                   ],
                 ]),
               },
-             },
-          ]
+            },
+          ],
         ]),
         decorations: new Map(),
       },
@@ -470,12 +460,12 @@ describe("rendering", () => {
                       width: 4,
                       x: 1,
                       y: 0,
-                    }
+                    },
                   ],
                 ]),
               },
-             },
-          ]
+            },
+          ],
         ]),
         decorations: new Map(),
       },
@@ -486,10 +476,8 @@ describe("rendering", () => {
   });
 
   test("handles multiple objects of the same hash", () => {
-    const { objects } = toRenderData(
-      process("json")(["null, null"])
-    );
-    expect(objects.content.text.size).toBe(3)
+    const { objects } = toRenderData(process("json")(["null, null"]));
+    expect(objects.content.text.size).toBe(3);
   });
 
   test("deals with a single frame", () => {
@@ -581,9 +569,9 @@ describe("rendering", () => {
             x: 0,
             y: 0,
           },
-        ]
-      ]
-    ));
+        ],
+      ])
+    );
     expect(maxHeight).toBe(1);
     expect(maxWidth).toBe(0);
   });

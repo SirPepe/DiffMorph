@@ -11,23 +11,23 @@ export type BoxLifecycle<T, D> = {
   text: Lifecycle<T>[];
   decorations: Lifecycle<D>[];
   boxes: BoxLifecycle<T, D>[];
-}
+};
 
-function toPosition({x, y, width, height}: Token): string {
+function toPosition({ x, y, width, height }: Token): string {
   return `${x}/${y}/${width}/${height}`;
 }
 
 function toTokenLifecycles<T extends Token>(
   frames: DiffOp<T>[][],
-  startIdx: number,
+  startIdx: number
 ): [Lifecycle<T>[], never];
 function toTokenLifecycles<T extends Token, D extends Token>(
   frames: (DiffTree<T, D> | DiffOp<T>)[][],
-  startIdx: number,
+  startIdx: number
 ): [Lifecycle<T>[], BoxLifecycle<T, D>[]];
 function toTokenLifecycles<T extends Token, D extends Token>(
   frames: (DiffTree<T, D> | DiffOp<T>)[][],
-  startIdx: number,
+  startIdx: number
 ): [Lifecycle<T>[], BoxLifecycle<T, D>[]] {
   // Last token position -> lifecycle
   const lifecycles = new Map<string, Lifecycle<T>>();
@@ -79,7 +79,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
         if (lifecycles.has(key)) {
           throw new Error();
         }
-        lifecycles.set(key, new Map([[ i + startIdx, operation ]]));
+        lifecycles.set(key, new Map([[i + startIdx, operation]]));
       }
     }
     // Third pass: place remaining items
@@ -104,7 +104,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
 
 function toBoxLifecycle<T extends Token, D extends Token>(
   diffs: DiffTree<T, D>[],
-  frameOffset: number,
+  frameOffset: number
 ): BoxLifecycle<T, D> {
   const self = new Map(diffs.map((diff, i) => [i + frameOffset, diff.root]));
   const [text, boxes] = toTokenLifecycles(
@@ -135,7 +135,8 @@ function getNextFrame<T>(
   parentMin: number,
   parentMax: number
 ): [number, T | undefined] {
-  if (from + 1 > parentMax) { // wrap around
+  if (from + 1 > parentMax) {
+    // wrap around
     return [parentMin, source.get(parentMin)];
   }
   return [from + 1, source.get(from + 1)];
@@ -147,7 +148,8 @@ function getPrevFrame<T>(
   parentMin: number,
   parentMax: number
 ): [number, T | undefined] {
-  if (from - 1 < parentMin) { // wrap around
+  if (from - 1 < parentMin) {
+    // wrap around
     return [parentMax, source.get(parentMax)];
   }
   return [from - 1, source.get(from - 1)];
@@ -249,7 +251,7 @@ function expandLifecycle(
 }
 
 function expandBoxLifecycles<T extends Token, D extends Token>(
-  lifecycle: BoxLifecycle<T, D>,
+  lifecycle: BoxLifecycle<T, D>
 ): void {
   const [minFrame, maxFrame] = minmax(lifecycle.self.keys());
   for (const box of lifecycle.boxes) {

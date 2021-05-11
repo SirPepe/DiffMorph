@@ -7,7 +7,7 @@ import {
   isAdjacent,
   isNewLine,
   lookbehindText,
-  lookbehindType
+  lookbehindType,
 } from "../lib/util";
 import {
   LanguageDefinition,
@@ -32,11 +32,7 @@ type CurlyType =
   | "block"
   | "curly";
 
-type BracketType =
-  | "array"
-  | "type"
-  | "destruct"
-  | "bracket";
+type BracketType = "array" | "type" | "destruct" | "bracket";
 
 type ParenType =
   | "parens"
@@ -136,7 +132,7 @@ type Flags = {
   types: boolean;
 };
 
-function startRegex (token: RawToken): boolean {
+function startRegex(token: RawToken): boolean {
   if (token.text !== "/") {
     return false;
   }
@@ -159,7 +155,7 @@ function startRegex (token: RawToken): boolean {
   return true;
 }
 
-function endRegex (token: RawToken): boolean {
+function endRegex(token: RawToken): boolean {
   const endWithFlag = token.prev?.text === "/" && token.text.match(RE_FLAGS_RE);
   const endWithPunctuation = token.text === "/" && token.next?.text === ";";
   if (endWithFlag || endWithPunctuation) {
@@ -170,15 +166,15 @@ function endRegex (token: RawToken): boolean {
 
 class Stack<T extends string> {
   private data: T[] = [];
-  constructor(private defaultValue: T){}
+  constructor(private defaultValue: T) {}
 
-  push(value: T): { before: number, after: number } {
+  push(value: T): { before: number; after: number } {
     const before = this.data.filter((str) => str === value).length;
     this.data.push(value);
     return { before, after: before + 1 };
   }
 
-  pop(): { before: number, after: number, value: T } {
+  pop(): { before: number; after: number; value: T } {
     const value = this.data[this.data.length - 1];
     if (!value) {
       return { before: 0, after: 0, value: this.defaultValue };
@@ -188,7 +184,7 @@ class Stack<T extends string> {
     return { before, after: before - 1, value };
   }
 
-  peek(): { current: number, value: T } {
+  peek(): { current: number; value: T } {
     const value = this.data[this.data.length - 1];
     if (!value) {
       return { current: 0, value: this.defaultValue };
@@ -332,7 +328,9 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return "call";
       }
       // Identifier in a list
-      if (lookbehindType<RawToken | TypedToken>(token, ["punctuation", "token"])) {
+      if (
+        lookbehindType<RawToken | TypedToken>(token, ["punctuation", "token"])
+      ) {
         return "token";
       }
     }
@@ -403,7 +401,8 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         const { before } = state.curlyStack.push("object");
         return `punctuation object-start-${before}`;
       }
-      if (state.curlyStack.peek().value === "destruct") { // nested destruct?
+      if (state.curlyStack.peek().value === "destruct") {
+        // nested destruct?
         const { before } = state.curlyStack.push("destruct");
         return `punctuation destruct-start-${before}`;
       }
@@ -430,10 +429,8 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // operator
     if (
       OTHER_KEYWORDS.has(token.text) &&
-      (
-        token.prev?.text !== "." ||
-        lookbehindText<RawToken | TypedToken>(token, [".", ".", "."])
-      ) &&
+      (token.prev?.text !== "." ||
+        lookbehindText<RawToken | TypedToken>(token, [".", ".", "."])) &&
       !token?.prev?.type.match(/object-start/)
     ) {
       return "keyword";
@@ -483,7 +480,7 @@ const theme: LanguageTheme = {
   comment: {
     color: themeColors.comment,
     "font-style": "italic",
-  }
+  },
 };
 
 function postprocessECMAScript(token: TypedToken): boolean {

@@ -92,23 +92,12 @@ describe("XML features", () => {
   test("Style tags are normal tags", () => {
     const tokens = xml(`<style>Hello</style>`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([
-      "tag",
-      "tag",
-      "token",
-      "tag",
-    ]);
+    expect(types).toEqual(["tag", "tag", "token", "tag"]);
   });
 
   test("Script tags are normal tags", () => {
     const tokens = xml(`<script>let x</script>`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([
-      "tag",
-      "tag",
-      "token",
-      "token",
-      "tag",
-    ]);
+    expect(types).toEqual(["tag", "tag", "token", "token", "tag"]);
   });
 });

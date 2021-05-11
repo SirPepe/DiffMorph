@@ -194,7 +194,7 @@ const theme: LanguageTheme = {
   comment: {
     color: themeColors.comment,
     "font-style": "italic",
-  }
+  },
 };
 
 export const languageDefinition: LanguageDefinition<Flags> = {

@@ -13,7 +13,7 @@ type State = {
   arrayDepth: number;
   tableDepth: number;
   stack: ("a" | "t")[]; // a = array, t = table
-}
+};
 
 function defaultState(): State {
   return {
@@ -49,7 +49,8 @@ function defineTOML(): (token: RawToken) => string | string[] {
     // exit header state
     if (state.header && token.text === "]") {
       state.header = false;
-      if (token?.next?.text === "]") { // array table header
+      if (token?.next?.text === "]") {
+        // array table header
         return ["header", "header"];
       }
       return "header";
@@ -86,7 +87,7 @@ function defineTOML(): (token: RawToken) => string | string[] {
       // Key inside an inline table
       if (
         state.stack[state.stack.length - 1] === "t" &&
-        (token.prev.text === "{" ||  token.prev.text === ",")
+        (token.prev.text === "{" || token.prev.text === ",")
       ) {
         state.key = true;
         return "key";
@@ -106,11 +107,19 @@ function defineTOML(): (token: RawToken) => string | string[] {
       state.string = false;
       return "value";
     }
-    if (state.string === "ms" && token.text === '"' && lookaheadText(token, ['"', '"'])) {
+    if (
+      state.string === "ms" &&
+      token.text === '"' &&
+      lookaheadText(token, ['"', '"'])
+    ) {
       state.string = false;
       return ["value", "value", "value"];
     }
-    if (state.string === "ml" && token.text === "'" && lookaheadText(token, ["'", "'"])) {
+    if (
+      state.string === "ml" &&
+      token.text === "'" &&
+      lookaheadText(token, ["'", "'"])
+    ) {
       state.string = false;
       return ["value", "value", "value"];
     }
@@ -184,12 +193,9 @@ function defineTOML(): (token: RawToken) => string | string[] {
       return "number";
     }
     if (
-      (
-        ["+", "-", "."].includes(token.text) &&
-        token?.next?.text.match(NUMBER_RE)
-      ) || (
-        ["e", "E", "."].includes(token.text) &&
-        token?.prev?.type === "number")
+      (["+", "-", "."].includes(token.text) &&
+        token?.next?.text.match(NUMBER_RE)) ||
+      (["e", "E", "."].includes(token.text) && token?.prev?.type === "number")
     ) {
       return ["number", "number"];
     }
@@ -208,16 +214,16 @@ function postprocessTOML(token: TypedToken): boolean {
     return isAdjacent(token, token.prev);
   }
   if (
-    token.type === "string"
-    && ["'", '"'].includes(token.text)
-    && token.text === token?.prev?.text
+    token.type === "string" &&
+    ["'", '"'].includes(token.text) &&
+    token.text === token?.prev?.text
   ) {
     return isAdjacent(token, token.prev);
   }
   if (
-    token.type === "header"
-    && ["[", "]"].includes(token.text)
-    && token.text === token?.prev?.text
+    token.type === "header" &&
+    ["[", "]"].includes(token.text) &&
+    token.text === token?.prev?.text
   ) {
     return true;
   }
@@ -253,7 +259,7 @@ const theme: LanguageTheme = {
   },
 };
 
-export const languageDefinition: LanguageDefinition<{}> = {
+export const languageDefinition: LanguageDefinition<Record<string, unknown>> = {
   name: "toml",
   theme,
   definitionFactory: defineTOML,

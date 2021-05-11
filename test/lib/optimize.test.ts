@@ -81,7 +81,7 @@ describe("Optimizer", () => {
         tokenizeJSON("{},"),
         tokenizeJSON(`{
   "a": 1,
-},`)
+},`),
       ])
     );
     expect(res.length).toBe(2);
@@ -89,7 +89,7 @@ describe("Optimizer", () => {
     // Stay with the closing curly brace
     expect(res[1].content[2]).toMatchObject({
       kind: "MOV",
-      item: { x: 1, y: 2, text: ","  },
+      item: { x: 1, y: 2, text: "," },
       from: { x: 2, y: 0 },
     });
   });
@@ -105,7 +105,7 @@ describe("Optimizer", () => {
   "a": {
     "b": 1,
   },
-}`)
+}`),
       ])
     );
     expect(res.length).toBe(2);
@@ -116,12 +116,12 @@ describe("Optimizer", () => {
       "ADD",
       "ADD",
       "ADD",
-      "ADD"
+      "ADD",
     ]);
     // Stay with the closing curly brace
     expect(res[1].content[3]).toMatchObject({
       kind: "MOV",
-      item: { x: 3, y: 3, text: ","  },
+      item: { x: 3, y: 3, text: "," },
       from: { x: 9, y: 1 },
     });
   });

@@ -272,7 +272,6 @@ describe("broken JSON", () => {
       "value",
       "punctuation object-end-0",
     ]);
-
   });
 });
 

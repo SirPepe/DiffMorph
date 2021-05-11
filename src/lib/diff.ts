@@ -182,11 +182,13 @@ function asPattern<T extends DiffableContent>(
   items: T[],
   parent: Box<T, any>
 ): Pattern<T> {
-  let [{x, y}] = items;
-  const hash = items.map((item, idx) => {
-    const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
-    return item.hash + String(xDelta);
-  }).join("");
+  const [{ x, y }] = items;
+  const hash = items
+    .map((item, idx) => {
+      const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
+      return item.hash + String(xDelta);
+    })
+    .join("");
   return {
     x,
     y,
@@ -204,16 +206,16 @@ function consume<T extends DiffableContent>(
   items: T[],
   from: number,
   done: (item: T) => boolean | null // null = abort
-): { result: T[], position: number } {
+): { result: T[]; position: number } {
   const consumed = [];
   for (let i = from; i < items.length; i++) {
     const result = done(items[i]);
     if (result === null) {
-      return { result: [], position: i }
+      return { result: [], position: i };
     } else {
       consumed.push(items[i]);
       if (result === true) {
-        return { result: consumed, position: i }
+        return { result: consumed, position: i };
       }
     }
   }
@@ -245,7 +247,7 @@ export function findPatterns<T extends DiffableContent>(
         if (curr.y !== items[i].y) {
           return null; // abort on new line
         }
-        return (curr.text === items[i].text);
+        return curr.text === items[i].text;
       });
       if (result.length > 0) {
         patterns.push(asPattern([items[i], ...result], parent));

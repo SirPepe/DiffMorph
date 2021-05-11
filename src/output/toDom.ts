@@ -63,7 +63,9 @@ function generateTextCss(
   y -= offsetY;
   const styles = [];
   const selector = `${baseSelector} > .dm-token.dm-${id}`;
-  const rules = [`transform:translate(${x}ch, calc(${y} * var(--line-height)))`];
+  const rules = [
+    `transform:translate(${x}ch, calc(${y} * var(--line-height)))`,
+  ];
   if (alpha === 1) {
     rules.push(`opacity:1`);
   }
@@ -114,39 +116,47 @@ function generateBoxCss(
   }
   styles.push(`${selector}{${rules.join(";")}}`);
   for (const position of frame.text.values()) {
-    styles.push(...generateTextCss(position, selector, x - offsetX, y - offsetY));
+    styles.push(
+      ...generateTextCss(position, selector, x - offsetX, y - offsetY)
+    );
   }
   for (const position of frame.decorations.values()) {
-    styles.push(...generateDecorationCss(position, selector, x - offsetX, y - offsetY));
+    styles.push(
+      ...generateDecorationCss(position, selector, x - offsetX, y - offsetY)
+    );
   }
   for (const position of frame.boxes.values()) {
-    styles.push(...generateBoxCss(position, selector, x - offsetX, y - offsetY));
+    styles.push(
+      ...generateBoxCss(position, selector, x - offsetX, y - offsetY)
+    );
   }
   return styles;
 }
 
 function themeToCss(prefix: string, theme: LanguageTheme): string {
-  return Object.entries(theme).map(([type, props]) => {
-    const selector = `${prefix} .` + type.split(/\s+/).join(".");
-    const declarations = Object.entries(props).map(([property, value]) => {
-      if (value) {
-        if (property === "color") {
-          value = `var(--${value})`;
-        }
-        return `${property}:${value}`;
-      }
-    }).join(";");
-    return `${selector}{${declarations}}`;
-  }).join("\n");
+  return Object.entries(theme)
+    .map(([type, props]) => {
+      const selector = `${prefix} .` + type.split(/\s+/).join(".");
+      const declarations = Object.entries(props)
+        .map(([property, value]) => {
+          if (value) {
+            if (property === "color") {
+              value = `var(--${value})`;
+            }
+            return `${property}:${value}`;
+          }
+        })
+        .join(";");
+      return `${selector}{${declarations}}`;
+    })
+    .join("\n");
 }
 
 function getDefaultStyles(langs: Set<string>): string {
   let css = DEFAULT_STYLES;
   for (const lang of langs) {
     if (lang in languages) {
-      css += themeToCss(
-        `.dm-box.language-${lang}`,
-        languages[lang].theme)
+      css += themeToCss(`.dm-box.language-${lang}`, languages[lang].theme);
     }
   }
   return css;
@@ -223,7 +233,7 @@ export function toDom(
   const id = nextId("dom", "container");
   wrapper.className = `dm dm-${id}`;
   const [dom, languages] = generateDom(renderData.objects);
-  code.append(dom)
+  code.append(dom);
   const style = generateStyle(renderData.frames, languages, `.dm-${id}`);
   wrapper.append(code, style);
   return [wrapper, renderData.maxWidth, renderData.maxHeight];

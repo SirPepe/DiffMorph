@@ -3,14 +3,26 @@ const javascript = type("javascript");
 
 describe("Basic statements", () => {
   test("Variable declaration", () => {
-    expect(javascript(`var foo;`).map((token) => token.type))
-      .toEqual(["keyword", "token", "punctuation"]);
-    expect(javascript(`var _;`).map((token) => token.type))
-      .toEqual(["keyword", "token", "punctuation"]);
-    expect(javascript(`var $;`).map((token) => token.type))
-      .toEqual(["keyword", "token", "punctuation"]);
-    expect(javascript(`var foo_var;`).map((token) => token.type))
-      .toEqual(["keyword", "token", "punctuation"]);
+    expect(javascript(`var foo;`).map((token) => token.type)).toEqual([
+      "keyword",
+      "token",
+      "punctuation",
+    ]);
+    expect(javascript(`var _;`).map((token) => token.type)).toEqual([
+      "keyword",
+      "token",
+      "punctuation",
+    ]);
+    expect(javascript(`var $;`).map((token) => token.type)).toEqual([
+      "keyword",
+      "token",
+      "punctuation",
+    ]);
+    expect(javascript(`var foo_var;`).map((token) => token.type)).toEqual([
+      "keyword",
+      "token",
+      "punctuation",
+    ]);
   });
 
   test("Multi-variable declaration", () => {
@@ -137,7 +149,8 @@ describe("Basic statements", () => {
   test("nested object destructuring", () => {
     const tokens = javascript(
       `var { foo: { etc }, bar = 42, baz: asdf } = source;
-    `);
+    `
+    );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
@@ -165,7 +178,8 @@ describe("Basic statements", () => {
   test("nested object destructuring with object initalizers", () => {
     const tokens = javascript(
       `var { foo: { etc = { bar: null } } } = source;
-    `);
+    `
+    );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
@@ -184,51 +198,54 @@ describe("Basic statements", () => {
       "punctuation destruct-end-0",
       "operator assignment",
       "token",
-      "punctuation"
+      "punctuation",
     ]);
   });
 
   test("function declaration", () => {
-    expect(javascript(`function foo() { return 42; }`).map((token) => token.type))
-      .toEqual([
-        "keyword function",
-        "declaration function",
-        "punctuation arguments-start-0",
-        "punctuation arguments-end-0",
-        "punctuation function-start-0",
-        "keyword",
-        "number",
-        "punctuation",
-        "punctuation function-end-0",
-      ]);
+    expect(
+      javascript(`function foo() { return 42; }`).map((token) => token.type)
+    ).toEqual([
+      "keyword function",
+      "declaration function",
+      "punctuation arguments-start-0",
+      "punctuation arguments-end-0",
+      "punctuation function-start-0",
+      "keyword",
+      "number",
+      "punctuation",
+      "punctuation function-end-0",
+    ]);
   });
 
   test("function expression", () => {
-    expect(javascript(`const foo = function () {}`).map((token) => token.type))
-      .toEqual([
-        "keyword",
-        "token",
-        "operator assignment",
-        "keyword function",
-        "punctuation arguments-start-0",
-        "punctuation arguments-end-0",
-        "punctuation function-start-0",
-        "punctuation function-end-0"
-      ]);
+    expect(
+      javascript(`const foo = function () {}`).map((token) => token.type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator assignment",
+      "keyword function",
+      "punctuation arguments-start-0",
+      "punctuation arguments-end-0",
+      "punctuation function-start-0",
+      "punctuation function-end-0",
+    ]);
   });
 
   test("arrow function expression", () => {
-    expect(javascript(`const foo = () => {}`).map((token) => token.type))
-      .toEqual([
-        "keyword",
-        "token",
-        "operator assignment",
-        "punctuation parens-start-0", // should really be arguments-start-0
-        "punctuation parens-end-0", // should really be arguments-end-0
-        "operator arrow",
-        "punctuation function-start-0",
-        "punctuation function-end-0"
-      ]);
+    expect(
+      javascript(`const foo = () => {}`).map((token) => token.type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator assignment",
+      "punctuation parens-start-0", // should really be arguments-start-0
+      "punctuation parens-end-0", // should really be arguments-end-0
+      "operator arrow",
+      "punctuation function-start-0",
+      "punctuation function-end-0",
+    ]);
   });
 
   test("Use of globals", () => {
@@ -247,37 +264,38 @@ describe("Basic statements", () => {
 
 describe("Bonkers syntax", () => {
   test("'new' in an array in an object is in fact a keyword!", () => {
-    expect(javascript("x = { y: [ new B() ] }").map((token) => token.type))
-      .toEqual([
-        "token",
-        "operator assignment",
-        "punctuation object-start-0",
-        "token",
-        "punctuation",
-        "punctuation array-start-0",
-        "keyword",
-        "call constructor",
-        "punctuation call-start-0",
-        "punctuation call-end-0",
-        "punctuation array-end-0",
-        "punctuation object-end-0",
-      ]);
+    expect(
+      javascript("x = { y: [ new B() ] }").map((token) => token.type)
+    ).toEqual([
+      "token",
+      "operator assignment",
+      "punctuation object-start-0",
+      "token",
+      "punctuation",
+      "punctuation array-start-0",
+      "keyword",
+      "call constructor",
+      "punctuation call-start-0",
+      "punctuation call-end-0",
+      "punctuation array-end-0",
+      "punctuation object-end-0",
+    ]);
   });
 
-
   test("'new' before the three spread dots is indeed a keyword!", () => {
-    expect(javascript("x = [ ...new Foo() ]").map((token) => token.type))
-      .toEqual([
-        "token",
-        "operator assignment",
-        "punctuation array-start-0",
-        "punctuation",
-        "keyword",
-        "call constructor",
-        "punctuation call-start-0",
-        "punctuation call-end-0",
-        "punctuation array-end-0",
-      ]);
+    expect(
+      javascript("x = [ ...new Foo() ]").map((token) => token.type)
+    ).toEqual([
+      "token",
+      "operator assignment",
+      "punctuation array-start-0",
+      "punctuation",
+      "keyword",
+      "call constructor",
+      "punctuation call-start-0",
+      "punctuation call-end-0",
+      "punctuation array-end-0",
+    ]);
   });
 });
 
@@ -289,7 +307,7 @@ describe("Broken statements", () => {
       "keyword",
       "punctuation",
       "operator assignment",
-      "number"
+      "number",
     ]);
   });
 
@@ -304,7 +322,7 @@ describe("Broken statements", () => {
       "keyword",
       "token",
       "operator assignment",
-      "punctuation"
+      "punctuation",
     ]);
   });
 });

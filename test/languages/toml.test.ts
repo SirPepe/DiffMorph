@@ -22,7 +22,7 @@ Hello
       "value",
       "value",
       "value",
-      "value"
+      "value",
     ]);
   });
 
@@ -101,7 +101,7 @@ time = 07:32:00`);
       "token-datetime",
       "token-datetime",
       "token-datetime",
-      "token-datetime"
+      "token-datetime",
     ]);
   });
 

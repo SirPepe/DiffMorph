@@ -1,4 +1,3 @@
-import { diff } from "../../src/lib/diff";
 import { toRenderData } from "../../src/lib/render";
 import { toDom } from "../../src/output/toDom";
 import { process } from "../helpers";
@@ -6,11 +5,7 @@ import { process } from "../helpers";
 describe("toDom", () => {
   test("renders tokens to DOM", () => {
     const renderData = toRenderData(
-      process("json")(
-        ["{}"],
-        ["  {}"],
-        ["    {\n}"],
-      )
+      process("json")(["{}"], ["  {}"], ["    {\n}"])
     );
     const [el, maxWidth, maxHeight] = toDom(renderData);
     expect(maxWidth).toBe(5);
@@ -25,9 +20,7 @@ describe("toDom", () => {
   test("renders tokens in boxes to DOM", () => {
     const keyframes = toRenderData(
       process("json")(
-        [
-          "[]"
-        ],
+        ["[]"],
         [
           "[",
           {
@@ -38,9 +31,9 @@ describe("toDom", () => {
             language: undefined,
             data: { id: "hello" },
           },
-          "]"
+          "]",
         ]
-      ),
+      )
     );
     const [el, maxWidth, maxHeight] = toDom(keyframes);
     expect(maxWidth).toBe(6);

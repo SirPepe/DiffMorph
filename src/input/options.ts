@@ -12,5 +12,5 @@ export function withDefaults(input: InputOptions): InputConfig {
   return {
     tabSize: input.tabSize ?? 2,
     languageOverride: input.languageOverride,
-  }
+  };
 }

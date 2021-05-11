@@ -5,13 +5,14 @@ export function hash(input: string): string {
   let nonAscii = false;
   for (let i = 0; i < input.length; i++) {
     let characterCode = input.charCodeAt(i);
-    if (characterCode > 0x7F && !nonAscii) {
+    if (characterCode > 0x7f && !nonAscii) {
       input = unescape(encodeURIComponent(input));
       characterCode = input.charCodeAt(i);
       nonAscii = true;
     }
     hash ^= characterCode;
-    hash += (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
+    hash +=
+      (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
   }
   return (hash >>> 0).toString(36);
 }
@@ -32,7 +33,8 @@ export function assertIsNot<T>(
   if (x) {
     throw new Error(
       `Expected ${name} to be null or undefined, but found ${typeof x}
-    `);
+    `
+    );
   }
 }
 
@@ -193,7 +195,7 @@ export function isNewLine(token: {
 
 export function minmax(numbers: Iterable<number>): [number, number] {
   numbers = [...numbers]; // lest the iterable be consumed
-  return [Math.min(...numbers), Math.max(...numbers)]
+  return [Math.min(...numbers), Math.max(...numbers)];
 }
 
 export function findMax<T>(
@@ -266,7 +268,9 @@ export const lookbehindText = <T extends { text: string; prev: T | undefined }>(
   return true;
 };
 
-export const lookbehindType = <T extends { type?: string; prev: T | undefined }>(
+export const lookbehindType = <
+  T extends { type?: string; prev: T | undefined }
+>(
   token: T,
   expected: string[]
 ): boolean => {

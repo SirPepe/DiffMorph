@@ -6,11 +6,16 @@ import {
   RenderPositions,
   RenderRoot,
   RenderText,
-  TextPosition
+  TextPosition,
 } from "../types";
 import { languages } from "../languages";
 import { assertIs } from "../lib/util";
-import { ColorPalette, DEFAULT_COLOR_PALETTE, LanguageTheme, LanguageThemeProperties } from "../lib/theme";
+import {
+  ColorPalette,
+  DEFAULT_COLOR_PALETTE,
+  LanguageTheme,
+  LanguageThemeProperties,
+} from "../lib/theme";
 
 // Translate language theme into canvas styles
 function setStyles(
@@ -21,7 +26,7 @@ function setStyles(
   const {
     color,
     "font-style": fontStyle = "normal",
-    "font-weight": fontWeight = "normal"
+    "font-weight": fontWeight = "normal",
   } = languageTheme;
   // Text color
   if (color) {
@@ -37,7 +42,7 @@ function setStyles(
 const ease = BezierEasing(0.25, 0.1, 0.25, 1);
 
 function value(from: number, to: number, step: number, steps: number): number {
-  return from + (to - from) * ease(step / steps)
+  return from + (to - from) * ease(step / steps);
 }
 
 // Text does not change its dimensions
@@ -52,7 +57,7 @@ function tweenTextPositions(
   for (const id of ids) {
     const from = fromPositions.get(id);
     const to = toPositions.get(id);
-    if (!from || !to){
+    if (!from || !to) {
       continue;
     }
     result.set(id, {
@@ -77,7 +82,7 @@ function tweenDecorationPositions(
   for (const id of ids) {
     const from = fromPositions.get(id);
     const to = toPositions.get(id);
-    if (!from || !to){
+    if (!from || !to) {
       continue;
     }
     result.set(id, {
@@ -105,7 +110,7 @@ function tweenBoxPositions(
   for (const id of ids) {
     const from = fromPositions.get(id);
     const to = toPositions.get(id);
-    if (!from || !to){
+    if (!from || !to) {
       continue;
     }
     result.set(id, {
@@ -113,9 +118,14 @@ function tweenBoxPositions(
       alpha: 1,
       frame: {
         text: tweenTextPositions(from.frame.text, to.frame.text, step, steps),
-        decorations: tweenDecorationPositions(from.frame.decorations, to.frame.decorations, step, steps),
+        decorations: tweenDecorationPositions(
+          from.frame.decorations,
+          to.frame.decorations,
+          step,
+          steps
+        ),
         boxes: tweenBoxPositions(from.frame.boxes, to.frame.boxes, step, steps),
-      }
+      },
     });
   }
   return result;
@@ -132,9 +142,14 @@ function tweenRootPositions(
     alpha: 1,
     frame: {
       text: tweenTextPositions(from.frame.text, to.frame.text, step, steps),
-      decorations: tweenDecorationPositions(from.frame.decorations, to.frame.decorations, step, steps),
+      decorations: tweenDecorationPositions(
+        from.frame.decorations,
+        to.frame.decorations,
+        step,
+        steps
+      ),
       boxes: tweenBoxPositions(from.frame.boxes, to.frame.boxes, step, steps),
-    }
+    },
   }));
 }
 
@@ -169,8 +184,8 @@ class TextNode {
     languageTheme: LanguageTheme,
     private colorPalette: ColorPalette,
     private cellSize: number,
-    private lineHeight: number,
-  ){
+    private lineHeight: number
+  ) {
     type = type.split(/\s/)[0];
     this.styles = languageTheme[type];
   }
@@ -199,9 +214,10 @@ class DecorationNode {
     private languageTheme: LanguageTheme,
     private colorPalette: ColorPalette,
     private cellSize: number,
-    private lineHeight: number,
-  ){}
-  public draw(x: number, y: number, w: number, h: number, alpha: number) {
+    private lineHeight: number
+  ) {}
+  public draw(x: number, y: number, w: number, h: number, alpha: number): void {
+    return;
   }
 }
 
@@ -210,42 +226,46 @@ function toRenderNodes(
   ctx: CanvasRenderingContext2D,
   colorPalette: ColorPalette,
   cellSize: number,
-  lineHeight: number,
+  lineHeight: number
 ): RenderRoot<TextNode, DecorationNode> {
-  const languageTheme = root.language
-    ? languages[root.language]?.theme
-    : {};
+  const languageTheme = root.language ? languages[root.language]?.theme : {};
   return {
     ...root,
     content: {
-      text: new Map(Array.from(root.content.text, ([id, { text, type }]) => {
-        return [
-          id,
-          new TextNode(
-            ctx,
-            text,
-            type,
-            languageTheme,
-            colorPalette,
-            cellSize,
-            lineHeight,
-          )
-        ];
-      })),
-      decorations: new Map(Array.from(root.content.decorations, ([id]) => {
-        return [
-          id,
-          new DecorationNode(ctx, {}, colorPalette, cellSize, lineHeight),
-        ];
-      })),
-      boxes: new Map(Array.from(root.content.boxes, ([id, box]) => {
-        return [
-          id,
-          toRenderNodes(box, ctx, colorPalette, cellSize, lineHeight),
-        ];
-      })),
-    }
-  }
+      text: new Map(
+        Array.from(root.content.text, ([id, { text, type }]) => {
+          return [
+            id,
+            new TextNode(
+              ctx,
+              text,
+              type,
+              languageTheme,
+              colorPalette,
+              cellSize,
+              lineHeight
+            ),
+          ];
+        })
+      ),
+      decorations: new Map(
+        Array.from(root.content.decorations, ([id]) => {
+          return [
+            id,
+            new DecorationNode(ctx, {}, colorPalette, cellSize, lineHeight),
+          ];
+        })
+      ),
+      boxes: new Map(
+        Array.from(root.content.boxes, ([id, box]) => {
+          return [
+            id,
+            toRenderNodes(box, ctx, colorPalette, cellSize, lineHeight),
+          ];
+        })
+      ),
+    },
+  };
 }
 
 function renderNodes(
@@ -253,11 +273,13 @@ function renderNodes(
   ctx: CanvasRenderingContext2D,
   frame: RenderPositions,
   xOffset: number,
-  yOffset: number,
+  yOffset: number
 ): void {
   xOffset += frame.x;
   yOffset += frame.y;
-  const { frame: { text, decorations, boxes } } = frame;
+  const {
+    frame: { text, decorations, boxes },
+  } = frame;
   for (const [id, { x, y, alpha }] of text) {
     const node = nodes.content.text.get(id);
     assertIs(node, "text node");
@@ -293,8 +315,8 @@ function setupContext(
   // Figure out the equivalent of 1ch
   const { width: cellSize } = ctx.measureText(" ");
   // Resizing the canvas wipes the context state...
-  canvas.width = (maxWidth * cellSize) + 2 * padding;
-  canvas.height = (maxHeight * cellSize * lineHeight) + 2 * padding;
+  canvas.width = maxWidth * cellSize + 2 * padding;
+  canvas.height = maxHeight * cellSize * lineHeight + 2 * padding;
   // ... so the basic setup needs to be repeated
   ctx.font = `16px monospace`;
   ctx.textAlign = "left";
@@ -307,7 +329,7 @@ function setupContext(
 class ColorIndex {
   #map = new Map<string, [number, number, number, number]>();
   public storeColors(colors: Uint8ClampedArray): void {
-    for (let i = 0; i < colors.length; i+=4) {
+    for (let i = 0; i < colors.length; i += 4) {
       const rgba: [number, number, number, number] = [
         colors[i],
         colors[i + 1],
@@ -351,7 +373,7 @@ export function toFrames(
   colorPalette: ColorPalette = DEFAULT_COLOR_PALETTE,
   steps = 30, // 500ms @ 60fps
   padding = 16,
-  watermarkText = "",
+  watermarkText = ""
 ): [number, number, () => Generator<ImageData, Uint8ClampedArray, unknown>] {
   colorPalette = { ...DEFAULT_COLOR_PALETTE, ...colorPalette };
   const { objects, frames, maxWidth, maxHeight } = renderData;
@@ -360,26 +382,35 @@ export function toFrames(
     lineHeight,
     renderData.maxWidth,
     renderData.maxHeight,
-    padding,
+    padding
   );
   const renderFrames = tweenFrames(frames, steps);
   const nodes = toRenderNodes(objects, ctx, colorPalette, cellSize, lineHeight);
   const colorIndex = new ColorIndex();
-  return [ctx.canvas.width, ctx.canvas.height, function * () {
-    for (const frame of renderFrames.values()) {
-      ctx.save();
-      ctx.setTransform(); // unset padding
-      ctx.fillStyle = colorPalette.background;
-      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.restore();
-      renderNodes(nodes, ctx, frame, 0, 0);
-      if (watermarkText) {
-        renderWatermark(ctx, watermarkText, colorPalette.foreground, padding);
+  return [
+    ctx.canvas.width,
+    ctx.canvas.height,
+    function* () {
+      for (const frame of renderFrames.values()) {
+        ctx.save();
+        ctx.setTransform(); // unset padding
+        ctx.fillStyle = colorPalette.background;
+        ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.restore();
+        renderNodes(nodes, ctx, frame, 0, 0);
+        if (watermarkText) {
+          renderWatermark(ctx, watermarkText, colorPalette.foreground, padding);
+        }
+        const data = ctx.getImageData(
+          0,
+          0,
+          ctx.canvas.width,
+          ctx.canvas.height
+        );
+        colorIndex.storeColors(data.data);
+        yield data;
       }
-      const data = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
-      colorIndex.storeColors(data.data);
-      yield data;
-    }
-    return colorIndex.getColors();
-  }];
+      return colorIndex.getColors();
+    },
+  ];
 }

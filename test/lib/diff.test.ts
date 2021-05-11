@@ -16,7 +16,7 @@ describe("finding patterns", () => {
     content: [],
     decorations: [],
     parent: undefined,
-  }
+  };
 
   test("directly adjacent tokens separated by : or -", () => {
     const input = [
@@ -26,15 +26,17 @@ describe("finding patterns", () => {
       { x: 4, y: 0, width: 1, height: 1, hash: "b0", text: "b" },
     ];
     const actual = findPatterns(input, rootBox);
-    expect(actual).toEqual([{
-      x: 2,
-      y: 0,
-      width: 0,
-      height: 0,
-      hash: "a00a11b01",
-      items: [ input[1], input[2], input[3] ],
-      parent: rootBox,
-    }])
+    expect(actual).toEqual([
+      {
+        x: 2,
+        y: 0,
+        width: 0,
+        height: 0,
+        hash: "a00a11b01",
+        items: [input[1], input[2], input[3]],
+        parent: rootBox,
+      },
+    ]);
   });
 
   test("string sequence", () => {
@@ -47,15 +49,17 @@ describe("finding patterns", () => {
       { x: 7, y: 0, width: 1, height: 1, hash: "b0", text: "'" },
     ];
     const actual = findPatterns(input, rootBox);
-    expect(actual).toEqual([{
-      x: 4,
-      y: 0,
-      width: 0,
-      height: 0,
-      hash: "a10b01a11b01",
-      items: [ input[2], input[3], input[4], input[5] ],
-      parent: rootBox,
-    }]);
+    expect(actual).toEqual([
+      {
+        x: 4,
+        y: 0,
+        width: 0,
+        height: 0,
+        hash: "a10b01a11b01",
+        items: [input[2], input[3], input[4], input[5]],
+        parent: rootBox,
+      },
+    ]);
   });
 
   test("identifier/assignment pair", () => {
@@ -65,15 +69,17 @@ describe("finding patterns", () => {
       { x: 4, y: 0, width: 1, height: 1, hash: "a2", text: "42" },
     ];
     const actual = findPatterns(input, rootBox);
-    expect(actual).toEqual([{
-      x: 0,
-      y: 0,
-      width: 0,
-      height: 0,
-      hash: "a00a12",
-      items: [ input[0], input[1] ],
-      parent: rootBox,
-    }]);
+    expect(actual).toEqual([
+      {
+        x: 0,
+        y: 0,
+        width: 0,
+        height: 0,
+        hash: "a00a12",
+        items: [input[0], input[1]],
+        parent: rootBox,
+      },
+    ]);
   });
 
   test("string sequence and identifier/operator pair", () => {
@@ -93,7 +99,7 @@ describe("finding patterns", () => {
         width: 0,
         height: 0,
         hash: "a00a02",
-        items: [ input[0], input[1] ],
+        items: [input[0], input[1]],
         parent: rootBox,
       },
       {
@@ -102,9 +108,9 @@ describe("finding patterns", () => {
         width: 0,
         height: 0,
         hash: "a10b01a11b01",
-        items: [ input[2], input[3], input[4], input[5] ],
+        items: [input[2], input[3], input[4], input[5]],
         parent: rootBox,
-      }
+      },
     ]);
   });
 
@@ -116,7 +122,7 @@ describe("finding patterns", () => {
       { x: 4, y: 0, width: 1, height: 1, hash: "b0", text: "b" },
     ];
     const actual = findPatterns(input, rootBox);
-    expect(actual).toEqual([])
+    expect(actual).toEqual([]);
   });
 });
 
@@ -393,7 +399,7 @@ describe("diff with decorations", () => {
             height: 2,
           },
         ],
-      })
+      }),
     ]);
     expect(actual).toEqual({
       kind: "TREE",
@@ -413,7 +419,7 @@ describe("diff with decorations", () => {
     };
     const [, actual] = diff<any, any>([
       stubBox({ decorations: [] }),
-      stubBox({ decorations: [added] })
+      stubBox({ decorations: [added] }),
     ]);
     expect(actual).toEqual({
       kind: "TREE",
@@ -433,7 +439,7 @@ describe("diff with decorations", () => {
     };
     const [, actual] = diff<any, any>([
       stubBox({ decorations: [removed] }),
-      stubBox({ decorations: [] })
+      stubBox({ decorations: [] }),
     ]);
     expect(actual).toEqual({
       kind: "TREE",
@@ -460,7 +466,7 @@ describe("diff with decorations", () => {
     };
     const [, actual] = diff<any, any>([
       stubBox({ decorations: [before] }),
-      stubBox({ decorations: [after] })
+      stubBox({ decorations: [after] }),
     ]);
     expect(actual).toEqual({
       kind: "TREE",
@@ -490,7 +496,7 @@ describe("diff with decorations", () => {
     };
     const [, actual] = diff<any, any>([
       stubBox({ decorations: [before] }),
-      stubBox({ decorations: [after] })
+      stubBox({ decorations: [after] }),
     ]);
     expect(actual).toEqual({
       kind: "TREE",
@@ -508,7 +514,7 @@ describe("diff with boxes", () => {
   test("diffing empty root boxes that don't change", () => {
     const [, actual] = diff<any, any>([
       stubBox({ x: 0, y: 0 }),
-      stubBox({ x: 0, y: 0 })
+      stubBox({ x: 0, y: 0 }),
     ]);
     expect(actual).toEqual({
       kind: "TREE",

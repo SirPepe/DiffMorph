@@ -18,7 +18,7 @@ import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
 import { assertIs, createIdGenerator } from "./util";
 
-type OutputToken = { id: string; };
+type OutputToken = { id: string };
 
 function toRenderPosition<Input extends Token>(
   { x, y, width, height }: Input,
@@ -38,19 +38,14 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
   private inUse = new Map<Lifecycle<Input>, [Output, TextPosition]>();
 
   // Customize how an input token turns into an output token
-  constructor(
-    private toOutput: (
-      item: Input,
-      newId: string
-    ) => Output
-  ) {}
+  constructor(private toOutput: (item: Input, newId: string) => Output) {}
 
   private require(
     holder: Lifecycle<Input>,
     { kind, item }: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
   ): [Output, TextPosition] {
     const isVisible = kind === "ADD" || kind === "MOV";
-    let available = this.available.get(item.hash);
+    const available = this.available.get(item.hash);
     if (available && available.length > 0) {
       const output = available.shift() as Output;
       const position = toRenderPosition(item, output.id, isVisible);
@@ -76,7 +71,7 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
     holder: Lifecycle<Input>,
     operation?: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
   ): [Output, TextPosition] | undefined {
-    let previousOutput = this.inUse.get(holder);
+    const previousOutput = this.inUse.get(holder);
     // In case there is no current operation, see if the holder holds onto
     // something and re-use the existing information
     if (!operation) {
@@ -99,10 +94,7 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
   }
 
   // For DEL: free used token
-  public free(
-    holder: Lifecycle<Input>,
-    operation: DEL<Input>
-  ): undefined {
+  public free(holder: Lifecycle<Input>, operation: DEL<Input>): undefined {
     const freed = this.inUse.get(holder);
     if (!freed) {
       // This can happen for DEL ops in the first frame, which in turn may be
@@ -130,10 +122,7 @@ function renderToken<Input extends Token, Output extends OutputToken>(
   return pool.use(lifecycle, operation);
 }
 
-function toRenderText(
-  { type, text }: TypedToken,
-  id: string
-): RenderText {
+function toRenderText({ type, text }: TypedToken, id: string): RenderText {
   return { type, text, id };
 }
 
@@ -145,15 +134,15 @@ function toRenderDecoration(
 }
 
 function renderFrames(
-  lifecycle: BoxLifecycle<TypedToken, Decoration<any>>,
-): [ RenderRoot<RenderText, RenderDecoration>, Map<number, RenderPositions> ] {
+  lifecycle: BoxLifecycle<TypedToken, Decoration<any>>
+): [RenderRoot<RenderText, RenderDecoration>, Map<number, RenderPositions>] {
   const frames = new Map<number, RenderPositions>();
   const textTokens = new Map<string, RenderText>();
   const decoTokens = new Map<string, RenderDecoration>();
   const boxTokens = new Map<string, RenderRoot<RenderText, RenderDecoration>>();
   const textPool = new TokenPool(toRenderText);
   const decoPool = new TokenPool(toRenderDecoration);
-  for (let [frameIdx, self] of lifecycle.self) {
+  for (const [frameIdx, self] of lifecycle.self) {
     const frame = {
       text: new Map<string, TextPosition>(),
       decorations: new Map<string, DecorationPosition>(),
@@ -174,11 +163,11 @@ function renderFrames(
     }
     // Render and free decoration tokens on a per-frame basis
     for (const decorationLifecycle of lifecycle.decorations) {
-        const result = renderToken(decorationLifecycle, frameIdx, decoPool);
-        if (result) {
-          decoTokens.set(result[0].id, result[0]);
-          frame.decorations.set(result[1].id, result[1]);
-        }
+      const result = renderToken(decorationLifecycle, frameIdx, decoPool);
+      if (result) {
+        decoTokens.set(result[0].id, result[0]);
+        frame.decorations.set(result[1].id, result[1]);
+      }
     }
   }
   for (const boxLifecycle of lifecycle.boxes) {
@@ -199,7 +188,7 @@ function renderFrames(
         text: textTokens,
         decorations: decoTokens,
         boxes: boxTokens,
-      }
+      },
     },
     frames,
   ];
@@ -218,7 +207,7 @@ export function toRenderData(
           text: new Map(),
           decorations: new Map(),
           boxes: new Map(),
-        }
+        },
       },
       frames: new Map(),
       maxWidth: 0,

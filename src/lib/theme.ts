@@ -13,7 +13,7 @@ export const themeColors = {
 };
 
 export type LanguageThemeProperties = {
-  "color"?: typeof themeColors[keyof typeof themeColors];
+  color?: typeof themeColors[keyof typeof themeColors];
   "font-weight"?: string;
   "font-style"?: string;
 };

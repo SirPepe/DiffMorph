@@ -309,18 +309,24 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: undefined,
     };
-    const aRoot = processCode({
-      content: ["const ", aBox],
-      id: "root",
-      isDecoration: false,
-      language: "javascript",
-    }, 2);
-    const bRoot = processCode({
-      content: ["const ", bBox],
-      id: "root",
-      isDecoration: false,
-      language: "javascript",
-    }, 2);
+    const aRoot = processCode(
+      {
+        content: ["const ", aBox],
+        id: "root",
+        isDecoration: false,
+        language: "javascript",
+      },
+      2
+    );
+    const bRoot = processCode(
+      {
+        content: ["const ", bBox],
+        id: "root",
+        isDecoration: false,
+        language: "javascript",
+      },
+      2
+    );
     expect(aRoot).toEqual(bRoot);
   });
 

@@ -65,14 +65,17 @@ describe("Continuous coordinate system", () => {
 
 describe("In-place modifications", () => {
   test("It modifies the tokens in-place", () => {
-    const subject = tokenize({
-      content: ['"Hello World"'],
-      hash: "root",
-      id: "root",
-      isDecoration: false,
-      language: "json",
-      data: {},
-    }, 2);
+    const subject = tokenize(
+      {
+        content: ['"Hello World"'],
+        hash: "root",
+        id: "root",
+        isDecoration: false,
+        language: "json",
+        data: {},
+      },
+      2
+    );
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
@@ -106,25 +109,28 @@ describe("In-place modifications", () => {
   });
 
   test("applying a language leaves boxes untouched", () => {
-    const subject = tokenize({
-      content: [
-        '"Hello',
-        {
-          content: [" 42 "],
-          hash: "nested",
-          id: "nested",
-          isDecoration: false,
-          language: undefined,
-          data: {},
-        },
-        'World"',
-      ],
-      hash: "root",
-      id: "root",
-      isDecoration: false,
-      language: "json",
-      data: {},
-    }, 2);
+    const subject = tokenize(
+      {
+        content: [
+          '"Hello',
+          {
+            content: [" 42 "],
+            hash: "nested",
+            id: "nested",
+            isDecoration: false,
+            language: undefined,
+            data: {},
+          },
+          'World"',
+        ],
+        hash: "root",
+        id: "root",
+        isDecoration: false,
+        language: "json",
+        data: {},
+      },
+      2
+    );
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     const nested = output.content[1] as Box<any, any>;
@@ -200,25 +206,28 @@ describe("In-place modifications", () => {
   });
 
   test("applying a language leaves decorations untouched", () => {
-    const subject = tokenize({
-      content: [
-        '"Hello',
-        {
-          content: [" 42 "],
-          hash: "highlight",
-          id: "highlight",
-          isDecoration: true,
-          language: undefined,
-          data: {},
-        },
-        'World"',
-      ],
-      hash: "root",
-      id: "root",
-      isDecoration: false,
-      language: "json",
-      data: {},
-    }, 2);
+    const subject = tokenize(
+      {
+        content: [
+          '"Hello',
+          {
+            content: [" 42 "],
+            hash: "highlight",
+            id: "highlight",
+            isDecoration: true,
+            language: undefined,
+            data: {},
+          },
+          'World"',
+        ],
+        hash: "root",
+        id: "root",
+        isDecoration: false,
+        language: "json",
+        data: {},
+      },
+      2
+    );
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({

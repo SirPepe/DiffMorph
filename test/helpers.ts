@@ -69,14 +69,17 @@ export const lang = (language: string) => (
   ...input: Code[]
 ): Box<TypedToken, Decoration<TypedToken>> => {
   return applyLanguage(
-    tokenize({
-      content: input,
-      hash: "root",
-      id: "root",
-      language,
-      isDecoration: false,
-      data: {},
-    }, 2)
+    tokenize(
+      {
+        content: input,
+        hash: "root",
+        id: "root",
+        language,
+        isDecoration: false,
+        data: {},
+      },
+      2
+    )
   );
 };
 

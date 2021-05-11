@@ -33,15 +33,12 @@ function splitText(text: string): string[] {
   return tokens;
 }
 
-function measureSpacesAndTabs(
-  text: string,
-  tabSize: number,
-): number {
+function measureSpacesAndTabs(text: string, tabSize: number): number {
   let size = 0;
   for (const char of text) {
     if (char === " ") {
       size += 1;
-    } else if  (char === "\t") {
+    } else if (char === "\t") {
       size += tabSize;
     } else {
       throw new Error(`Encountered "${char}" in measureSpacesAndTabs!`);
@@ -52,7 +49,7 @@ function measureSpacesAndTabs(
 
 function measureWhitespace(
   text: string,
-  tabSize: number,
+  tabSize: number
 ): { breaks: number; length: number } {
   const lines = text.split(LINE_BREAK_RE);
   return {
@@ -273,12 +270,6 @@ export function tokenize(
   root: CodeContainer,
   tabSize: number
 ): Box<TextToken, Decoration<TextToken>> {
-  return tokenizeContainer(
-    root,
-    0,
-    0,
-    undefined,
-    undefined,
-    tabSize
-  ).content[0];
+  return tokenizeContainer(root, 0, 0, undefined, undefined, tabSize)
+    .content[0];
 }
