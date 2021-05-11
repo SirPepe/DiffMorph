@@ -32,9 +32,7 @@ const esmConfig = {
         ],
         "@babel/preset-typescript",
       ],
-      plugins: [
-        "@babel/plugin-transform-runtime",
-      ],
+      plugins: ["@babel/plugin-transform-runtime"],
     }),
   ],
 };
