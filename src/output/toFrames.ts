@@ -380,8 +380,8 @@ export function toFrames(
   const lineHeight = 2.5;
   const [ctx, cellSize] = setupContext(
     lineHeight,
-    renderData.maxWidth,
-    renderData.maxHeight,
+    maxWidth,
+    maxHeight,
     padding
   );
   const renderFrames = tweenFrames(frames, steps);

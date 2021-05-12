@@ -72,6 +72,7 @@ export function spliceBoxContent<
     const firstIdx = parent.content.indexOf(batch[0]);
     const newBox = boxFactory(parent);
     newBox.content = parent.content.splice(firstIdx, batch.length, newBox);
+    newBox.content.forEach((item) => item.parent = newBox);
   }
 }
 

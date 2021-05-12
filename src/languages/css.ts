@@ -242,7 +242,7 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
       )
     ) {
       state.contextStack.push("selector");
-      return "value selector";
+      return "selector";
     }
     // css rule selector state
     if (getContext(state) === "selector") {
@@ -250,12 +250,12 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
         return "punctuation";
       }
       if (["[", "]"].includes(token.text)) {
-        return "punctuation selector"; // part of a selector
+        return "punctuation-selector"; // part of a selector
       }
       if (COMBINATORS.has(token.text)) {
         return "keyword combinator";
       }
-      return "value selector";
+      return "selector";
     }
     // exit css rule state
     if (getContext(state) === "rule" && token.text === "}") {
@@ -322,8 +322,8 @@ function postprocessCss(token: TypedToken): boolean {
   }
   // Join colons, dots and hashes with selector token directly afterwards
   if (
-    token.type === "value selector" &&
-    token?.prev?.type === token.type &&
+    token.type === "selector" &&
+    token.prev?.type === token.type &&
     isAdjacent(token, token.prev) &&
     [":", ".", "#"].includes(token.prev.text)
   ) {
@@ -366,11 +366,11 @@ function postprocessCss(token: TypedToken): boolean {
 }
 
 const theme: LanguageTheme = {
-  "value selector": {
+  selector: {
     color: themeColors.string,
     "font-weight": "bold",
   },
-  "punctuation selector": {
+  "punctuation-selector": {
     color: themeColors.string,
   },
   keyword: {

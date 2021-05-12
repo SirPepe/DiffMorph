@@ -11,7 +11,13 @@ import {
   hash,
   spliceBoxContent,
 } from "./util";
-import { Box, Decoration, TextToken, TypedToken } from "../types";
+import {
+  Box,
+  Decoration,
+  LanguagePostprocessor,
+  TextToken,
+  TypedToken
+} from "../types";
 import { languages } from "../languages";
 
 function embeddedLanguageBoxFactory(
@@ -42,11 +48,13 @@ function applyPostprocessor(token: TypedToken | undefined): void {
   if (!token) {
     return;
   }
-  const postprocessor =
-    token.parent.language && languages[token.parent.language]
-      ? languages[token.parent.language].postprocessor
-      : languages.none.postprocessor;
   while (true) {
+    // The postprocessor can potentially be different on a per-token basis
+    // because embedded languages are a thing.
+    const postprocessor: LanguagePostprocessor =
+      token.parent.language && languages[token.parent.language]
+        ? languages[token.parent.language].postprocessor
+        : languages.none.postprocessor;
     if (
       token.prev &&
       token.prev.y === token.y &&

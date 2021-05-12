@@ -67,7 +67,6 @@ function processEmbeddedCss(
       return { language: "css", types };
     }
     const results = language(current);
-    // console.log(current.text, results);
     const resultTypes = Array.isArray(results) ? results : [results];
     for (const type of resultTypes) {
       types.push(type);

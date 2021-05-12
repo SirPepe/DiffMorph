@@ -157,7 +157,7 @@ describe("embedded languages", () => {
     expect(types).toEqual([
       "tag",
       "tag",
-      "value selector",
+      "selector",
       "punctuation rule-start",
       "property",
       "punctuation",
