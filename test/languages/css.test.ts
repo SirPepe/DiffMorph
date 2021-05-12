@@ -22,7 +22,7 @@ describe("Basic CSS", () => {
       "punctuation rule-start",
       "property",
       "punctuation",
-      "token",
+      "value color",
       "punctuation",
       "property",
       "punctuation",
@@ -33,6 +33,7 @@ describe("Basic CSS", () => {
       "punctuation rule-end",
     ]);
   });
+
   test("Simple rule with non-trivial selector", () => {
     const tokens = css(
       `div + .foo, :host([disabled="true"]) ~ a { color: red; }`
@@ -40,29 +41,89 @@ describe("Basic CSS", () => {
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "value selector",
+      "keyword combinator",
+      "value selector",
+      "punctuation",
       "value selector",
       "value selector",
-      "value selector",
-      "value selector",
-      "value selector",
-      "value selector",
+      "punctuation selector",
       "value selector",
       "value selector",
       "string",
       "string",
       "string",
+      "punctuation selector",
       "value selector",
-      "value selector",
-      "value selector",
+      "keyword combinator",
       "value selector",
       "punctuation rule-start",
       "property",
       "punctuation",
-      "token",
+      "value color",
       "punctuation",
       "punctuation rule-end",
     ]);
   });
+
+  test("Universal selector", () => {
+    const tokens = css(
+      `* { color: red; }`
+    );
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "value selector",
+      "punctuation rule-start",
+      "property",
+      "punctuation",
+      "value color",
+      "punctuation",
+      "punctuation rule-end",
+    ]);
+  });
+
+  test("Universal selector in a list", () => {
+    const tokens = css(
+      `*::before, *::after, * { color: red; }`
+    );
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "value selector",
+      "value selector",
+      "value selector",
+      "punctuation",
+      "value selector",
+      "value selector",
+      "value selector",
+      "punctuation",
+      "value selector",
+      "punctuation rule-start",
+      "property",
+      "punctuation",
+      "value color",
+      "punctuation",
+      "punctuation rule-end",
+    ]);
+  });
+
+  test("Universal selector following a comment ", () => {
+    const tokens = css(
+      `/* Yo */* { color: red; }`
+    );
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "comment",
+      "comment",
+      "comment",
+      "value selector",
+      "punctuation rule-start",
+      "property",
+      "punctuation",
+      "value color",
+      "punctuation",
+      "punctuation rule-end",
+    ]);
+  });
+
   test("Two simple rules", () => {
     const tokens = css(`div { color: red; } #foo { font-family: sans-serif; }`);
     const types = tokens.map((token) => token.type);
@@ -71,7 +132,7 @@ describe("Basic CSS", () => {
       "punctuation rule-start",
       "property",
       "punctuation",
-      "token",
+      "value color",
       "punctuation",
       "punctuation rule-end",
       "value selector",
@@ -85,6 +146,31 @@ describe("Basic CSS", () => {
       "punctuation rule-end",
     ]);
   });
+
+  test("Color values", () => {
+    const tokens = css(
+      `a { color: red; background: #C00000; outline: #F00; }`
+    );
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "value selector",
+      "punctuation rule-start",
+      "property",
+      "punctuation",
+      "value color",
+      "punctuation",
+      "property",
+      "punctuation",
+      "value color",
+      "punctuation",
+      "property",
+      "punctuation",
+      "value color",
+      "punctuation",
+      "punctuation rule-end",
+    ]);
+  });
+
   test("Custom properties", () => {
     const tokens = css(`:root { --foo: red } .foo { color: var(--foo) }`);
     const types = tokens.map((token) => token.type);
@@ -93,7 +179,7 @@ describe("Basic CSS", () => {
       "punctuation rule-start",
       "property",
       "punctuation",
-      "token",
+      "value color",
       "punctuation rule-end",
       "value selector",
       "punctuation rule-start",
@@ -269,7 +355,7 @@ describe("At-rules", () => {
       "punctuation rule-end",
       "value selector",
       "value selector",
-      "value selector",
+      "punctuation",
       "value selector",
       "value selector",
       "punctuation rule-start",
@@ -290,7 +376,7 @@ describe("Inline CSS", () => {
     expect(types).toEqual([
       "property",
       "punctuation",
-      "token",
+      "value color",
       "punctuation",
       "property",
       "punctuation",

@@ -93,5 +93,33 @@ b = 2</dm-frame>
 &lt;/soap:Envelope&gt;</dm-frame>
 </diff-morph>
 
+<diff-morph class="language-css" controls>
+<dm-frame class="language-css">/* Hello World, CSS! */
+
+@import "bootstrap.css";
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+:root {
+  box-sizing: border-box;
+  font-size: 16px;
+  --baseColor: #C00000;
+}
+
+@media (max-width: 1000px) {
+  :root {
+    font-size: 14px;
+  }
+}
+
+div + .foo, :not([disabled]) ~ a[id="foo42"] {
+  color: var(--baseColor);
+  background: rgb(0, 0, 0);
+  border: calc(1rem / 8) solid red;
+}</dm-frame>
+</diff-morph>
+
 </body>
 </html>

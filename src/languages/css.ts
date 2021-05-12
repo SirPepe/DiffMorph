@@ -1,3 +1,4 @@
+import { LanguageTheme, themeColors } from "../lib/theme";
 import { isAdjacent } from "../lib/util";
 import {
   LanguageDefinition,
@@ -6,8 +7,11 @@ import {
   RawToken,
   TypedToken,
 } from "../types";
+import { CSS_COLOR_KEYWORDS } from "./CONSTANTS";
 
 const STRINGS = ["'", '"', "`"];
+
+const COMBINATORS = new Set(["+", "~", ">"]);
 
 const MEDIA_TYPES = new Set([
   "all",
@@ -229,15 +233,28 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
     if (
       getContext(state) !== "rule" &&
       getContext(state) !== "selector" &&
-      (!token.prev ||
+      (
+        !token.prev ||
+        token.prev.type === "comment" ||
         ["{", "}"].includes(token.prev.text) ||
-        token.prev.text === ">") // after <style> embedded in HTML
+        token.prev.text === ">" || // after <style> embedded in HTML
+        token.prev.text === ";" // after @import's semicolon
+      )
     ) {
       state.contextStack.push("selector");
       return "value selector";
     }
     // css rule selector state
     if (getContext(state) === "selector") {
+      if (token.text === ",") {
+        return "punctuation";
+      }
+      if (["[", "]"].includes(token.text)) {
+        return "punctuation selector"; // part of a selector
+      }
+      if (COMBINATORS.has(token.text)) {
+        return "keyword combinator";
+      }
       return "value selector";
     }
     // exit css rule state
@@ -281,6 +298,18 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
       return "punctuation";
     }
 
+    // Non-function (rgba, hsla etc.) colors
+    if (
+      token.text === "#" &&
+      token.next &&
+      /[a-f0-9]{3,6}/i.test(token.next.text)
+    ) {
+      return ["value color", "value color"];
+    }
+    if (CSS_COLOR_KEYWORDS.has(token.text)) {
+      return "value color"
+    }
+
     // no special token
     return "token";
   };
@@ -304,6 +333,14 @@ function postprocessCss(token: TypedToken): boolean {
   if (token.type === "property" && token.prev?.type === "property") {
     return true;
   }
+  // Join hex colors
+  if (
+    token.type === "value color" &&
+    token.prev?.type === "value color" &&
+    isAdjacent(token, token.prev)
+  ) {
+    return true;
+  }
   // Join floating point numbers
   if (
     (token.text === "." && token?.prev?.type === "number") ||
@@ -315,7 +352,7 @@ function postprocessCss(token: TypedToken): boolean {
   if (token.text === "%" && token?.prev?.type === "number") {
     return true;
   }
-  // Join comment text and comment signifier, but not to each other
+  // Join start and end of comments
   if (token.type === "comment" && token?.prev?.type === "comment") {
     if (token.text === "*" && token?.prev?.text === "/") {
       return true;
@@ -323,20 +360,46 @@ function postprocessCss(token: TypedToken): boolean {
     if (token.text === "/" && token?.prev?.text === "*") {
       return true;
     }
-    if (token.text !== "*" && token?.prev?.text !== "*") {
-      return true;
-    }
-    if (token.text !== "/" && token?.prev?.text !== "*") {
-      return true;
-    }
     return false;
   }
   return false;
 }
 
+const theme: LanguageTheme = {
+  "value selector": {
+    color: themeColors.string,
+    "font-weight": "bold",
+  },
+  "punctuation selector": {
+    color: themeColors.string,
+  },
+  keyword: {
+    "font-weight": "bold",
+  },
+  property: {
+    color: themeColors.type,
+  },
+  string: {
+    color: themeColors.string,
+  },
+  number: {
+    color: themeColors.number,
+  },
+  value: {
+    color: themeColors.value,
+  },
+  punctuation: {
+    color: themeColors.punctuation,
+  },
+  comment: {
+    color: themeColors.comment,
+    "font-style": "italic",
+  },
+};
+
 export const languageDefinition: LanguageDefinition<Flags> = {
   name: "css",
-  theme: {},
+  theme,
   definitionFactory: defineCss,
   postprocessor: postprocessCss,
 };

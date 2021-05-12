@@ -143,7 +143,7 @@ describe("embedded languages", () => {
       "value",
       "property",
       "punctuation",
-      "token",
+      "value color",
       "punctuation",
       "value",
       "tag",
@@ -161,7 +161,7 @@ describe("embedded languages", () => {
       "punctuation rule-start",
       "property",
       "punctuation",
-      "token",
+      "value color",
       "punctuation rule-end",
       "tag",
     ]);
