@@ -94,7 +94,7 @@ export function processCode(
 // Actual facade for dom content extraction
 export function fromDom(
   inputs: Element[],
-  options: InputOptions
+  options: InputOptions = {}
 ): RenderData<RenderText, RenderDecoration> {
   const inputConfig = withDefaults(options);
   const typed = inputs.map((input) => {

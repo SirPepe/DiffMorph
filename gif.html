@@ -7,52 +7,21 @@
 <body>
 
 
-<pre class="language-javascript">// Work on JavaScript has started!</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-function foo() {}</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-function foo(bar) {}</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-function foo(bar) {
-  return;
-}</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-function foo(bar) {
-  return [bar, 42n];
-}</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-function foo(bar) {
-  return [bar, null, 42n];
-}</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-function foo(bar = true) {
-  return [bar, null, 42n];
-}</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-const [a, b, c] = function foo(bar = true) {
-  return [bar, null, 42n];
-}</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-const [a, b, c = 23_000_000] = function foo(bar = true) {
-  return [bar, null, 42n];
-}</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-const [a, b, c = 23_000_000] = function foo(bar = true) {
-  return [bar, null, 42n];
+<pre class="language-css">/* Hello World, CSS! */
+*, *::before, *::after {
+  box-sizing: inherit;
 }
-// It's going to take a while, the syntax is very complex</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-const [a, b, c = 23_000_000] = function foo(bar = true) {
-  return [bar, null, 42n];
+
+:root {
+  box-sizing: border-box;
+  font-size: 16px;
 }
-// It's going to take a while, the syntax is very complex
-// Especially if you factor in JSX and TypeScript/Flow</pre>
-<pre class="language-javascript">// Work on JavaScript has started!
-const [a, b, c = 23_000_000] = function foo(bar = true) {
-  return [bar, null, 42n];
-}
-// It's going to take a while, the syntax is very complex
-// Especially if you factor in JSX and TypeScript/Flow</pre>
+
+@media (max-width: 1000px) {
+  :root {
+    font-size: 14px;
+  }
+}</pre>
 
 <style>
 pre { display: none }
@@ -66,6 +35,7 @@ const renderData = DiffMorph.fromDom(
 );
 const [width, height, frameGen] = DiffMorph.toFrames(
   renderData,
+  DiffMorph.DEFAULT_COLOR_PALETTE,
   STEPS,
   8,
   "diff2gif.com",

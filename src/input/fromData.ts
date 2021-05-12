@@ -61,7 +61,7 @@ export function processCode(
 // Actual facade for processing data
 export function fromData(
   inputs: InputContainer[],
-  options: InputOptions
+  options: InputOptions = {}
 ): RenderData<RenderText, RenderDecoration> {
   const inputConfig = withDefaults(options);
   const typed = inputs.map((input) => {
