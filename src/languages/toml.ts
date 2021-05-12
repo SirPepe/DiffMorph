@@ -3,7 +3,8 @@ import { isAdjacent, lookaheadText } from "../lib/util";
 import { LanguageDefinition, RawToken, TypedToken } from "../types";
 
 const KEYWORDS = ["null", "true", "false"];
-const NUMBER_RE = /^nan|^inf|^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
+const NUMBER_RE =
+  /^nan|^inf|^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
 
 type State = {
   comment: boolean;
