@@ -12,8 +12,10 @@ export const themeColors = {
   punctuation: "punctuation",
 };
 
+// Colors are mandatory because, while CSS just inherits from the root element's
+// foreground color, canvas rendering needs explicit colors.
 export type LanguageThemeProperties = {
-  color?: typeof themeColors[keyof typeof themeColors];
+  color: typeof themeColors[keyof typeof themeColors];
   "font-weight"?: string;
   "font-style"?: string;
 };

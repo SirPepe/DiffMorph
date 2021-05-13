@@ -374,6 +374,7 @@ const theme: LanguageTheme = {
     color: themeColors.string,
   },
   keyword: {
+    color: themeColors.foreground,
     "font-weight": "bold",
   },
   property: {
