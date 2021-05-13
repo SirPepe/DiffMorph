@@ -176,7 +176,7 @@ export function tweenFrames(
 }
 
 class TextNode {
-  private styles: LanguageThemeProperties | undefined;
+  private styles: LanguageThemeProperties;
   constructor(
     private ctx: CanvasRenderingContext2D,
     private text: string,
@@ -187,7 +187,14 @@ class TextNode {
     private lineHeight: number
   ) {
     type = type.split(/\s/)[0];
-    this.styles = languageTheme[type];
+    // Not every type always has a theme entry (eg. plain old "token"), so we
+    // must take care to default to something readable.
+    const typeStyles: LanguageThemeProperties | undefined = languageTheme[type];
+    if (typeStyles) {
+      this.styles = typeStyles;
+    } else {
+      this.styles = { color: "foreground" };
+    }
   }
 
   public draw(x: number, y: number, alpha: number): void {
@@ -196,9 +203,7 @@ class TextNode {
     }
     this.ctx.save();
     this.ctx.globalAlpha = alpha;
-    if (this.styles) {
-      setStyles(this.ctx, this.styles, this.colorPalette);
-    }
+    setStyles(this.ctx, this.styles, this.colorPalette);
     this.ctx.fillText(
       this.text,
       x * this.cellSize,
