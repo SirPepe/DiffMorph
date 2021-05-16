@@ -462,6 +462,35 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       return `punctuation ${value}-end-${after}`;
     }
 
+    if (
+      token.text === "NaN" ||
+      token.text === "Infinity" ||
+      token.text.match(NUMBER_RE)
+    ) {
+      return "number";
+    }
+    if (
+      token.text === "-" &&
+      token.next &&
+      isAdjacent(token, token.next) &&
+      token.next.text.match(NUMBER_RE)
+    ) {
+      return ["number", "number"];
+    }
+    if (
+      token.text === "+" &&
+      token.prev?.type === "number" &&
+      isAdjacent(token, token.prev) &&
+      token.next &&
+      isAdjacent(token, token.next) &&
+      token.next.text.match(NUMBER_RE)
+    ) {
+      return ["number", "number"];
+    }
+    if ([".", "e", "E"].includes(token.text) && token.prev?.type === "number") {
+      return "number";
+    }
+
     if (PUNCTUATION.includes(token.text)) {
       return "punctuation";
     }
@@ -485,14 +514,6 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       !token?.prev?.type.match(/object-start/)
     ) {
       return "value";
-    }
-
-    if (
-      token.text === "NaN" ||
-      token.text === "Infinity" ||
-      token.text.match(NUMBER_RE)
-    ) {
-      return "number";
     }
 
     return "token";
@@ -540,6 +561,14 @@ function postprocessECMAScript(token: TypedToken): boolean {
   }
   // Join arrows
   if (token.type === "operator arrow" && token?.prev?.type === token.type) {
+    return true;
+  }
+  // Join floating point numbers
+  if (
+    token.type === "number" &&
+    token?.prev?.type === token.type &&
+    isAdjacent(token, token.prev)
+  ) {
     return true;
   }
   return false;

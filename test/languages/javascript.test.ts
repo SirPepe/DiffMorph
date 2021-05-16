@@ -375,6 +375,46 @@ describe("Bonkers syntax", () => {
   });
 });
 
+describe("Numbers", () => {
+  test("Normal and octal syntax", () => {
+    expect(javascript(`-0`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`42`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`42.0`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`42n`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`4_2`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`4_2n`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`-4_2n`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`0888`).map(({type}) => type)).toEqual(["number"]);
+  });
+
+  test("Exponential syntax", () => {
+    expect(javascript(`0e-5`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`0e+5`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`5e1`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`175e-2`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`1e3`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`1e-3`).map(({type}) => type)).toEqual(["number"]);
+  });
+
+  test("Binary syntax", () => {
+    expect(
+      javascript(`0b10000000000000000000000000000000`).map(({type}) => type)
+    ).toEqual(["number"]);
+    expect(
+      javascript(`0b01111111100000000000000000000000`).map(({type}) => type)
+    ).toEqual(["number"]);
+    expect(
+      javascript(`0B00000000011111111111111111111111`).map(({type}) => type)
+    ).toEqual(["number"]);
+  });
+
+  test("Hex syntax", () => {
+    expect(javascript(`0xFFF`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`0x123ABC`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`0XA`).map(({type}) => type)).toEqual(["number"]);
+  });
+});
+
 describe("Broken statements", () => {
   test("Incomplete variable declaration", () => {
     const tokens = javascript(`var ... = 42`);
