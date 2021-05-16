@@ -175,7 +175,7 @@ describe("Basic statements", () => {
     ]);
   });
 
-  test("nested object destructuring with object initalizers", () => {
+  test("nested object destructuring with object initializers", () => {
     const tokens = javascript(
       `var { foo: { etc = { bar: null } } } = source;
     `
@@ -233,6 +233,22 @@ describe("Basic statements", () => {
     ]);
   });
 
+  test("comma expression with parens", () => {
+    expect(
+      javascript(`const foo = (a, b);`).map((token) => token.type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator assignment",
+      "punctuation parens-start-0",
+      "token",
+      "punctuation",
+      "token",
+      "punctuation parens-end-0",
+      "punctuation",
+    ]);
+  });
+
   test("arrow function expression", () => {
     expect(
       javascript(`const foo = () => {}`).map((token) => token.type)
@@ -240,8 +256,68 @@ describe("Basic statements", () => {
       "keyword",
       "token",
       "operator assignment",
-      "punctuation parens-start-0", // should really be arguments-start-0
-      "punctuation parens-end-0", // should really be arguments-end-0
+      "punctuation arguments-start-0",
+      "punctuation arguments-end-0",
+      "operator arrow",
+      "punctuation function-start-0",
+      "punctuation function-end-0",
+    ]);
+  });
+
+  test("multi-line arrow function expression", () => {
+    expect(
+      javascript(`const foo = (
+) => {}`).map((token) => token.type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator assignment",
+      "punctuation arguments-start-0",
+      "punctuation arguments-end-0",
+      "operator arrow",
+      "punctuation function-start-0",
+      "punctuation function-end-0",
+    ]);
+  });
+
+  test("multi-line arrow function expression with args", () => {
+    expect(
+      javascript(`const foo = (
+  x,
+  y = 42
+) => {}`).map((token) => token.type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator assignment",
+      "punctuation arguments-start-0",
+      "token",
+      "punctuation",
+      "token",
+      "operator assignment",
+      "number",
+      "punctuation arguments-end-0",
+      "operator arrow",
+      "punctuation function-start-0",
+      "punctuation function-end-0",
+    ]);
+  });
+
+  test("arrow function in arrow function args", () => {
+    expect(
+      javascript(`const foo = (f = () => 42) => {}`).map((token) => token.type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator assignment",
+      "punctuation arguments-start-0",
+      "token",
+      "operator assignment",
+      "punctuation arguments-start-1",
+      "punctuation arguments-end-1",
+      "operator arrow",
+      "number",
+      "punctuation arguments-end-0",
       "operator arrow",
       "punctuation function-start-0",
       "punctuation function-end-0",

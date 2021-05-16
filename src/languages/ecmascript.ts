@@ -164,6 +164,42 @@ function endRegex(token: RawToken): boolean {
   return false;
 }
 
+function searchAheadForArrow(token: RawToken | undefined): boolean {
+  let nested = 0;
+  while (token) {
+    if (token.text === "(") {
+      nested++;
+      token = token.next;
+      continue;
+    }
+    if (nested === 0) {
+      if (token.text === ")" && token.next?.text === "=" && token.next?.next?.text === ">") {
+        return true;
+      }
+      if (token.text === ";") {
+        return false;
+      }
+      if (
+        token.prev &&
+        token.y !== token.prev.y &&
+        [",", ";", "(", "[", "["].includes(token.prev.text) === false
+      ) {
+        console.log(token.text)
+        return false;
+      }
+      token = token.next;
+      continue;
+    } else {
+      if (token.text === ")") {
+        nested--;
+      }
+      token = token.next;
+      continue;
+    }
+  }
+  return false;
+}
+
 class Stack<T extends string> {
   private data: T[] = [];
   constructor(private defaultValue: T) {}
@@ -354,6 +390,12 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         const { before } = state.parenStack.push("arguments");
         return `punctuation arguments-start-${before}`;
       }
+      // This is not how proper JS engines do it, but it's easy to build
+      if (token.next && searchAheadForArrow(token.next)) {
+        const { before } = state.parenStack.push("arguments");
+        return `punctuation arguments-start-${before}`;
+      }
+      // Fallback and comma expressions
       const { before } = state.parenStack.push("parens");
       return `punctuation parens-start-${before}`;
     }
