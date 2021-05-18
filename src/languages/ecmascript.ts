@@ -329,48 +329,6 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       return "keyword function";
     }
 
-    // Identifiers
-    if (token.text.match(IDENT_RE)) {
-      // "Looks like a class" sort of identifier (that's not a function call)
-      if (
-        /[A-Z]/.test(token.text[0]) &&
-        token.next?.text !== "(" &&
-        token.prev?.text !== "new"
-      ) {
-        return "class";
-      }
-      // Known global (that's not a function call)
-      if (
-        GLOBALS.has(token.text) &&
-        token.prev?.text !== "." &&
-        token.next?.text !== "(" &&
-        token.prev?.text !== "new"
-      ) {
-        return "global";
-      }
-      // Regular identifier
-      if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
-        return "token";
-      }
-      // Declarations
-      if (token.prev?.type === "keyword function") {
-        return "declaration function";
-      }
-      // Function and constructor calls
-      if (token.prev?.type === "keyword" && token.prev.text === "new") {
-        return "call constructor";
-      }
-      if (token.next?.text === "(") {
-        return "call";
-      }
-      // Identifier in a list
-      if (
-        lookbehindType<RawToken | TypedToken>(token, ["punctuation", "token"])
-      ) {
-        return "token";
-      }
-    }
-
     if (token.text === "=") {
       if (token?.next?.text === ">") {
         return ["operator arrow", "operator arrow"];
@@ -473,7 +431,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       token.text === "-" &&
       token.next &&
       isAdjacent(token, token.next) &&
-      token.next.text.match(NUMBER_RE)
+      (token.next.text.match(NUMBER_RE) || token.next?.text === "Infinity")
     ) {
       return ["number", "number"];
     }
@@ -489,6 +447,48 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     }
     if ([".", "e", "E"].includes(token.text) && token.prev?.type === "number") {
       return "number";
+    }
+
+    // Identifiers
+    if (token.text.match(IDENT_RE)) {
+      // "Looks like a class" sort of identifier (that's not a function call)
+      if (
+        /[A-Z]/.test(token.text[0]) &&
+        token.next?.text !== "(" &&
+        token.prev?.text !== "new"
+      ) {
+        return "class";
+      }
+      // Known global (that's not a function call)
+      if (
+        GLOBALS.has(token.text) &&
+        token.prev?.text !== "." &&
+        token.next?.text !== "(" &&
+        token.prev?.text !== "new"
+      ) {
+        return "global";
+      }
+      // Regular identifier
+      if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
+        return "token";
+      }
+      // Declarations
+      if (token.prev?.type === "keyword function") {
+        return "declaration function";
+      }
+      // Function and constructor calls
+      if (token.prev?.type === "keyword" && token.prev.text === "new") {
+        return "call constructor";
+      }
+      if (token.next?.text === "(") {
+        return "call";
+      }
+      // Identifier in a list
+      if (
+        lookbehindType<RawToken | TypedToken>(token, ["punctuation", "token"])
+      ) {
+        return "token";
+      }
     }
 
     if (PUNCTUATION.includes(token.text)) {

@@ -376,6 +376,12 @@ describe("Bonkers syntax", () => {
 });
 
 describe("Numbers", () => {
+  test("Special values", () => {
+    expect(javascript(`NaN`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`Infinity`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`-Infinity`).map(({type}) => type)).toEqual(["number"]);
+  });
+
   test("Normal and octal syntax", () => {
     expect(javascript(`-0`).map(({type}) => type)).toEqual(["number"]);
     expect(javascript(`42`).map(({type}) => type)).toEqual(["number"]);
