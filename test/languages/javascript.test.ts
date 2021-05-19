@@ -375,6 +375,82 @@ describe("Bonkers syntax", () => {
   });
 });
 
+describe("Strings", () => {
+  test("Regular strings", () => {
+    expect(javascript(`"Hello"`).map(({type}) => type)).toEqual([
+      "string",
+      "string",
+      "string",
+    ]);
+    expect(javascript(`'Hello'`).map(({type}) => type)).toEqual([
+      "string",
+      "string",
+      "string",
+    ]);
+    expect(javascript("`Hello`").map(({type}) => type)).toEqual([
+      "string",
+      "string",
+      "string",
+    ]);
+  });
+
+  test("Multi-line strings", () => {
+    expect(javascript(`"Hello\n\\World"`).map(({type}) => type)).toEqual([
+      "string",
+      "string",
+      "string",
+      "string",
+      "string",
+    ]);
+    expect(javascript("`Hello\nWorld`").map(({type}) => type)).toEqual([
+      "string",
+      "string",
+      "string",
+      "string",
+    ]);
+  });
+
+  test("Template strings with interpolation", () => {
+    expect(javascript("`Hello${42}`").map(({type}) => type)).toEqual([
+      "string",
+      "string",
+      "operator interpolation",
+      "number",
+      "operator interpolation",
+      "string",
+    ]);
+  });
+
+  test("Template strings with complex interpolation", () => {
+    expect(javascript("`Hello${foo(42)}`").map(({type}) => type)).toEqual([
+      "string",
+      "string",
+      "operator interpolation",
+      "call",
+      "punctuation call-start-0",
+      "number",
+      "punctuation call-end-0",
+      "operator interpolation",
+      "string",
+    ]);
+  });
+
+  test("Template strings with complex interpolation, nested", () => {
+    expect(javascript("`Hello${`${42}`}`").map(({type}) => type)).toEqual([
+      "string",
+      "string",
+      "operator interpolation",
+      "string",
+      "operator interpolation",
+      "number",
+      "operator interpolation",
+      "string",
+      "operator interpolation",
+      "string",
+    ]);
+  });
+});
+
 describe("Numbers", () => {
   test("Special values", () => {
     expect(javascript(`NaN`).map(({type}) => type)).toEqual(["number"]);

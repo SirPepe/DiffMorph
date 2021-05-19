@@ -44,10 +44,12 @@ type ParenType =
 
 type JSXTagType = "tag" | "component" | "fragment" | "none";
 
+type StringType = `"` | `'` | "`"
+
 const VALUES = new Set(["false", "true", "null", "undefined"]);
 const OPERATORS = ["!", "=", "&", "|", "+", "-", "<", ">", "/"];
 const PUNCTUATION = [".", ":", ",", ";"];
-const STRINGS = ["'", '"', "`"];
+const STRINGS = new Set(["'", '"', "`"]);
 const NUMBER_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
 const RE_FLAGS_RE = /^[gimuy]+$/;
 const IDENT_RE = /^[$_a-z][$_a-z0-9]*$/i; // accepts REASONABLE identifiers
@@ -200,7 +202,17 @@ function searchAheadForArrow(token: RawToken | undefined): boolean {
   return false;
 }
 
-class Stack<T extends string> {
+function inStringMode(state: State): boolean {
+  if (state.stringStack.size() === 0) {
+    return false;
+  }
+  if (state.stringInterpolationState) {
+    return false;
+  }
+  return true;
+}
+
+class Stack<T extends string | undefined> {
   private data: T[] = [];
   constructor(private defaultValue: T) {}
 
@@ -228,13 +240,19 @@ class Stack<T extends string> {
     const current = this.data.filter((str) => str === value).length;
     return { current, value };
   }
+
+  size(): number {
+    return this.data.length;
+  }
 }
 
 type State = {
   lineCommentState: boolean;
   blockCommentState: boolean;
   regexState: boolean;
-  stringState: false | string; // string indicates the type of quotes used
+  stringStack: Stack<StringType | undefined>;
+  stringInterpolationState: boolean;
+  stringInterpolationDepth: number;
   bracketStack: Stack<BracketType>;
   curlyStack: Stack<CurlyType>;
   parenStack: Stack<ParenType>;
@@ -245,7 +263,9 @@ function defaultState(): State {
     lineCommentState: false,
     blockCommentState: false,
     regexState: false,
-    stringState: false,
+    stringStack: new Stack<StringType | undefined>(undefined),
+    stringInterpolationState: false,
+    stringInterpolationDepth: 0,
     bracketStack: new Stack<BracketType>("bracket"),
     curlyStack: new Stack<CurlyType>("curly"),
     parenStack: new Stack<ParenType>("parens"),
@@ -269,7 +289,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // exit block comment state
     if (
       state.blockCommentState === true &&
-      state.stringState === false &&
+      !inStringMode(state) &&
       token.text === "/" &&
       token?.prev?.text === "*"
     ) {
@@ -279,7 +299,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // enter block comment state
     if (
       state.blockCommentState === false &&
-      state.stringState === false &&
+      !inStringMode(state) &&
       token.text === "/" &&
       token?.next?.text === "*"
     ) {
@@ -294,7 +314,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // enter line comment state
     if (
       state.lineCommentState === false &&
-      state.stringState === false &&
+      !inStringMode(state) &&
       token.text === "/" &&
       token?.next?.text === "/"
     ) {
@@ -304,6 +324,52 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // are we in line comment state?
     if (state.lineCommentState) {
       return "comment line";
+    }
+
+    // exit string interpolation mode
+    if (
+      state.stringInterpolationState &&
+      token.text === "}" &&
+      token.prev?.text !== "\\"
+    ) {
+      state.stringInterpolationState = false;
+      state.stringInterpolationDepth--;
+      return "operator interpolation";
+    }
+    // enter string interpolation mode
+    if (
+      state.stringStack.peek().value === "`" &&
+      token.text === "$" &&
+      token.next?.text === "{" &&
+      isAdjacent(token, token.next)
+    ) {
+      state.stringInterpolationState = true;
+      state.stringInterpolationDepth++;
+      return ["operator interpolation", "operator interpolation"];
+    }
+
+    // exit string state
+    if (
+      token.text === state.stringStack.peek().value &&
+      !state.stringInterpolationState
+    ) {
+      state.stringStack.pop();
+      if (state.stringInterpolationDepth > 0) {
+        state.stringInterpolationState = true;
+      }
+      return "string";
+    }
+    // enter string state
+    if (
+      (token.text === "'" || token.text === "`" || token.text === `"`) &&
+      !inStringMode(state)
+    ) {
+      state.stringStack.push(token.text);
+      return "string";
+    }
+    // are we in non-interpolating string state?
+    if (inStringMode(state)) {
+      return "string";
     }
 
     // exit re state
@@ -559,8 +625,12 @@ function postprocessECMAScript(token: TypedToken): boolean {
   if (token.type === "regex" && token?.prev?.type === token.type) {
     return true;
   }
-  // Join arrows
-  if (token.type === "operator arrow" && token?.prev?.type === token.type) {
+  // Join operators
+  if (
+    token.type.startsWith("operator") &&
+    token?.prev?.type === token.type &&
+    isAdjacent(token, token.prev)
+  ) {
     return true;
   }
   // Join floating point numbers
