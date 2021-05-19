@@ -15,6 +15,7 @@ import {
   DEFAULT_COLOR_PALETTE,
   LanguageTheme,
   LanguageThemeProperties,
+  themeColors,
 } from "../lib/theme";
 
 // Translate language theme into canvas styles
@@ -193,7 +194,7 @@ class TextNode {
     if (typeStyles) {
       this.styles = typeStyles;
     } else {
-      this.styles = { color: "foreground" };
+      this.styles = { color: themeColors.foreground };
     }
   }
 

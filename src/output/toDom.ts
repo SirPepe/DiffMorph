@@ -16,6 +16,7 @@ const DEFAULT_STYLES = `
 .dm-code {
   --foreground: var(--dm-foreground, ${DEFAULT_COLOR_PALETTE.foreground});
   --background: var(--dm-background, ${DEFAULT_COLOR_PALETTE.background});
+  --highlight: var(--dm-highlight, ${DEFAULT_COLOR_PALETTE.highlight});
   --line-height: var(--dm-line-height, 2.5ch);
   --string: var(--dm-string, ${DEFAULT_COLOR_PALETTE.string});
   --number: var(--dm-number, ${DEFAULT_COLOR_PALETTE.number});
@@ -51,6 +52,7 @@ const DEFAULT_STYLES = `
 }
 .dm-decoration {
   transition: all var(--dm-transition-time, 500ms);
+  background-color: var(--highlight);
 }
 .dm-box {
   transition: transform var(--dm-transition-time, 500ms);
