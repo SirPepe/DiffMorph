@@ -45,9 +45,12 @@ const DEFAULT_STYLES = `
 .dm-decoration {
   z-index: 0;
 }
-.dm-token, .dm-decoration {
+.dm-token {
   transition: transform var(--dm-transition-time, 500ms),
               opacity var(--dm-transition-time, 500ms);
+}
+.dm-decoration {
+  transition: all var(--dm-transition-time, 500ms);
 }
 .dm-box {
   transition: transform var(--dm-transition-time, 500ms);
