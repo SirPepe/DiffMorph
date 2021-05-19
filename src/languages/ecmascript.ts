@@ -47,11 +47,17 @@ type JSXTagType = "tag" | "component" | "fragment" | "none";
 type StringType = `"` | `'` | "`"
 
 const VALUES = new Set(["false", "true", "null", "undefined"]);
-const OPERATORS = ["!", "=", "&", "|", "+", "-", "<", ">", "/"];
-const PUNCTUATION = [".", ":", ",", ";"];
-const STRINGS = new Set(["'", '"', "`"]);
+
+// Does not include "-" and "+" to ease handling of negative numbers
+// TODO: make : work in ternary context
+const OPERATORS = new Set(["!", "=", "&", "|", "<", ">", "/", "?", /*":"*/]);
+
+const PUNCTUATION = new Set([".", ":", ",", ";"]);
+
 const NUMBER_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
+
 const RE_FLAGS_RE = /^[gimuy]+$/;
+
 const IDENT_RE = /^[$_a-z][$_a-z0-9]*$/i; // accepts REASONABLE identifiers
 
 const TYPE_KEYWORDS = ["type", "enum", "interface", "infer"];
@@ -399,7 +405,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       if (token?.next?.text === ">") {
         return ["operator arrow", "operator arrow"];
       }
-      return "operator assignment";
+      return "operator";
     }
 
     if (token.text === "(") {
@@ -435,7 +441,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return `punctuation destruct-start-${before}`;
       }
       if (
-        token?.prev?.type === "operator assignment" ||
+        token?.prev?.type === "operator" && token.prev.text === "=" ||
         token?.prev?.text === ":"
       ) {
         const { before } = state.bracketStack.push("array");
@@ -463,7 +469,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return `punctuation function-start-${before}`;
       }
       // Must be before nested destruct
-      if (token?.prev?.type === "operator assignment") {
+      if (token?.prev?.type === "operator" && token.prev.text === "=") {
         const { before } = state.curlyStack.push("object");
         return `punctuation object-start-${before}`;
       }
@@ -486,6 +492,11 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       return `punctuation ${value}-end-${after}`;
     }
 
+    // Does not handle "-" and "+" - both are part of number handling just below
+    if (OPERATORS.has(token.text)) {
+      return "operator";
+    }
+
     if (
       token.text === "NaN" ||
       token.text === "Infinity" ||
@@ -493,23 +504,27 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     ) {
       return "number";
     }
-    if (
-      token.text === "-" &&
-      token.next &&
-      isAdjacent(token, token.next) &&
-      (token.next.text.match(NUMBER_RE) || token.next?.text === "Infinity")
-    ) {
-      return ["number", "number"];
+    if (token.text === "-") {
+      if (
+        token.next &&
+        isAdjacent(token, token.next) &&
+        (token.next.text.match(NUMBER_RE) || token.next?.text === "Infinity")
+      ) {
+        return ["number", "number"];
+      }
+      return "operator"; // -, -- etc.
     }
-    if (
-      token.text === "+" &&
-      token.prev?.type === "number" &&
-      isAdjacent(token, token.prev) &&
-      token.next &&
-      isAdjacent(token, token.next) &&
-      token.next.text.match(NUMBER_RE)
-    ) {
-      return ["number", "number"];
+    if (token.text === "+") {
+      if (
+        token.prev?.type === "number" &&
+        isAdjacent(token, token.prev) &&
+        token.next &&
+        isAdjacent(token, token.next) &&
+        token.next.text.match(NUMBER_RE)
+      ) {
+        return ["number", "number"];
+      }
+      return "operator"; // +, ++ etc.
     }
     if ([".", "e", "E"].includes(token.text) && token.prev?.type === "number") {
       return "number";
@@ -557,7 +572,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       }
     }
 
-    if (PUNCTUATION.includes(token.text)) {
+    if (PUNCTUATION.has(token.text)) {
       return "punctuation";
     }
 

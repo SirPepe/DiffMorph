@@ -61,19 +61,19 @@ describe("Basic statements", () => {
       // foo
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "number",
       "punctuation",
       // bar
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "value",
       "punctuation",
       // baz
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "number",
       "punctuation",
     ]);
@@ -85,7 +85,7 @@ describe("Basic statements", () => {
     expect(types).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation object-start-0",
       "token",
       "punctuation",
@@ -100,7 +100,7 @@ describe("Basic statements", () => {
     expect(types).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "regex",
       "punctuation",
     ]);
@@ -115,10 +115,10 @@ describe("Basic statements", () => {
       "token",
       "punctuation",
       "token",
-      "operator assignment",
+      "operator",
       "number",
       "punctuation destruct-end-0",
-      "operator assignment",
+      "operator",
       "token",
       "punctuation",
     ]);
@@ -133,14 +133,14 @@ describe("Basic statements", () => {
       "token",
       "punctuation",
       "token",
-      "operator assignment",
+      "operator",
       "number",
       "punctuation",
       "token",
       "punctuation",
       "token",
       "punctuation destruct-end-0",
-      "operator assignment",
+      "operator",
       "token",
       "punctuation",
     ]);
@@ -162,14 +162,14 @@ describe("Basic statements", () => {
       "punctuation destruct-end-1",
       "punctuation",
       "token",
-      "operator assignment",
+      "operator",
       "number",
       "punctuation",
       "token",
       "punctuation",
       "token",
       "punctuation destruct-end-0",
-      "operator assignment",
+      "operator",
       "token",
       "punctuation",
     ]);
@@ -188,7 +188,7 @@ describe("Basic statements", () => {
       "punctuation",
       "punctuation destruct-start-1",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation object-start-0",
       "token",
       "punctuation",
@@ -196,7 +196,7 @@ describe("Basic statements", () => {
       "punctuation object-end-0",
       "punctuation destruct-end-1",
       "punctuation destruct-end-0",
-      "operator assignment",
+      "operator",
       "token",
       "punctuation",
     ]);
@@ -224,7 +224,7 @@ describe("Basic statements", () => {
     ).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "keyword function",
       "punctuation arguments-start-0",
       "punctuation arguments-end-0",
@@ -239,7 +239,7 @@ describe("Basic statements", () => {
     ).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation parens-start-0",
       "token",
       "punctuation",
@@ -255,7 +255,7 @@ describe("Basic statements", () => {
     ).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation arguments-start-0",
       "punctuation arguments-end-0",
       "operator arrow",
@@ -271,7 +271,7 @@ describe("Basic statements", () => {
     ).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation arguments-start-0",
       "punctuation arguments-end-0",
       "operator arrow",
@@ -289,12 +289,12 @@ describe("Basic statements", () => {
     ).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation arguments-start-0",
       "token",
       "punctuation",
       "token",
-      "operator assignment",
+      "operator",
       "number",
       "punctuation arguments-end-0",
       "operator arrow",
@@ -309,10 +309,10 @@ describe("Basic statements", () => {
     ).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation arguments-start-0",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation arguments-start-1",
       "punctuation arguments-end-1",
       "operator arrow",
@@ -344,7 +344,7 @@ describe("Bonkers syntax", () => {
       javascript("x = { y: [ new B() ] }").map((token) => token.type)
     ).toEqual([
       "token",
-      "operator assignment",
+      "operator",
       "punctuation object-start-0",
       "token",
       "punctuation",
@@ -363,7 +363,7 @@ describe("Bonkers syntax", () => {
       javascript("x = [ ...new Foo() ]").map((token) => token.type)
     ).toEqual([
       "token",
-      "operator assignment",
+      "operator",
       "punctuation array-start-0",
       "punctuation",
       "keyword",
@@ -451,6 +451,33 @@ describe("Strings", () => {
   });
 });
 
+describe("Operators", () => {
+  test.skip("Ternary", () => {
+    expect(javascript(`a ? b : b`).map(({type}) => type))
+      .toEqual(["token", "operator", "token", "operator", "token"]);
+  });
+  test("Other operators", () => {
+    expect(javascript(`1++`).map(({type}) => type))
+      .toEqual(["number", "operator"]);
+    expect(javascript(`1--`).map(({type}) => type))
+      .toEqual(["number", "operator"]);
+    expect(javascript(`++1`).map(({type}) => type))
+      .toEqual(["operator", "number"]);
+    expect(javascript(`--1`).map(({type}) => type))
+      .toEqual(["operator", "number"]);
+    expect(javascript(`a || b`).map(({type}) => type))
+      .toEqual(["token", "operator", "token"]);
+    expect(javascript(`a ?? b`).map(({type}) => type))
+      .toEqual(["token", "operator", "token"]);
+    expect(javascript(`a ?= b`).map(({type}) => type))
+      .toEqual(["token", "operator", "token"]);
+    expect(javascript(`a > b`).map(({type}) => type))
+      .toEqual(["token", "operator", "token"]);
+    expect(javascript(`a >>>= b`).map(({type}) => type))
+    .toEqual(["token", "operator", "token"]);
+  });
+});
+
 describe("Numbers", () => {
   test("Special values", () => {
     expect(javascript(`NaN`).map(({type}) => type)).toEqual(["number"]);
@@ -504,7 +531,7 @@ describe("Broken statements", () => {
     expect(types).toEqual([
       "keyword",
       "punctuation",
-      "operator assignment",
+      "operator",
       "number",
     ]);
   });
@@ -515,11 +542,11 @@ describe("Broken statements", () => {
     expect(types).toEqual([
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation",
       "keyword",
       "token",
-      "operator assignment",
+      "operator",
       "punctuation",
     ]);
   });
