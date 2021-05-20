@@ -452,10 +452,79 @@ describe("Strings", () => {
 });
 
 describe("Operators", () => {
-  test.skip("Ternary", () => {
-    expect(javascript(`a ? b : b`).map(({type}) => type))
+  test("Simple ternary", () => {
+    expect(javascript(`a ? b : c`).map(({type}) => type))
       .toEqual(["token", "operator", "token", "operator", "token"]);
   });
+
+  test("Ternary involving arrays", () => {
+    expect(javascript(`a ? [b] : [c]`).map(({type}) => type))
+      .toEqual([
+        "token",
+        "operator",
+        "punctuation array-start-0",
+        "token",
+        "punctuation array-end-0",
+        "operator",
+        "punctuation array-start-0",
+        "token",
+        "punctuation array-end-0",
+      ]);
+  });
+
+  test("Ternary involving objects", () => {
+    expect(javascript(`a ? { b: 1 } : { b: 1 }`).map(({type}) => type))
+      .toEqual([
+        "token",
+        "operator",
+        "punctuation object-start-0",
+        "token",
+        "punctuation",
+        "number",
+        "punctuation object-end-0",
+        "operator",
+        "punctuation object-start-0",
+        "token",
+        "punctuation",
+        "number",
+        "punctuation object-end-0",
+      ]);
+  });
+
+  test("Ternary inside an object", () => {
+    expect(javascript(`const x = { a: x ? y : z }`).map(({type}) => type))
+      .toEqual([
+        "keyword",
+        "token",
+        "operator",
+        "punctuation object-start-0",
+        "token",
+        "punctuation",
+        "token",
+        "operator",
+        "token",
+        "operator",
+        "token",
+        "punctuation object-end-0",
+      ]);
+  });
+
+  test("Ternary inside an array", () => {
+    expect(javascript(`const x = [ x ? y : z ]`).map(({type}) => type))
+      .toEqual([
+        "keyword",
+        "token",
+        "operator",
+        "punctuation array-start-0",
+        "token",
+        "operator",
+        "token",
+        "operator",
+        "token",
+        "punctuation array-end-0",
+      ]);
+  });
+
   test("Other operators", () => {
     expect(javascript(`1++`).map(({type}) => type))
       .toEqual(["number", "operator"]);

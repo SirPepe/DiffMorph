@@ -49,7 +49,6 @@ type StringType = `"` | `'` | "`"
 const VALUES = new Set(["false", "true", "null", "undefined"]);
 
 // Does not include "-" and "+" to ease handling of negative numbers
-// TODO: make : work in ternary context
 const OPERATORS = new Set(["!", "=", "&", "|", "<", ">", "/", "?", /*":"*/]);
 
 const PUNCTUATION = new Set([".", ":", ",", ";"]);
@@ -262,6 +261,7 @@ type State = {
   bracketStack: Stack<BracketType>;
   curlyStack: Stack<CurlyType>;
   parenStack: Stack<ParenType>;
+  objectLHSState: boolean;
 };
 
 function defaultState(): State {
@@ -275,6 +275,7 @@ function defaultState(): State {
     bracketStack: new Stack<BracketType>("bracket"),
     curlyStack: new Stack<CurlyType>("curly"),
     parenStack: new Stack<ParenType>("parens"),
+    objectLHSState: false,
   };
 }
 
@@ -440,10 +441,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         const { before } = state.bracketStack.push("destruct");
         return `punctuation destruct-start-${before}`;
       }
-      if (
-        token?.prev?.type === "operator" && token.prev.text === "=" ||
-        token?.prev?.text === ":"
-      ) {
+      if (token?.prev?.type === "operator" || token.prev?.text === ":") {
         const { before } = state.bracketStack.push("array");
         return `punctuation array-start-${before}`;
       }
@@ -459,6 +457,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     if (token.text === "{") {
       if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
         const { before } = state.curlyStack.push("destruct");
+        state.objectLHSState = true;
         return `punctuation destruct-start-${before}`;
       }
       if (
@@ -469,18 +468,21 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return `punctuation function-start-${before}`;
       }
       // Must be before nested destruct
-      if (token?.prev?.type === "operator" && token.prev.text === "=") {
+      if (token?.prev?.type === "operator") {
         const { before } = state.curlyStack.push("object");
+        state.objectLHSState = true;
         return `punctuation object-start-${before}`;
       }
       if (state.curlyStack.peek().value === "destruct") {
         // nested destruct?
         const { before } = state.curlyStack.push("destruct");
+        state.objectLHSState = true;
         return `punctuation destruct-start-${before}`;
       }
       // Must be after nested destruct
       if (token?.prev?.text === ":") {
         const { before } = state.curlyStack.push("object");
+        state.objectLHSState = true;
         return `punctuation object-start-${before}`;
       }
       const { before } = state.curlyStack.push("curly");
@@ -490,6 +492,14 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     if (token.text === "}") {
       const { after, value } = state.curlyStack.pop();
       return `punctuation ${value}-end-${after}`;
+    }
+
+    if (token.text === ":") {
+      if (state.objectLHSState) {
+        state.objectLHSState = false;
+        return "punctuation";
+      }
+      return "operator"; // ternary
     }
 
     // Does not handle "-" and "+" - both are part of number handling just below
