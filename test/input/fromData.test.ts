@@ -9,7 +9,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "base",
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toEqual({
       kind: "BOX",
       data: {},
@@ -43,7 +43,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "base",
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toEqual({
       kind: "BOX",
       data: {},
@@ -81,7 +81,7 @@ describe("processing code from a data source", () => {
       language: undefined,
     };
     /* eslint-enable */
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -110,7 +110,7 @@ describe("processing code from a data source", () => {
       language: undefined,
     };
     /* eslint-enable */
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -139,7 +139,7 @@ describe("processing code from a data source", () => {
       language: undefined,
     };
     /* eslint-enable */
-    const root = processCode(rootContainer, 4);
+    const root = processCode(rootContainer, [], 4);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -173,7 +173,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toEqual({
       kind: "BOX",
       data: {},
@@ -242,7 +242,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toEqual({
       kind: "BOX",
       data: {},
@@ -316,6 +316,7 @@ describe("processing code from a data source", () => {
         isDecoration: false,
         language: "javascript",
       },
+      [],
       2
     );
     const bRoot = processCode(
@@ -325,6 +326,7 @@ describe("processing code from a data source", () => {
         isDecoration: false,
         language: "javascript",
       },
+      [],
       2
     );
     expect(aRoot).toEqual(bRoot);
@@ -348,7 +350,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -407,7 +409,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -482,7 +484,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -565,7 +567,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: "javascript",
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     expect(root).toMatchObject({
       x: 0,
       y: 0,
@@ -614,7 +616,7 @@ describe("processing code from a data source", () => {
     ]);
   });
 
-  test("decorations", () => {
+  test("decoration boxes", () => {
     const rootContainer: CodeContainer = {
       content: [
         "const a = () => ",
@@ -633,7 +635,7 @@ describe("processing code from a data source", () => {
       isDecoration: false,
       language: undefined,
     };
-    const root = processCode(rootContainer, 2);
+    const root = processCode(rootContainer, [], 2);
     const { content, decorations } = root;
     expect(content).toEqual([
       /* eslint-disable */
@@ -656,6 +658,112 @@ describe("processing code from a data source", () => {
         height: 1,
         hash: "red",
         data: {},
+        parent: root,
+      },
+    ]);
+  });
+
+  test("external decorations", () => {
+    const rootContainer: CodeContainer = {
+      content: ["const a = () => 42"],
+      id: "root",
+      hash: "root",
+      data: {},
+      isDecoration: false,
+      language: undefined,
+    };
+    const root = processCode(
+      rootContainer,
+      [{ x: 16, y: 0, width: 2, height: 1, data: { hash: "red" } }],
+      2
+    );
+    const { content, decorations } = root;
+    expect(content).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, next: content[1], prev: undefined, parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, next: content[2], prev: content[0], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, next: content[3], prev: content[1], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, next: content[4], prev: content[2], parent: root },
+      { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, next: content[5], prev: content[3], parent: root },
+      { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, next: content[6], prev: content[4], parent: root },
+      { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, next: content[7], prev: content[5], parent: root },
+      { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, next: undefined, prev: content[6], parent: root },
+      /* eslint-enable */
+    ]);
+    expect(decorations).toEqual([
+      {
+        kind: "DECO",
+        x: 16,
+        y: 0,
+        width: 2,
+        height: 1,
+        hash: "red",
+        data: {
+          hash: "red",
+        },
+        parent: root,
+      },
+    ]);
+  });
+
+  test("decoration boxes plus external decorations", () => {
+    const rootContainer: CodeContainer = {
+      content: [
+        "const a = () => ",
+        {
+          content: ["42"],
+          id: "red",
+          hash: "red",
+          data: {},
+          isDecoration: true,
+          language: undefined,
+        },
+      ],
+      id: "root",
+      hash: "root",
+      data: {},
+      isDecoration: false,
+      language: undefined,
+    };
+    const root = processCode(
+      rootContainer,
+      [{ x: 0, y: 0, width: 5, height: 1, data: { hash: "green" } }],
+      2
+    );
+    const { content, decorations } = root;
+    expect(content).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, next: content[1], prev: undefined, parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, next: content[2], prev: content[0], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, next: content[3], prev: content[1], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, next: content[4], prev: content[2], parent: root },
+      { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, next: content[5], prev: content[3], parent: root },
+      { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, next: content[6], prev: content[4], parent: root },
+      { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, next: content[7], prev: content[5], parent: root },
+      { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, next: undefined, prev: content[6], parent: root },
+      /* eslint-enable */
+    ]);
+    expect(decorations).toEqual([
+      {
+        kind: "DECO",
+        x: 16,
+        y: 0,
+        width: 2,
+        height: 1,
+        hash: "red",
+        data: {},
+        parent: root,
+      },
+      {
+        kind: "DECO",
+        x: 0,
+        y: 0,
+        width: 5,
+        height: 1,
+        hash: "green",
+        data: {
+          hash: "green",
+        },
         parent: root,
       },
     ]);

@@ -30,6 +30,14 @@ type InputContainer = {
   language: string | undefined;
 };
 
+type InputDecoration = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  data: Record<string, any>; // tag name and attributes for DOM sources
+};
+
 function extractCode(source: InputContainer): CodeContainer {
   const idGenerator = createIdGenerator();
   const content: Code[] = [];
@@ -50,22 +58,50 @@ function extractCode(source: InputContainer): CodeContainer {
   };
 }
 
+function processExternalDecorations(
+  input: InputDecoration[],
+  parent: Box<TextToken, any>
+): Decoration<TextToken>[] {
+  return input.map(({ x, y, width, height, data }): Decoration<TextToken> => {
+    return {
+      kind: "DECO",
+      parent,
+      data,
+      x,
+      y,
+      hash: data.hash || "",
+      width,
+      height,
+    };
+  });
+}
+
 // Only exported for unit testing code extraction
 export function processCode(
   source: InputContainer,
+  externalDecorations: InputDecoration[],
   tabSize: number
 ): Box<TextToken, Decoration<TextToken>> {
-  return tokenize(extractCode(source), tabSize);
+  const result = tokenize(extractCode(source), tabSize);
+  result.decorations.push(
+    ...processExternalDecorations(externalDecorations, result)
+  );
+  return result;
 }
 
 // Actual facade for processing data
 export function fromData(
   inputs: InputContainer[],
+  externalDecorations: InputDecoration[],
   options: InputOptions = {}
 ): RenderData<RenderText, RenderDecoration> {
   const inputConfig = withDefaults(options);
   const typed = inputs.map((input) => {
-    const tokenized = processCode(input, inputConfig.tabSize);
+    const tokenized = processCode(
+      input,
+      externalDecorations,
+      inputConfig.tabSize
+    );
     if (inputConfig.languageOverride) {
       tokenized.language = inputConfig.languageOverride;
     }
