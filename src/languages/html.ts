@@ -3,6 +3,7 @@
 
 import { isAdjacent, lookaheadText } from "../lib/util";
 import { languageDefinition as css } from "./css";
+import { languageDefinition as js } from "./javascript";
 import {
   EmbeddedLanguageFunctionResult,
   LanguageDefinition,
@@ -76,6 +77,26 @@ function processEmbeddedCss(
     }
   }
   return { language: "css", types };
+}
+
+function processEmbeddedJavaScript(
+  start: RawToken | undefined
+): EmbeddedLanguageFunctionResult {
+  const language = js.definitionFactory({ inline: false });
+  const types = [];
+  let current: any = start;
+  while (current) {
+    if (current.text === "<" && lookaheadText(current, ["/", "script", ">"])) {
+      return { language: "javascript", types };
+    }
+    const results = language(current);
+    const resultTypes = Array.isArray(results) ? results : [results];
+    for (const type of resultTypes) {
+      types.push(type);
+      current = current.next;
+    }
+  }
+  return { language: "javascript", types };
 }
 
 function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
@@ -162,6 +183,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     // exit tag state
     if (state.tagState && token.text === ">") {
       state.tagState = false;
+      // Handle embedded CSS
       if (
         !xml &&
         state.tagName === "style" &&
@@ -169,6 +191,15 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       ) {
         state.tagName = false;
         return ["tag", processEmbeddedCss(token.next)];
+      }
+      // Handle embedded JS
+      if (
+        !xml &&
+        state.tagName === "script" &&
+        token?.prev?.prev?.text !== "/" // don't switch to JS after </script>
+      ) {
+        state.tagName = false;
+        return ["tag", processEmbeddedJavaScript(token.next)];
       }
       state.tagName = false;
       return "tag";

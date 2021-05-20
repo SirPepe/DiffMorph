@@ -190,6 +190,41 @@ describe("embedded languages", () => {
       "tag",
     ]);
   });
+
+  test("embedded JS", () => {
+    const tokens = html(`<script>let x = 42;</script>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "keyword",
+      "token",
+      "operator",
+      "number",
+      "punctuation",
+      "tag",
+    ]);
+  });
+
+  test("embedded JS module (attributes)", () => {
+    const tokens = html(`<script type="module">let x = 42;</script>`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "tag",
+      "keyword",
+      "token",
+      "operator",
+      "number",
+      "punctuation",
+      "tag",
+    ]);
+  });
 });
 
 describe("non-support for XML features", () => {
