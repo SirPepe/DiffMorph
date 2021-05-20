@@ -178,6 +178,7 @@ export function tweenFrames(
 
 class TextNode {
   private styles: LanguageThemeProperties;
+
   constructor(
     private ctx: CanvasRenderingContext2D,
     private text: string,
@@ -189,7 +190,8 @@ class TextNode {
   ) {
     type = type.split(/\s/)[0];
     // Not every type always has a theme entry (eg. plain old "token"), so we
-    // must take care to default to something readable.
+    // must take care to default to something readable (which the foreground
+    // color probably is).
     const typeStyles: LanguageThemeProperties | undefined = languageTheme[type];
     if (typeStyles) {
       this.styles = typeStyles;
@@ -217,13 +219,25 @@ class TextNode {
 class DecorationNode {
   constructor(
     private ctx: CanvasRenderingContext2D,
-    private languageTheme: LanguageTheme,
     private colorPalette: ColorPalette,
     private cellSize: number,
     private lineHeight: number
   ) {}
+
   public draw(x: number, y: number, w: number, h: number, alpha: number): void {
-    return;
+    if (alpha === 0) {
+      return;
+    }
+    this.ctx.save();
+    this.ctx.globalAlpha = alpha;
+    this.ctx.fillStyle = this.colorPalette.highlight;
+    this.ctx.fillRect(
+      x * this.cellSize - 1,
+      y * this.cellSize * this.lineHeight - 4, // compensate for baseline=top
+      w * this.cellSize + 2,
+      h * this.cellSize * this.lineHeight
+    );
+    this.ctx.restore();
   }
 }
 
@@ -258,7 +272,7 @@ function toRenderNodes(
         Array.from(root.content.decorations, ([id]) => {
           return [
             id,
-            new DecorationNode(ctx, {}, colorPalette, cellSize, lineHeight),
+            new DecorationNode(ctx, colorPalette, cellSize, lineHeight),
           ];
         })
       ),
@@ -286,15 +300,15 @@ function renderNodes(
   const {
     frame: { text, decorations, boxes },
   } = frame;
-  for (const [id, { x, y, alpha }] of text) {
-    const node = nodes.content.text.get(id);
-    assertIs(node, "text node");
-    node.draw(x + xOffset, y + yOffset, alpha);
-  }
   for (const [id, { x, y, width, height, alpha }] of decorations) {
     const node = nodes.content.decorations.get(id);
     assertIs(node, "decoration node");
     node.draw(x + xOffset, y + yOffset, width, height, alpha);
+  }
+  for (const [id, { x, y, alpha }] of text) {
+    const node = nodes.content.text.get(id);
+    assertIs(node, "text node");
+    node.draw(x + xOffset, y + yOffset, alpha);
   }
   for (const [id, boxFrame] of boxes) {
     const node = nodes.content.boxes.get(id);
