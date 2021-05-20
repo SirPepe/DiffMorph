@@ -246,6 +246,15 @@ class Stack<T extends string | undefined> {
     return { current, value };
   }
 
+  swap(replacement: T): { current: number; value: T } {
+    const index = this.data.length - 1;
+    if (!this.data[index]) {
+      throw new Error("Can't swap on empty stack");
+    }
+    this.data[index] = replacement;
+    return { current: index, value: replacement };
+  }
+
   size(): number {
     return this.data.length;
   }
@@ -261,7 +270,7 @@ type State = {
   bracketStack: Stack<BracketType>;
   curlyStack: Stack<CurlyType>;
   parenStack: Stack<ParenType>;
-  objectLHSState: boolean;
+  objectState:"lhs" | "rhs" | false;
 };
 
 function defaultState(): State {
@@ -275,7 +284,7 @@ function defaultState(): State {
     bracketStack: new Stack<BracketType>("bracket"),
     curlyStack: new Stack<CurlyType>("curly"),
     parenStack: new Stack<ParenType>("parens"),
-    objectLHSState: false,
+    objectState: false,
   };
 }
 
@@ -457,7 +466,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     if (token.text === "{") {
       if (token.prev && ["var", "let", "const"].includes(token.prev.text)) {
         const { before } = state.curlyStack.push("destruct");
-        state.objectLHSState = true;
+        state.objectState = "lhs";
         return `punctuation destruct-start-${before}`;
       }
       if (
@@ -470,19 +479,19 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       // Must be before nested destruct
       if (token?.prev?.type === "operator") {
         const { before } = state.curlyStack.push("object");
-        state.objectLHSState = true;
+        state.objectState = "lhs";
         return `punctuation object-start-${before}`;
       }
       if (state.curlyStack.peek().value === "destruct") {
         // nested destruct?
         const { before } = state.curlyStack.push("destruct");
-        state.objectLHSState = true;
+        state.objectState = "lhs";
         return `punctuation destruct-start-${before}`;
       }
       // Must be after nested destruct
       if (token?.prev?.text === ":") {
         const { before } = state.curlyStack.push("object");
-        state.objectLHSState = true;
+        state.objectState = "lhs";
         return `punctuation object-start-${before}`;
       }
       const { before } = state.curlyStack.push("curly");
@@ -491,15 +500,26 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
 
     if (token.text === "}") {
       const { after, value } = state.curlyStack.pop();
+      if (value === "object" || value === "destruct") {
+        if (after > 0) {
+          state.objectState = "lhs";
+        } else {
+          state.objectState = false;
+        }
+      }
       return `punctuation ${value}-end-${after}`;
     }
 
     if (token.text === ":") {
-      if (state.objectLHSState) {
-        state.objectLHSState = false;
+      if (state.objectState === "lhs") {
+        state.objectState = "rhs";
         return "punctuation";
       }
       return "operator"; // ternary
+    }
+
+    if (token.text === "," && state.objectState === "rhs") {
+      state.objectState = "lhs";
     }
 
     // Does not handle "-" and "+" - both are part of number handling just below

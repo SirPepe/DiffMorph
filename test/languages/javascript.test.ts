@@ -148,8 +148,7 @@ describe("Basic statements", () => {
 
   test("nested object destructuring", () => {
     const tokens = javascript(
-      `var { foo: { etc }, bar = 42, baz: asdf } = source;
-    `
+      `var { foo: { etc }, bar = 42, baz: asdf } = source;`
     );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
@@ -505,6 +504,50 @@ describe("Operators", () => {
         "token",
         "operator",
         "token",
+        "punctuation object-end-0",
+      ]);
+  });
+
+  test("Ternary inside a larger object", () => {
+    expect(javascript(`const x = { a: 1, b: x ? y : z }`).map(({type}) => type))
+      .toEqual([
+        "keyword",
+        "token",
+        "operator",
+        "punctuation object-start-0",
+        "token",
+        "punctuation",
+        "number",
+        "punctuation",
+        "token",
+        "punctuation",
+        "token",
+        "operator",
+        "token",
+        "operator",
+        "token",
+        "punctuation object-end-0",
+      ]);
+  });
+
+  test("Ternary inside a nested object", () => {
+    expect(javascript(`const x = { a: { b: x ? y : z } }`).map(({type}) => type))
+      .toEqual([
+        "keyword",
+        "token",
+        "operator",
+        "punctuation object-start-0",
+        "token",
+        "punctuation",
+        "punctuation object-start-1",
+        "token",
+        "punctuation",
+        "token",
+        "operator",
+        "token",
+        "operator",
+        "token",
+        "punctuation object-end-1",
         "punctuation object-end-0",
       ]);
   });
