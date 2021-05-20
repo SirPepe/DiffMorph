@@ -46,7 +46,7 @@ type JSXTagType = "tag" | "component" | "fragment" | "none";
 
 type StringType = `"` | `'` | "`"
 
-const VALUES = new Set(["false", "true", "null", "undefined"]);
+const LITERALS = new Set(["false", "true", "null", "undefined"]);
 
 // Does not include "-" and "+" to ease handling of negative numbers
 const OPERATORS = new Set(["!", "=", "&", "|", "<", ">", "/", "?", /*":"*/]);
@@ -528,10 +528,13 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     }
 
     if (
-      token.text === "NaN" ||
-      token.text === "Infinity" ||
-      token.text.match(NUMBER_RE)
+      (token.text === "NaN" || token.text === "Infinity") &&
+      state.objectState !== "lhs"
     ) {
+      return "number";
+    }
+
+    if (token.text.match(NUMBER_RE)) {
       return "number";
     }
     if (token.text === "-") {
@@ -564,6 +567,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     if (token.text.match(IDENT_RE)) {
       // "Looks like a class" sort of identifier (that's not a function call)
       if (
+        state.objectState !== "lhs" &&
         /[A-Z]/.test(token.text[0]) &&
         token.next?.text !== "(" &&
         token.prev?.text !== "new"
@@ -609,22 +613,13 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // Make sure to treat member expressions not as keywords, but also take care
     // that keywords like "new" are indeed keywords when following a spread
     // operator
-    if (
-      OTHER_KEYWORDS.has(token.text) &&
-      (token.prev?.text !== "." ||
-        lookbehindText<RawToken | TypedToken>(token, [".", ".", "."])) &&
-      !token?.prev?.type.match(/object-start/)
-    ) {
+    if (OTHER_KEYWORDS.has(token.text) && state.objectState !== "lhs") {
       return "keyword";
     }
 
     // Make sure to treat member expressions not as values
-    if (
-      VALUES.has(token.text) &&
-      token.prev?.text !== "." &&
-      !token?.prev?.type.match(/object-start/)
-    ) {
-      return "value";
+    if (LITERALS.has(token.text) && state.objectState !== "lhs") {
+      return "literal";
     }
 
     return "token";

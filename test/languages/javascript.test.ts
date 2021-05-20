@@ -68,7 +68,7 @@ describe("Basic statements", () => {
       "keyword",
       "token",
       "operator",
-      "value",
+      "literal",
       "punctuation",
       // baz
       "keyword",
@@ -88,6 +88,40 @@ describe("Basic statements", () => {
       "operator",
       "punctuation object-start-0",
       "token",
+      "punctuation",
+      "number",
+      "punctuation object-end-0",
+    ]);
+  });
+
+  test("Variable initialization with interpolated object key", () => {
+    const tokens = javascript(`var foo = { [new]: 42 }`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "keyword",
+      "token",
+      "operator",
+      "punctuation object-start-0",
+      "punctuation bracket-start-0",
+      "token",
+      "punctuation bracket-end-0",
+      "punctuation",
+      "number",
+      "punctuation object-end-0",
+    ]);
+  });
+
+  test("Variable initialization with interpolated object index", () => {
+    const tokens = javascript(`var foo = { [1]: 42 }`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "keyword",
+      "token",
+      "operator",
+      "punctuation object-start-0",
+      "punctuation bracket-start-0",
+      "number",
+      "punctuation bracket-end-0",
       "punctuation",
       "number",
       "punctuation object-end-0",
@@ -176,8 +210,7 @@ describe("Basic statements", () => {
 
   test("nested object destructuring with object initializers", () => {
     const tokens = javascript(
-      `var { foo: { etc = { bar: null } } } = source;
-    `
+      `var { foo: { etc = { bar: null } } } = source;`
     );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
@@ -191,7 +224,7 @@ describe("Basic statements", () => {
       "punctuation object-start-0",
       "token",
       "punctuation",
-      "value",
+      "literal",
       "punctuation object-end-0",
       "punctuation destruct-end-1",
       "punctuation destruct-end-0",
@@ -338,6 +371,33 @@ describe("Basic statements", () => {
 });
 
 describe("Bonkers syntax", () => {
+  test("reserved words as object members", () => {
+    expect(
+      javascript(
+        "x = { new: 1, true: 2, typeof: 3, NaN: 4 }"
+      ).map((token) => token.type)).toEqual([
+        "token",
+        "operator",
+        "punctuation object-start-0",
+        "token",
+        "punctuation",
+        "number",
+        "punctuation",
+        "token",
+        "punctuation",
+        "number",
+        "punctuation",
+        "token",
+        "punctuation",
+        "number",
+        "punctuation",
+        "token",
+        "punctuation",
+        "number",
+        "punctuation object-end-0",
+      ]);
+  });
+
   test("'new' in an array in an object is in fact a keyword!", () => {
     expect(
       javascript("x = { y: [ new B() ] }").map((token) => token.type)
