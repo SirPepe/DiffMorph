@@ -17,11 +17,22 @@ export function hash(input: string): string {
   return (hash >>> 0).toString(36);
 }
 
+export function is<T>(x: T | undefined | null): x is T {
+  if (typeof x === "undefined" || x === null) {
+    return false;
+  }
+  return true;
+}
+
+export function isNot<T>(x: T | undefined | null): x is null | undefined {
+  return !is(x);
+}
+
 export function assertIs<T>(
   x: T | undefined | null,
   name = "value"
 ): asserts x is T {
-  if (!x) {
+  if (!is(x)) {
     throw new Error(`Expected ${name} to be defined, but found ${x}`);
   }
 }
@@ -30,7 +41,7 @@ export function assertIsNot<T>(
   x: T | undefined | null,
   name = "value"
 ): asserts x is undefined | null {
-  if (x) {
+  if (is(x)) {
     throw new Error(
       `Expected ${name} to be null or undefined, but found ${typeof x}
     `
@@ -72,7 +83,7 @@ export function spliceBoxContent<
     const firstIdx = parent.content.indexOf(batch[0]);
     const newBox = boxFactory(parent);
     newBox.content = parent.content.splice(firstIdx, batch.length, newBox);
-    newBox.content.forEach((item) => item.parent = newBox);
+    newBox.content.forEach((item) => (item.parent = newBox));
   }
 }
 

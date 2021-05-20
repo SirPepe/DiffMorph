@@ -444,6 +444,36 @@ describe("processing code from a DOM source", () => {
     ]);
   });
 
+  test("it handles external decorations", () => {
+    container.innerHTML = `const a = () => 42<data class='dm-decoration' value='{"x": 16,"y": 0,"width": 2,"height": 1,"data":{}}'>Ignore me</data>`;
+    const root = processCode(container, 2);
+    const { content, decorations } = root;
+    expect(content).toEqual([
+      /* eslint-disable */
+      { kind: "TEXT", x: 0, y: 0, text: "const", height: 1, width: 5, prev: undefined, next: content[1], parent: root },
+      { kind: "TEXT", x: 6, y: 0, text: "a", height: 1, width: 1, prev: content[0], next: content[2], parent: root },
+      { kind: "TEXT", x: 8, y: 0, text: "=", height: 1, width: 1, prev: content[1], next: content[3], parent: root },
+      { kind: "TEXT", x: 10, y: 0, text: "(", height: 1, width: 1, prev: content[2], next: content[4], parent: root },
+      { kind: "TEXT", x: 11, y: 0, text: ")", height: 1, width: 1, prev: content[3], next: content[5], parent: root },
+      { kind: "TEXT", x: 13, y: 0, text: "=", height: 1, width: 1, prev: content[4], next: content[6], parent: root },
+      { kind: "TEXT", x: 14, y: 0, text: ">", height: 1, width: 1, prev: content[5], next: content[7], parent: root },
+      { kind: "TEXT", x: 16, y: 0, text: "42", height: 1, width: 2, prev: content[6], next: undefined, parent: root },
+      /* eslint-enable */
+    ]);
+    expect(decorations).toEqual([
+      {
+        kind: "DECO",
+        x: 16,
+        y: 0,
+        width: 2,
+        height: 1,
+        data: {},
+        hash: "",
+        parent: root,
+      },
+    ]);
+  });
+
   test("it handles multiple decorations", () => {
     container.innerHTML =
       "const <mark class='a'>a</mark> = () => <mark class='b'>42</mark>";

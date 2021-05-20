@@ -9,6 +9,7 @@ Example:
   <dm-frame>{}</dm-frame>
   <dm-frame>{ "hello": 42 }</dm-frame>
   <dm-frame>{ "hello": 42, "world": 42 }</dm-frame>
+  <dm-frame>{ "hello": <mark>42</mark>, "world": 42 }</dm-frame>
 </diff-morph>
 ```
 

@@ -12,7 +12,7 @@ import {
   TextToken,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
-import { createIdGenerator, getLanguage, hash } from "../lib/util";
+import { createIdGenerator, getLanguage, hash, isNot } from "../lib/util";
 import { toRenderData } from "../lib/render";
 import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
@@ -58,6 +58,29 @@ function hashDOMBox(tagName: string, attributes: [string, string][]): string {
   );
 }
 
+function decorationFromData(
+  source: HTMLDataElement,
+  parent: Box<TextToken, Decoration<TextToken>>
+): Decoration<TextToken> | null {
+  if (source.classList.contains("dm-decoration")) {
+    const { x, y, width, height, data } = JSON.parse(source.value);
+    if ([x, y, width, height, data].some(isNot)) {
+      return null;
+    }
+    return {
+      kind: "DECO",
+      parent,
+      data,
+      x: Number(x),
+      y: Number(y),
+      hash: data.hash || "",
+      width: Number(width),
+      height: Number(height),
+    };
+  }
+  return null;
+}
+
 function extractCode(source: Element): CodeContainer {
   const idGenerator = createIdGenerator();
   const children = Array.from(source.childNodes).filter(isDomContent);
@@ -66,6 +89,10 @@ function extractCode(source: Element): CodeContainer {
     if (isText(child) && child.textContent) {
       content.push(child.textContent);
     } else if (isHTMLElement(child)) {
+      // <data> serves as a way to inject external decorations, nothing more
+      if (child.tagName === "DATA") {
+        continue;
+      }
       content.push(extractCode(child));
     }
   }
@@ -88,7 +115,16 @@ export function processCode(
   source: Element,
   tabSize: number
 ): Box<TextToken, Decoration<TextToken>> {
-  return tokenize(extractCode(source), tabSize);
+  const result = tokenize(extractCode(source), tabSize);
+  const externalDecorations =
+    source.querySelectorAll<HTMLDataElement>("data.dm-decoration");
+  for (const externalDecoration of externalDecorations) {
+    const decoration = decorationFromData(externalDecoration, result);
+    if (decoration) {
+      result.decorations.push(decoration);
+    }
+  }
+  return result;
 }
 
 // Actual facade for dom content extraction
