@@ -3,12 +3,7 @@
 // definition binds to true.
 
 import { LanguageTheme, themeColors } from "../lib/theme";
-import {
-  isAdjacent,
-  isNewLine,
-  lookbehindText,
-  lookbehindType,
-} from "../lib/util";
+import { isAdjacent, isNewLine, lookbehindType } from "../lib/util";
 import {
   LanguageDefinition,
   LanguageFunction,
