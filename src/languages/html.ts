@@ -24,7 +24,8 @@ type State = {
   attrState: false | string; // string indicates the attribute name
   attrValueState: false | string; // string indicates the quote used
   commentState: false | "cdata" | "comment";
-  tagState: false | string; // string indicates the current tag
+  tagState: false | "tag" | "xml";
+  tagName: false | string;
   doctypeState: boolean;
 };
 
@@ -34,6 +35,7 @@ function defaultState(): State {
     attrValueState: false,
     commentState: false,
     tagState: false,
+    tagName: false,
     doctypeState: false,
   };
 }
@@ -141,15 +143,16 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         token?.next?.text === "?" &&
         token?.next?.next?.text === "xml"
       ) {
-        state.tagState = "__XML_DECLARATION__";
+        state.tagState = "xml";
         return ["tag-xml", "tag-xml", "tag-xml"];
       }
+      state.tagName = "";
       state.tagState = "tag";
       return "tag";
     }
     // exit XML declarations
     if (
-      state.tagState === "__XML_DECLARATION__" &&
+      state.tagState === "xml" &&
       token.text === "?" &&
       token?.next?.text === ">"
     ) {
@@ -161,14 +164,16 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       state.tagState = false;
       if (
         !xml &&
-        token?.prev?.text === "style" &&
-        token.prev.type === "tag" &&
+        state.tagName === "style" &&
         token?.prev?.prev?.text !== "/" // don't switch to CSS after </style>
       ) {
+        state.tagName = false;
         return ["tag", processEmbeddedCss(token.next)];
       }
+      state.tagName = false;
       return "tag";
     }
+
     // handle tag contents
     if (state.tagState) {
       // Continue after namespace operator in XML mode
@@ -182,7 +187,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       if (token.text === state.attrValueState) {
         state.attrState = false;
         state.attrValueState = false;
-        if (state.tagState === "__XML_DECLARATION__") {
+        if (state.tagState === "xml") {
           return "value-xml";
         } else {
           return "value";
@@ -200,7 +205,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         ) {
           return ["value", processInlineCss(token.next, token.text)];
         }
-        if (state.tagState === "__XML_DECLARATION__") {
+        if (state.tagState === "xml") {
           return "value-xml";
         } else {
           return "value";
@@ -209,7 +214,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
 
       // are we in attribute value state?
       if (state.attrValueState) {
-        if (state.tagState === "__XML_DECLARATION__") {
+        if (state.tagState === "xml") {
           return "value-xml";
         } else {
           return "value";
@@ -218,6 +223,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
 
       // custom element tags contain dashes
       if (token.text === "-" && token?.prev?.type === "tag") {
+        state.tagName += token.text;
         return "tag";
       }
 
@@ -226,10 +232,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         return "tag";
       }
 
-      // Namespace
+      // Tag namespace
       if (xml && token.text === ":") {
+        state.tagName += token.text;
         const namespaceFor = token.prev?.type || "none";
-        if (state.tagState === "__XML_DECLARATION__") {
+        if (state.tagState === "xml") {
           return `operator-xml namespace-${namespaceFor}`;
         } else {
           return `operator namespace-${namespaceFor}`;
@@ -238,7 +245,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
 
       // Attribute value coming up
       if (token.text === "=") {
-        if (state.tagState === "__XML_DECLARATION__") {
+        if (state.tagState === "xml") {
           return "operator-xml";
         } else {
           return "operator";
@@ -252,14 +259,14 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         token.prev.text === "=" &&
         token.prev.type === "operator"
       ) {
-        if (state.tagState === "__XML_DECLARATION__") {
+        if (state.tagState === "xml") {
           return "value-xml";
         } else {
           return "value";
         }
       }
 
-      // Consume actual tag name. The tag state must be modified to, at the end
+      // Consume actual tag name. The tag name must be modified to, at the end
       // of the tag, include the whole tag name so that we can determine when to
       // switch to another language (eg. CSS, JS).
       if (
@@ -268,16 +275,16 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         isAdjacent(token.prev, token)
       ) {
         if (state.tagState === "tag") {
-          state.tagState = token.text;
+          state.tagName = token.text;
         } else {
-          state.tagState += token.text;
+          state.tagName += token.text;
         }
         return "tag";
       } else {
         state.attrState = state.attrState
           ? state.attrState + token.text
           : token.text;
-        if (state.tagState === "__XML_DECLARATION__") {
+        if (state.tagState === "xml") {
           return "attribute-xml";
         } else {
           return "attribute";

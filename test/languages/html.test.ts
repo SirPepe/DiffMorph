@@ -166,6 +166,30 @@ describe("embedded languages", () => {
       "tag",
     ]);
   });
+
+  test("embedded CSS with attributes on the style tag", () => {
+    const tokens = html(
+      `<style class="a" disabled>.foo { color: red }</style>
+    `);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "attribute",
+      "tag",
+      "selector",
+      "punctuation rule-start",
+      "property",
+      "punctuation",
+      "value color",
+      "punctuation rule-end",
+      "tag",
+    ]);
+  });
 });
 
 describe("non-support for XML features", () => {
