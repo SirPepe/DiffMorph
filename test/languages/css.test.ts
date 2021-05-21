@@ -66,9 +66,7 @@ describe("Basic CSS", () => {
   });
 
   test("Universal selector", () => {
-    const tokens = css(
-      `* { color: red; }`
-    );
+    const tokens = css(`* { color: red; }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "selector",
@@ -82,9 +80,7 @@ describe("Basic CSS", () => {
   });
 
   test("Universal selector in a list", () => {
-    const tokens = css(
-      `*::before, *::after, * { color: red; }`
-    );
+    const tokens = css(`*::before, *::after, * { color: red; }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "selector",
@@ -106,9 +102,7 @@ describe("Basic CSS", () => {
   });
 
   test("Universal selector following a comment ", () => {
-    const tokens = css(
-      `/* Yo */* { color: red; }`
-    );
+    const tokens = css(`/* Yo */* { color: red; }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "comment",
@@ -148,9 +142,7 @@ describe("Basic CSS", () => {
   });
 
   test("Color values", () => {
-    const tokens = css(
-      `a { color: red; background: #C00000; outline: #F00; }`
-    );
+    const tokens = css(`a { color: red; background: #C00000; outline: #F00; }`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "selector",

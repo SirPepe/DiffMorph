@@ -233,13 +233,11 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
     if (
       getContext(state) !== "rule" &&
       getContext(state) !== "selector" &&
-      (
-        !token.prev ||
+      (!token.prev ||
         token.prev.type === "comment" ||
         ["{", "}"].includes(token.prev.text) ||
         token.prev.text === ">" || // after <style> embedded in HTML
-        token.prev.text === ";" // after @import's semicolon
-      )
+        token.prev.text === ";") // after @import's semicolon
     ) {
       state.contextStack.push("selector");
       return "selector";
@@ -307,7 +305,7 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
       return ["value color", "value color"];
     }
     if (CSS_COLOR_KEYWORDS.has(token.text)) {
-      return "value color"
+      return "value color";
     }
 
     // no special token
