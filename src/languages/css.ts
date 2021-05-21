@@ -5,9 +5,10 @@ import {
   LanguageFunction,
   LanguageFunctionResult,
   RawToken,
+  TokenReplacementResult,
   TypedToken,
 } from "../types";
-import { CSS_COLOR_KEYWORDS } from "./CONSTANTS";
+import { CSS_COLOR_KEYWORDS } from "./constants";
 
 const STRINGS = ["'", '"', "`"];
 
@@ -56,7 +57,7 @@ const UNITS = [
 ];
 
 const NUMERIC_RE = new RegExp(
-  `^(\\d+(\\.\\d+)?|\\.\\d+)(${UNITS.join("|")})?$`
+  `^(\\d+(?:\\.\\d+)?|\\.\\d+)?(${UNITS.join("|")})?$`
 );
 
 type State = {
@@ -79,16 +80,33 @@ function getContext(state: State) {
   return state.contextStack[state.contextStack.length - 1];
 }
 
-function parseNumeric(token: RawToken): string[] | null {
+function parseNumeric(
+  token: RawToken
+): (string | TokenReplacementResult)[] | null {
   if (token.text === "." && token.next && isAdjacent(token, token.next)) {
     const rest = parseNumeric(token.next);
     if (rest) {
       return ["number", ...rest];
     }
-  } else if (NUMERIC_RE.test(token.text)) {
+  }
+  const { 1: number, 2: unit } = NUMERIC_RE.exec(token.text) ?? [];
+  if (!number && !unit) {
+    return null;
+  }
+  if (number && !unit) {
     return ["number"];
   }
-  return null;
+  if (!number && unit) {
+    return ["unit"];
+  }
+  return [
+    {
+      replacements: [
+        { text: number, type: "number" },
+        { text: unit, type: "unit" },
+      ],
+    },
+  ];
 }
 
 function defaultState(): State {
@@ -218,7 +236,12 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
         }
         const numeric = parseNumeric(token);
         if (numeric) {
-          return numeric.map((type) => `${type} ${getContext(state)}`);
+          return numeric.map((type) => {
+            if (typeof type === "string") {
+              return `${type} ${getContext(state)}`;
+            }
+            return type;
+          });
         }
       }
     }
@@ -315,49 +338,26 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
 
 function postprocessCss(token: TypedToken): boolean {
   // Join @ sign and rule name
-  if (token.type.startsWith("keyword at") && token.type === token?.prev?.type) {
+  if (token.type.startsWith("keyword at")) {
     return true;
   }
   // Join colons, dots and hashes with selector token directly afterwards
   if (
+    token.prev &&
     token.type === "selector" &&
-    token.prev?.type === token.type &&
     isAdjacent(token, token.prev) &&
     [":", ".", "#"].includes(token.prev.text)
   ) {
     return true;
   }
-  // Join property names
-  if (token.type === "property" && token.prev?.type === "property") {
-    return true;
-  }
-  // Join hex colors
+  // Join property names, hex colors, floating point numbers and comments
   if (
-    token.type === "value color" &&
-    token.prev?.type === "value color" &&
-    isAdjacent(token, token.prev)
+    token.type === "property" ||
+    token.type === "value color" ||
+    token.type === "number" ||
+    token.type.startsWith("comment")
   ) {
-    return true;
-  }
-  // Join floating point numbers
-  if (
-    (token.text === "." && token?.prev?.type === "number") ||
-    (token.type === "number" && token?.prev?.text?.endsWith("."))
-  ) {
-    return true;
-  }
-  // The tokenizer separates numbers and % signs, so we repair this here
-  if (token.text === "%" && token?.prev?.type === "number") {
-    return true;
-  }
-  // Join comments that are directly adjacent, such as "/" and "*" or "foo", "-"
-  // and "bar"
-  if (
-    token.type === "comment" &&
-    token?.prev?.type === "comment" &&
-    isAdjacent(token, token.prev)
-  ) {
-    return true;
+    return isAdjacent(token, token.prev);
   }
   return false;
 }
@@ -385,6 +385,9 @@ const theme: LanguageTheme = {
   },
   value: {
     color: themeColors.value,
+  },
+  unit: {
+    color: themeColors.global,
   },
   punctuation: {
     color: themeColors.punctuation,

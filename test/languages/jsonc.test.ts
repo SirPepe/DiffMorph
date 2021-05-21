@@ -62,4 +62,15 @@ describe("JSONC", () => {
       "punctuation object-end-0",
     ]);
   });
+
+  test("Line comment directly after something else", () => {
+    const tokens = jsonc("{}// a");
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "punctuation object-start-0",
+      "punctuation object-end-0",
+      "comment comment-line",
+      "comment comment-line",
+    ]);
+  });
 });

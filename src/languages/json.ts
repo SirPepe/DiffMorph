@@ -10,7 +10,7 @@ type Flags = {
 };
 
 const KEYWORDS = ["null", "true", "false"];
-const NUMBER_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
+const NUMERIC_RE = /^0b[01]|^0o[0-7]+|^0x[\da-f]+|^\d*\.?\d+(?:e[+-]?\d+)?/i;
 
 function defaultState() {
   return {
@@ -23,13 +23,25 @@ function defaultState() {
   };
 }
 
+function parseNumeric(token: RawToken): string[] | null {
+  if (token.text === "." && token.next && isAdjacent(token, token.next)) {
+    const rest = parseNumeric(token.next);
+    if (rest) {
+      return ["number", ...rest];
+    }
+  } else if (NUMERIC_RE.test(token.text)) {
+    return ["number"];
+  }
+  return null;
+}
+
 function defineJSON(
   flags: Flags = { comments: false }
-): (token: RawToken) => string {
+): (token: RawToken) => string | string[] {
   const state = defaultState();
   const { comments } = flags;
 
-  return (token: RawToken): string => {
+  return (token: RawToken): string | string[] => {
     if (comments) {
       // exit line comment state (on new line)
       if (state.lineComment && token.prev && token.y > token.prev.y) {
@@ -123,8 +135,9 @@ function defineJSON(
     }
 
     // is token a number?
-    if (token.text.match(NUMBER_RE)) {
-      return "number";
+    const numeric = parseNumeric(token);
+    if (numeric) {
+      return numeric;
     }
 
     // is token a keyword?

@@ -163,6 +163,30 @@ describe("Basic CSS", () => {
     ]);
   });
 
+  test("Numeric values", () => {
+    const tokens = css(`* { foo: 10px; bar: 10%; baz: 0; }`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "selector",
+      "punctuation rule-start",
+      "property",
+      "punctuation",
+      "number",
+      "unit",
+      "punctuation",
+      "property",
+      "punctuation",
+      "number",
+      "unit",
+      "punctuation",
+      "property",
+      "punctuation",
+      "number",
+      "punctuation",
+      "punctuation rule-end",
+    ]);
+  });
+
   test("Custom properties", () => {
     const tokens = css(`:root { --foo: red } .foo { color: var(--foo) }`);
     const types = tokens.map((token) => token.type);
@@ -223,7 +247,8 @@ describe("At-rules", () => {
       "token",
       "token",
       "punctuation at-media",
-      "number at-media",
+      "number",
+      "unit",
       "punctuation at-media-argument",
       "punctuation at-media-start",
       "punctuation at-media-end",
@@ -242,7 +267,8 @@ describe("At-rules", () => {
       "token",
       "token",
       "punctuation at-media",
-      "number at-media",
+      "number",
+      "unit",
       "punctuation at-media-argument",
       "punctuation at-media-start",
       "punctuation at-media-end",
@@ -263,7 +289,8 @@ describe("At-rules", () => {
       "token",
       "token",
       "punctuation at-media",
-      "number at-media",
+      "number",
+      "unit",
       "punctuation at-media-argument",
       "punctuation at-media-start",
       "keyword at-media",

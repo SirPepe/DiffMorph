@@ -14,11 +14,27 @@ import {
 import {
   Box,
   Decoration,
+  EmbeddedLanguageFunctionResult,
   LanguagePostprocessor,
   TextToken,
-  TypedToken
+  TokenReplacementResult,
+  TypedToken,
 } from "../types";
 import { languages } from "../languages";
+
+function isEmbeddedLanguageResult(x: any): x is EmbeddedLanguageFunctionResult {
+  if (x && "language" in x) {
+    return true;
+  }
+  return false;
+}
+
+function isTokenReplacementResult(x: any): x is TokenReplacementResult {
+  if (x && "replacements" in x) {
+    return true;
+  }
+  return false;
+}
 
 function embeddedLanguageBoxFactory(
   parent: Box<any, any>,
@@ -58,6 +74,7 @@ function applyPostprocessor(token: TypedToken | undefined): void {
     if (
       token.prev &&
       token.prev.y === token.y &&
+      token.prev.type === token.type && // don't join non-equal types
       token.parent.hash === token.prev.parent.hash && // don't join across boxes
       postprocessor(token)
     ) {
@@ -106,7 +123,7 @@ export function applyLanguage(
         current.type = type;
         current.hash = hash(hash(current.type) + hash(current.text));
         current = current.next;
-      } else if (typeof type === "object") {
+      } else if (isEmbeddedLanguageResult(type)) {
         // Move embedded languages items into their own box(es) before
         // processing their actual types
         spliceBoxContent(current, type.types.length, (parent) =>
@@ -120,6 +137,38 @@ export function applyLanguage(
         // current token with the then-current type
         types.splice(i, 1, ...type.types);
         i--;
+      } else if (isTokenReplacementResult(type)) {
+        const newTokens = [];
+        let x = current.x;
+        let prev = current.prev;
+        for (const replacement of type.replacements) {
+          const token: TypedToken = {
+            kind: "TYPED",
+            x,
+            y: current.y,
+            prev,
+            next: undefined,
+            text: replacement.text,
+            type: replacement.type,
+            parent: current.parent,
+            hash: hash(hash(replacement.type) + hash(replacement.text)),
+            width: replacement.text.length,
+            height: 1,
+          };
+          newTokens.push(token);
+          x += replacement.text.length;
+          prev.next = token;
+          prev = token;
+        }
+        // Splice new tokens into the list of tokens
+        newTokens[newTokens.length - 1].next = current.next;
+        root.content.splice(
+          root.content.indexOf(current),
+          1,
+          ...(newTokens as any) //
+        );
+        i += newTokens.length;
+        current = current.next;
       } else {
         throw new Error(
           `Language definition for ${languageDefinition.name} returned ${type} for "${current.text}"`

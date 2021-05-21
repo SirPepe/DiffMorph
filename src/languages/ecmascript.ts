@@ -39,12 +39,14 @@ type ParenType =
 
 type JSXTagType = "tag" | "component" | "fragment" | "none";
 
-type StringType = `"` | `'` | "`"
+type StringType = `"` | `'` | "`";
 
 const LITERALS = new Set(["false", "true", "null", "undefined"]);
 
-// Does not include "-" and "+" to ease handling of negative numbers
-const OPERATORS = new Set(["!", "=", "&", "|", "<", ">", "/", "?", /*":"*/]);
+// Does not include "-" and "+" to ease handling of negative numbers. Does also
+// not include ":" as a part of ternary operators, because they have to be
+// disambiguated from object property assignment manually.
+const OPERATORS = new Set(["!", "=", "&", "|", "<", ">", "/", "?"]);
 
 const PUNCTUATION = new Set([".", ":", ",", ";"]);
 
@@ -175,7 +177,11 @@ function searchAheadForArrow(token: RawToken | undefined): boolean {
       continue;
     }
     if (nested === 0) {
-      if (token.text === ")" && token.next?.text === "=" && token.next?.next?.text === ">") {
+      if (
+        token.text === ")" &&
+        token.next?.text === "=" &&
+        token.next?.next?.text === ">"
+      ) {
         return true;
       }
       if (token.text === ";") {
@@ -186,7 +192,6 @@ function searchAheadForArrow(token: RawToken | undefined): boolean {
         token.y !== token.prev.y &&
         [",", ";", "(", "[", "["].includes(token.prev.text) === false
       ) {
-        console.log(token.text)
         return false;
       }
       token = token.next;
@@ -265,7 +270,7 @@ type State = {
   bracketStack: Stack<BracketType>;
   curlyStack: Stack<CurlyType>;
   parenStack: Stack<ParenType>;
-  objectState:"lhs" | "rhs" | false;
+  objectState: "lhs" | "rhs" | false;
 };
 
 function defaultState(): State {
@@ -654,27 +659,16 @@ function postprocessECMAScript(token: TypedToken): boolean {
     token.text === "." &&
     (token.prev?.text === "." || token.prev?.text === "..")
   ) {
-    return true;
+    return isAdjacent(token, token.prev);
   }
-  // Join regular expressions
-  if (token.type === "regex" && token?.prev?.type === token.type) {
-    return true;
-  }
-  // Join operators
+  // Join regular expressions, operators, numbers and comments
   if (
-    token.type.startsWith("operator") &&
-    token?.prev?.type === token.type &&
-    isAdjacent(token, token.prev)
+    token.type === "regex" ||
+    token.type === "number" ||
+    token.type === "comment" ||
+    token.type.startsWith("operator")
   ) {
-    return true;
-  }
-  // Join floating point numbers
-  if (
-    token.type === "number" &&
-    token?.prev?.type === token.type &&
-    isAdjacent(token, token.prev)
-  ) {
-    return true;
+    return isAdjacent(token, token.prev);
   }
   return false;
 }

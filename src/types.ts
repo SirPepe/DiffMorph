@@ -101,7 +101,6 @@ export type RawToken = Token & {
 // Represents a text token that has been passed through a language function and
 // has thus been assigned a type.
 export type TypedToken = Token & {
-  id: string; // hash plus count for unique identification
   readonly kind: "TYPED";
   text: string;
   type: string;
@@ -158,15 +157,20 @@ export type RenderData<T, D> = {
 export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;
 export type LanguagePostprocessor = (token: TypedToken) => boolean;
 
+export type TokenReplacementResult = {
+  replacements: { text: string; type: string }[];
+};
+
 export type EmbeddedLanguageFunctionResult = {
   language: string;
-  types: (string | EmbeddedLanguageFunctionResult)[];
+  types: (string | EmbeddedLanguageFunctionResult | TokenReplacementResult)[];
 };
 
 export type LanguageFunctionResult =
   | string
   | EmbeddedLanguageFunctionResult
-  | (string | EmbeddedLanguageFunctionResult)[];
+  | TokenReplacementResult
+  | (string | EmbeddedLanguageFunctionResult | TokenReplacementResult)[];
 
 type LanguageFunctionFactory<Flags extends Record<string, any>> = (
   flags?: Flags

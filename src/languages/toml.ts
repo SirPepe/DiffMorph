@@ -211,13 +211,10 @@ function defineTOML(): (token: RawToken) => string | string[] {
 }
 
 function postprocessTOML(token: TypedToken): boolean {
-  if (token.type === "comment" || token.type === "number") {
-    return isAdjacent(token, token.prev);
-  }
   if (
-    token.type === "string" &&
-    ["'", '"'].includes(token.text) &&
-    token.text === token?.prev?.text
+    token.type === "comment" ||
+    token.type === "number" ||
+    token.type === "string"
   ) {
     return isAdjacent(token, token.prev);
   }
