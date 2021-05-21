@@ -144,12 +144,12 @@ export class DiffMorph extends HTMLElement {
       this.toggleAutoplay(this.hasAttribute("autoplay"));
     }
     if (name === "index") {
-      this.index = Number(newValue);
+      this.index = this.computeFrame(newValue);
     }
   }
 
   private computeFrame(input: any): number {
-    let value = Number(input);
+    let value = parseInt(input, 10);
     if (!value || Number.isNaN(value) || !Number.isFinite(value) || value < 0) {
       value = 0;
     }
@@ -197,12 +197,8 @@ export class DiffMorph extends HTMLElement {
     );
     this.#content.parentElement.replaceChild(newContent, this.#content);
     this.#content = newContent;
-    if (this.#currentFrame === -1 || this.#currentFrame > this.#numFrames - 1) {
-      this.index = 0;
-    } else {
-      // triggers reset of the frame attribute in the shadow dom
-      this.index = this.index; // eslint-disable-line
-    }
+    // triggers reset of the frame attribute in the shadow dom
+    this.index = this.computeFrame(this.getAttribute("index"));
     this.dispatchEvent(new Event("initialize"));
   }
 
@@ -232,7 +228,7 @@ export class DiffMorph extends HTMLElement {
 
   get tabSize(): number {
     if (this.hasAttribute("tabsize")) {
-      const value = Number(this.getAttribute("tabsize"));
+      const value = parseInt(this.getAttribute("tabsize") ?? "2", 10);
       if (Number.isFinite(value) && value < 0) {
         return value;
       }
