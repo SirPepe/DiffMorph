@@ -196,6 +196,19 @@ describe("Basic CSS", () => {
   });
 });
 
+describe("Comments", () => {
+  test("basic comment", () => {
+    const tokens = css(`/* Hello foo-bar */`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "comment", // "/*"
+      "comment", // "Hello"
+      "comment", // "foo-bar"
+      "comment", // "*/"
+    ]);
+  });
+});
+
 describe("At-rules", () => {
   test("Simple media query", () => {
     const tokens = css(`@media print {}`);

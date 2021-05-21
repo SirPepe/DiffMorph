@@ -352,15 +352,14 @@ function postprocessCss(token: TypedToken): boolean {
   if (token.text === "%" && token?.prev?.type === "number") {
     return true;
   }
-  // Join start and end of comments
-  if (token.type === "comment" && token?.prev?.type === "comment") {
-    if (token.text === "*" && token?.prev?.text === "/") {
-      return true;
-    }
-    if (token.text === "/" && token?.prev?.text === "*") {
-      return true;
-    }
-    return false;
+  // Join comments that are directly adjacent, such as "/" and "*" or "foo", "-"
+  // and "bar"
+  if (
+    token.type === "comment" &&
+    token?.prev?.type === "comment" &&
+    isAdjacent(token, token.prev)
+  ) {
+    return true;
   }
   return false;
 }
