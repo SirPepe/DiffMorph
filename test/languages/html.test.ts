@@ -122,13 +122,13 @@ describe("Basic HTML", () => {
   test("Traps in comments", () => {
     const tokens = html(`<!-- -- -->`); // actually invalid xml
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["comment", "comment", "comment", "comment"]);
+    expect(types).toEqual(["comment", "comment", "comment"]);
   });
 
   test("More traps in comments", () => {
     const tokens = html(`<!-- -> -->`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual(["comment", "comment", "comment", "comment"]);
+    expect(types).toEqual(["comment", "comment", "comment"]);
   });
 });
 
@@ -169,8 +169,8 @@ describe("embedded languages", () => {
 
   test("embedded CSS with attributes on the style tag", () => {
     const tokens = html(
-      `<style class="a" disabled>.foo { color: red }</style>
-    `);
+      `<style class="a" disabled>.foo { color: red }</style>`
+    );
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "tag",

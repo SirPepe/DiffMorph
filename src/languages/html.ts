@@ -383,24 +383,14 @@ function glueHTML(token: TypedToken): boolean {
   if (token.type === "tag" && token?.prev?.text === "<") {
     return true;
   }
-  if (token.type.startsWith("comment") && isAdjacent(token, token.prev)) {
-    if (token.text === "!" && token?.prev?.text === "<") {
-      return true;
-    }
-    if (token.text === "-" && token?.prev?.text.startsWith("<!")) {
-      return true;
-    }
-    if (
-      token.text === "-" &&
-      token?.prev?.text === "-" &&
-      token?.next?.text === ">"
-    ) {
-      return true;
-    }
-    if (token.text === ">" && token?.prev?.text === "--") {
-      return true;
-    }
-    return false;
+  // Join comments that are directly adjacent, such as "<" and "!" or "foo", "-"
+  // and "bar"
+  if (
+    token.type === "comment" &&
+    token?.prev?.type === "comment" &&
+    isAdjacent(token, token.prev)
+  ) {
+    return true;
   }
   // Fuse non-quote bits of attribute values
   if (

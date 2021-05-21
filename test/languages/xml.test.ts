@@ -70,6 +70,7 @@ describe("XML features", () => {
       "comment cdata",
       "comment cdata",
       "comment cdata",
+      "comment cdata",
       "tag",
     ]);
   });
