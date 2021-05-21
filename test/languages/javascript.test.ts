@@ -209,9 +209,7 @@ describe("Basic statements", () => {
   });
 
   test("nested object destructuring with object initializers", () => {
-    const tokens = javascript(
-      `var { foo: { etc = { bar: null } } } = source;`
-    );
+    const tokens = javascript(`var { foo: { etc = { bar: null } } } = source;`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword",
@@ -373,29 +371,30 @@ describe("Basic statements", () => {
 describe("Bonkers syntax", () => {
   test("reserved words as object members", () => {
     expect(
-      javascript(
-        "x = { new: 1, true: 2, typeof: 3, NaN: 4 }"
-      ).map((token) => token.type)).toEqual([
-        "token",
-        "operator",
-        "punctuation object-start-0",
-        "token",
-        "punctuation",
-        "number",
-        "punctuation",
-        "token",
-        "punctuation",
-        "number",
-        "punctuation",
-        "token",
-        "punctuation",
-        "number",
-        "punctuation",
-        "token",
-        "punctuation",
-        "number",
-        "punctuation object-end-0",
-      ]);
+      javascript("x = { new: 1, true: 2, typeof: 3, NaN: 4 }").map(
+        (token) => token.type
+      )
+    ).toEqual([
+      "token",
+      "operator",
+      "punctuation object-start-0",
+      "token",
+      "punctuation",
+      "number",
+      "punctuation",
+      "token",
+      "punctuation",
+      "number",
+      "punctuation",
+      "token",
+      "punctuation",
+      "number",
+      "punctuation",
+      "token",
+      "punctuation",
+      "number",
+      "punctuation object-end-0",
+    ]);
   });
 
   test("'new' in an array in an object is in fact a keyword!", () => {
@@ -436,17 +435,17 @@ describe("Bonkers syntax", () => {
 
 describe("Strings", () => {
   test("Regular strings", () => {
-    expect(javascript(`"Hello"`).map(({type}) => type)).toEqual([
+    expect(javascript(`"Hello"`).map(({ type }) => type)).toEqual([
       "string",
       "string",
       "string",
     ]);
-    expect(javascript(`'Hello'`).map(({type}) => type)).toEqual([
+    expect(javascript(`'Hello'`).map(({ type }) => type)).toEqual([
       "string",
       "string",
       "string",
     ]);
-    expect(javascript("`Hello`").map(({type}) => type)).toEqual([
+    expect(javascript("`Hello`").map(({ type }) => type)).toEqual([
       "string",
       "string",
       "string",
@@ -454,14 +453,14 @@ describe("Strings", () => {
   });
 
   test("Multi-line strings", () => {
-    expect(javascript(`"Hello\n\\World"`).map(({type}) => type)).toEqual([
+    expect(javascript(`"Hello\n\\World"`).map(({ type }) => type)).toEqual([
       "string",
       "string",
       "string",
       "string",
       "string",
     ]);
-    expect(javascript("`Hello\nWorld`").map(({type}) => type)).toEqual([
+    expect(javascript("`Hello\nWorld`").map(({ type }) => type)).toEqual([
       "string",
       "string",
       "string",
@@ -470,7 +469,7 @@ describe("Strings", () => {
   });
 
   test("Template strings with interpolation", () => {
-    expect(javascript("`Hello${42}`").map(({type}) => type)).toEqual([
+    expect(javascript("`Hello${42}`").map(({ type }) => type)).toEqual([
       "string",
       "string",
       "operator interpolation",
@@ -481,7 +480,7 @@ describe("Strings", () => {
   });
 
   test("Template strings with complex interpolation", () => {
-    expect(javascript("`Hello${foo(42)}`").map(({type}) => type)).toEqual([
+    expect(javascript("`Hello${foo(42)}`").map(({ type }) => type)).toEqual([
       "string",
       "string",
       "operator interpolation",
@@ -495,7 +494,7 @@ describe("Strings", () => {
   });
 
   test("Template strings with complex interpolation, nested", () => {
-    expect(javascript("`Hello${`${42}`}`").map(({type}) => type)).toEqual([
+    expect(javascript("`Hello${`${42}`}`").map(({ type }) => type)).toEqual([
       "string",
       "string",
       "operator interpolation",
@@ -512,187 +511,234 @@ describe("Strings", () => {
 
 describe("Operators", () => {
   test("Simple ternary", () => {
-    expect(javascript(`a ? b : c`).map(({type}) => type))
-      .toEqual(["token", "operator", "token", "operator", "token"]);
+    expect(javascript(`a ? b : c`).map(({ type }) => type)).toEqual([
+      "token",
+      "operator",
+      "token",
+      "operator",
+      "token",
+    ]);
   });
 
   test("Ternary involving arrays", () => {
-    expect(javascript(`a ? [b] : [c]`).map(({type}) => type))
-      .toEqual([
-        "token",
-        "operator",
-        "punctuation array-start-0",
-        "token",
-        "punctuation array-end-0",
-        "operator",
-        "punctuation array-start-0",
-        "token",
-        "punctuation array-end-0",
-      ]);
+    expect(javascript(`a ? [b] : [c]`).map(({ type }) => type)).toEqual([
+      "token",
+      "operator",
+      "punctuation array-start-0",
+      "token",
+      "punctuation array-end-0",
+      "operator",
+      "punctuation array-start-0",
+      "token",
+      "punctuation array-end-0",
+    ]);
   });
 
   test("Ternary involving objects", () => {
-    expect(javascript(`a ? { b: 1 } : { b: 1 }`).map(({type}) => type))
-      .toEqual([
-        "token",
-        "operator",
-        "punctuation object-start-0",
-        "token",
-        "punctuation",
-        "number",
-        "punctuation object-end-0",
-        "operator",
-        "punctuation object-start-0",
-        "token",
-        "punctuation",
-        "number",
-        "punctuation object-end-0",
-      ]);
+    expect(
+      javascript(`a ? { b: 1 } : { b: 1 }`).map(({ type }) => type)
+    ).toEqual([
+      "token",
+      "operator",
+      "punctuation object-start-0",
+      "token",
+      "punctuation",
+      "number",
+      "punctuation object-end-0",
+      "operator",
+      "punctuation object-start-0",
+      "token",
+      "punctuation",
+      "number",
+      "punctuation object-end-0",
+    ]);
   });
 
   test("Ternary inside an object", () => {
-    expect(javascript(`const x = { a: x ? y : z }`).map(({type}) => type))
-      .toEqual([
-        "keyword",
-        "token",
-        "operator",
-        "punctuation object-start-0",
-        "token",
-        "punctuation",
-        "token",
-        "operator",
-        "token",
-        "operator",
-        "token",
-        "punctuation object-end-0",
-      ]);
+    expect(
+      javascript(`const x = { a: x ? y : z }`).map(({ type }) => type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator",
+      "punctuation object-start-0",
+      "token",
+      "punctuation",
+      "token",
+      "operator",
+      "token",
+      "operator",
+      "token",
+      "punctuation object-end-0",
+    ]);
   });
 
   test("Ternary inside a larger object", () => {
-    expect(javascript(`const x = { a: 1, b: x ? y : z }`).map(({type}) => type))
-      .toEqual([
-        "keyword",
-        "token",
-        "operator",
-        "punctuation object-start-0",
-        "token",
-        "punctuation",
-        "number",
-        "punctuation",
-        "token",
-        "punctuation",
-        "token",
-        "operator",
-        "token",
-        "operator",
-        "token",
-        "punctuation object-end-0",
-      ]);
+    expect(
+      javascript(`const x = { a: 1, b: x ? y : z }`).map(({ type }) => type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator",
+      "punctuation object-start-0",
+      "token",
+      "punctuation",
+      "number",
+      "punctuation",
+      "token",
+      "punctuation",
+      "token",
+      "operator",
+      "token",
+      "operator",
+      "token",
+      "punctuation object-end-0",
+    ]);
   });
 
   test("Ternary inside a nested object", () => {
-    expect(javascript(`const x = { a: { b: x ? y : z } }`).map(({type}) => type))
-      .toEqual([
-        "keyword",
-        "token",
-        "operator",
-        "punctuation object-start-0",
-        "token",
-        "punctuation",
-        "punctuation object-start-1",
-        "token",
-        "punctuation",
-        "token",
-        "operator",
-        "token",
-        "operator",
-        "token",
-        "punctuation object-end-1",
-        "punctuation object-end-0",
-      ]);
+    expect(
+      javascript(`const x = { a: { b: x ? y : z } }`).map(({ type }) => type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator",
+      "punctuation object-start-0",
+      "token",
+      "punctuation",
+      "punctuation object-start-1",
+      "token",
+      "punctuation",
+      "token",
+      "operator",
+      "token",
+      "operator",
+      "token",
+      "punctuation object-end-1",
+      "punctuation object-end-0",
+    ]);
   });
 
   test("Ternary inside an array", () => {
-    expect(javascript(`const x = [ x ? y : z ]`).map(({type}) => type))
-      .toEqual([
-        "keyword",
-        "token",
-        "operator",
-        "punctuation array-start-0",
-        "token",
-        "operator",
-        "token",
-        "operator",
-        "token",
-        "punctuation array-end-0",
-      ]);
+    expect(
+      javascript(`const x = [ x ? y : z ]`).map(({ type }) => type)
+    ).toEqual([
+      "keyword",
+      "token",
+      "operator",
+      "punctuation array-start-0",
+      "token",
+      "operator",
+      "token",
+      "operator",
+      "token",
+      "punctuation array-end-0",
+    ]);
   });
 
   test("Other operators", () => {
-    expect(javascript(`1++`).map(({type}) => type))
-      .toEqual(["number", "operator"]);
-    expect(javascript(`1--`).map(({type}) => type))
-      .toEqual(["number", "operator"]);
-    expect(javascript(`++1`).map(({type}) => type))
-      .toEqual(["operator", "number"]);
-    expect(javascript(`--1`).map(({type}) => type))
-      .toEqual(["operator", "number"]);
-    expect(javascript(`a || b`).map(({type}) => type))
-      .toEqual(["token", "operator", "token"]);
-    expect(javascript(`a ?? b`).map(({type}) => type))
-      .toEqual(["token", "operator", "token"]);
-    expect(javascript(`a ?= b`).map(({type}) => type))
-      .toEqual(["token", "operator", "token"]);
-    expect(javascript(`a > b`).map(({type}) => type))
-      .toEqual(["token", "operator", "token"]);
-    expect(javascript(`a >>>= b`).map(({type}) => type))
-    .toEqual(["token", "operator", "token"]);
+    expect(javascript(`1++`).map(({ type }) => type)).toEqual([
+      "number",
+      "operator",
+    ]);
+    expect(javascript(`1--`).map(({ type }) => type)).toEqual([
+      "number",
+      "operator",
+    ]);
+    expect(javascript(`++1`).map(({ type }) => type)).toEqual([
+      "operator",
+      "number",
+    ]);
+    expect(javascript(`--1`).map(({ type }) => type)).toEqual([
+      "operator",
+      "number",
+    ]);
+    expect(javascript(`a || b`).map(({ type }) => type)).toEqual([
+      "token",
+      "operator",
+      "token",
+    ]);
+    expect(javascript(`a ?? b`).map(({ type }) => type)).toEqual([
+      "token",
+      "operator",
+      "token",
+    ]);
+    expect(javascript(`a ?= b`).map(({ type }) => type)).toEqual([
+      "token",
+      "operator",
+      "token",
+    ]);
+    expect(javascript(`a > b`).map(({ type }) => type)).toEqual([
+      "token",
+      "operator",
+      "token",
+    ]);
+    expect(javascript(`a >>>= b`).map(({ type }) => type)).toEqual([
+      "token",
+      "operator",
+      "token",
+    ]);
   });
 });
 
 describe("Numbers", () => {
   test("Special values", () => {
-    expect(javascript(`NaN`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`Infinity`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`-Infinity`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`NaN`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`Infinity`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`-Infinity`).map(({ type }) => type)).toEqual(["number"]);
   });
 
   test("Normal and octal syntax", () => {
-    expect(javascript(`-0`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`42`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`42.0`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`42n`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`4_2`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`4_2n`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`-4_2n`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`0888`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`-0`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`42`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`42.0`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`42n`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`4_2`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`4_2n`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`-4_2n`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`0888`).map(({ type }) => type)).toEqual(["number"]);
   });
 
   test("Exponential syntax", () => {
-    expect(javascript(`0e-5`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`0e+5`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`5e1`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`175e-2`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`1e3`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`1e-3`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`0e-5`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`0e+5`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`5e1`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`175e-2`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`1e3`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`1e-3`).map(({ type }) => type)).toEqual(["number"]);
   });
 
   test("Binary syntax", () => {
     expect(
-      javascript(`0b10000000000000000000000000000000`).map(({type}) => type)
+      javascript(`0b10000000000000000000000000000000`).map(({ type }) => type)
     ).toEqual(["number"]);
     expect(
-      javascript(`0b01111111100000000000000000000000`).map(({type}) => type)
+      javascript(`0b01111111100000000000000000000000`).map(({ type }) => type)
     ).toEqual(["number"]);
     expect(
-      javascript(`0B00000000011111111111111111111111`).map(({type}) => type)
+      javascript(`0B00000000011111111111111111111111`).map(({ type }) => type)
     ).toEqual(["number"]);
   });
 
   test("Hex syntax", () => {
-    expect(javascript(`0xFFF`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`0x123ABC`).map(({type}) => type)).toEqual(["number"]);
-    expect(javascript(`0XA`).map(({type}) => type)).toEqual(["number"]);
+    expect(javascript(`0xFFF`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`0x123ABC`).map(({ type }) => type)).toEqual(["number"]);
+    expect(javascript(`0XA`).map(({ type }) => type)).toEqual(["number"]);
+  });
+});
+
+describe("Comments", () => {
+  test.only("Line comment", () => {
+    const tokens = javascript(`// foo foo-bar bar it's foo`);
+    const types = tokens.map((token) => token.type);
+    expect(types).toEqual([
+      "comment", // "//"
+      "comment", // "foo"
+      "comment", // "foo-bar"
+      "comment", // "bar"
+      "comment", // "it's"
+      "comment", // "foo"
+    ]);
   });
 });
 
@@ -700,12 +746,7 @@ describe("Broken statements", () => {
   test("Incomplete variable declaration", () => {
     const tokens = javascript(`var ... = 42`);
     const types = tokens.map((token) => token.type);
-    expect(types).toEqual([
-      "keyword",
-      "punctuation",
-      "operator",
-      "number",
-    ]);
+    expect(types).toEqual(["keyword", "punctuation", "operator", "number"]);
   });
 
   test("Two incomplete variable declarations", () => {

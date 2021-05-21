@@ -630,6 +630,9 @@ const theme: LanguageTheme = {
   value: {
     color: themeColors.literal,
   },
+  regex: {
+    color: themeColors.literal,
+  },
   number: {
     color: themeColors.value,
   },
@@ -646,6 +649,12 @@ const theme: LanguageTheme = {
   },
   punctuation: {
     color: themeColors.punctuation,
+  },
+  call: {
+    color: themeColors.global,
+  },
+  string: {
+    color: themeColors.string,
   },
   comment: {
     color: themeColors.comment,
@@ -665,7 +674,7 @@ function postprocessECMAScript(token: TypedToken): boolean {
   if (
     token.type === "regex" ||
     token.type === "number" ||
-    token.type === "comment" ||
+    token.type.startsWith("comment") ||
     token.type.startsWith("operator")
   ) {
     return isAdjacent(token, token.prev);
