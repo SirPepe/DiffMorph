@@ -1,6 +1,6 @@
 import { Box, Token } from "../types";
 import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "./diff";
-import { assertIs, minmax } from "./util";
+import { minmax } from "./util";
 
 export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
 
