@@ -732,12 +732,12 @@ describe("Comments", () => {
     const tokens = javascript(`// foo foo-bar bar it's foo`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([
-      "comment", // "//"
-      "comment", // "foo"
-      "comment", // "foo-bar"
-      "comment", // "bar"
-      "comment", // "it's"
-      "comment", // "foo"
+      "comment line", // "//"
+      "comment line", // "foo"
+      "comment line", // "foo-bar"
+      "comment line", // "bar"
+      "comment line", // "it's"
+      "comment line", // "foo"
     ]);
   });
 });
