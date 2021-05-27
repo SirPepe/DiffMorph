@@ -9,8 +9,9 @@ import {
   LanguageDefinition,
   LanguageFunction,
   LanguageFunctionResult,
-  RawToken,
-  TypedToken,
+  LanguageTokens,
+  TextTokens,
+  TypedTokens,
 } from "../types";
 import { LanguageTheme, themeColors } from "../lib/theme";
 
@@ -42,7 +43,7 @@ function defaultState(): State {
 }
 
 function processInlineCss(
-  start: RawToken,
+  start: TextTokens,
   attributeEnd: string
 ): EmbeddedLanguageFunctionResult {
   const language = css.definitionFactory({ inline: true });
@@ -60,7 +61,7 @@ function processInlineCss(
 }
 
 function processEmbeddedCss(
-  start: RawToken | undefined
+  start: TextTokens | undefined
 ): EmbeddedLanguageFunctionResult {
   const language = css.definitionFactory({ inline: false });
   const types = [];
@@ -80,7 +81,7 @@ function processEmbeddedCss(
 }
 
 function processEmbeddedJavaScript(
-  start: RawToken | undefined
+  start: TextTokens | undefined
 ): EmbeddedLanguageFunctionResult {
   const language = js.definitionFactory({ inline: false });
   const types = [];
@@ -103,7 +104,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
   const state = defaultState();
   const { xml } = flags;
 
-  return (token: RawToken): LanguageFunctionResult => {
+  return (token: LanguageTokens): LanguageFunctionResult => {
     // handle comments and doctypes
     if (
       state.commentState === false &&
@@ -130,7 +131,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     if (
       state.commentState === "cdata" &&
       token.text === "]" &&
-      lookaheadText(token, ["]", ">"])
+      lookaheadText<TextTokens>(token, ["]", ">"])
     ) {
       state.commentState = false;
       return ["comment cdata", "comment cdata", "comment cdata"];
@@ -328,7 +329,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
   };
 }
 
-function glueHTML(token: TypedToken): boolean {
+function glueHTML(token: TypedTokens): boolean {
   // Fuse XML tags
   if (token.type === "tag-xml" && token?.prev?.type === "tag-xml") {
     return true;

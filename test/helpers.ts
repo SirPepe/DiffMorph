@@ -4,7 +4,7 @@ import { toLifecycle } from "../src/lib/lifecycle";
 import { optimizeDiffs } from "../src/lib/optimize";
 import { tokenize } from "../src/lib/tokenizer";
 import { flattenTokens, getFirstTextToken } from "../src/lib/util";
-import { Box, Code, Decoration, TypedToken } from "../src/types";
+import { Box, Code, Decoration, TypedTokens } from "../src/types";
 
 type BoxArgs<T, D> = {
   x?: number;
@@ -67,7 +67,7 @@ export function stubBox<T, D>(
 
 export const lang = (language: string) => (
   ...input: Code[]
-): Box<TypedToken, Decoration<TypedToken>> => {
+): Box<TypedTokens, Decoration<TypedTokens>> => {
   return applyLanguage(
     tokenize(
       {
@@ -83,7 +83,7 @@ export const lang = (language: string) => (
   );
 };
 
-export const type = (language: string) => (...input: Code[]): TypedToken[] => {
+export const type = (language: string) => (...input: Code[]): TypedTokens[] => {
   return flattenTokens(getFirstTextToken([lang(language)(...input)]));
 };
 

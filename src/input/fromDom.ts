@@ -9,7 +9,7 @@ import {
   RenderData,
   RenderDecoration,
   RenderText,
-  TextToken,
+  TextTokens,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { createIdGenerator, getLanguage, hash, isNot } from "../lib/util";
@@ -60,8 +60,8 @@ function hashDOMBox(tagName: string, attributes: [string, string][]): string {
 
 function decorationFromData(
   source: HTMLDataElement,
-  parent: Box<TextToken, Decoration<TextToken>>
-): Decoration<TextToken> | null {
+  parent: Box<TextTokens, Decoration<TextTokens>>
+): Decoration<TextTokens> | null {
   if (source.classList.contains("dm-decoration")) {
     const { x, y, width, height, data } = JSON.parse(source.value);
     if ([x, y, width, height, data].some(isNot)) {
@@ -114,7 +114,7 @@ function extractCode(source: Element): CodeContainer {
 export function processCode(
   source: Element,
   tabSize: number
-): Box<TextToken, Decoration<TextToken>> {
+): Box<TextTokens, Decoration<TextTokens>> {
   const result = tokenize(extractCode(source), tabSize);
   const externalDecorations =
     source.querySelectorAll<HTMLDataElement>("data.dm-decoration");

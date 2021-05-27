@@ -728,7 +728,7 @@ describe("Numbers", () => {
 });
 
 describe("Comments", () => {
-  test.only("Line comment", () => {
+  test("Line comment", () => {
     const tokens = javascript(`// foo foo-bar bar it's foo`);
     const types = tokens.map((token) => token.type);
     expect(types).toEqual([

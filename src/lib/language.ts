@@ -16,9 +16,9 @@ import {
   Decoration,
   EmbeddedLanguageFunctionResult,
   LanguagePostprocessor,
-  TextToken,
+  TextTokens,
   TokenReplacementResult,
-  TypedToken,
+  TypedTokens,
 } from "../types";
 import { languages } from "../languages";
 
@@ -60,7 +60,7 @@ function embeddedLanguageBoxFactory(
 // Joins the token in-place so that the glue function can benefit from working
 // with already-glued previous tokens. The input token may be undefined when
 // dealing with an empty string as input.
-function applyPostprocessor(token: TypedToken | undefined): void {
+function applyPostprocessor(token: TypedTokens | undefined): void {
   if (!token) {
     return;
   }
@@ -104,8 +104,8 @@ function applyPostprocessor(token: TypedToken | undefined): void {
 // Performs all of its actions in-place, essentially upgrading the TextTokens to
 // TypedTokens.
 export function applyLanguage(
-  root: Box<TextToken, Decoration<TextToken>>
-): Box<TypedToken, Decoration<TypedToken>> {
+  root: Box<TextTokens, Decoration<TextTokens>>
+): Box<TypedTokens, Decoration<TypedTokens>> {
   const nextEmbeddedId = createIdGenerator();
   const languageDefinition =
     root.language && languages[root.language]
@@ -142,8 +142,7 @@ export function applyLanguage(
         let x = current.x;
         let prev = current.prev;
         for (const replacement of type.replacements) {
-          const token: TypedToken = {
-            kind: "TYPED",
+          const token: TypedTokens = {
             x,
             y: current.y,
             prev,
@@ -177,5 +176,5 @@ export function applyLanguage(
     }
   }
   applyPostprocessor(first);
-  return root as Box<TypedToken, Decoration<TypedToken>>; // ¯\_(ツ)_/¯
+  return root as Box<TypedTokens, Decoration<TypedTokens>>; // ¯\_(ツ)_/¯
 }

@@ -4,9 +4,10 @@ import {
   LanguageDefinition,
   LanguageFunction,
   LanguageFunctionResult,
-  RawToken,
+  LanguageTokens,
+  TextTokens,
   TokenReplacementResult,
-  TypedToken,
+  TypedTokens,
 } from "../types";
 import { CSS_COLOR_KEYWORDS } from "./constants";
 
@@ -81,7 +82,7 @@ function getContext(state: State) {
 }
 
 function parseNumeric(
-  token: RawToken
+  token: TextTokens | LanguageTokens
 ): (string | TokenReplacementResult)[] | null {
   if (token.text === "." && token.next && isAdjacent(token, token.next)) {
     const rest = parseNumeric(token.next);
@@ -130,7 +131,7 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
     state.ruleContext = "left";
   }
 
-  return function css(token: RawToken): LanguageFunctionResult {
+  return function css(token: LanguageTokens): LanguageFunctionResult {
     // exit comment state
     if (
       state.commentState === true &&
@@ -336,7 +337,7 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
   };
 }
 
-function postprocessCss(token: TypedToken): boolean {
+function postprocessCss(token: TypedTokens): boolean {
   // Join @ sign and rule name
   if (token.type.startsWith("keyword at")) {
     return true;

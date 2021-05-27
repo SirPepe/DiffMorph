@@ -10,7 +10,7 @@ import {
   RenderData,
   RenderDecoration,
   RenderText,
-  TextToken,
+  TextTokens,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
@@ -60,9 +60,9 @@ function extractCode(source: InputContainer): CodeContainer {
 
 function processExternalDecorations(
   input: InputDecoration[],
-  parent: Box<TextToken, any>
-): Decoration<TextToken>[] {
-  return input.map(({ x, y, width, height, data }): Decoration<TextToken> => {
+  parent: Box<TextTokens, any>
+): Decoration<TextTokens>[] {
+  return input.map(({ x, y, width, height, data }): Decoration<TextTokens> => {
     return {
       kind: "DECO",
       parent,
@@ -81,7 +81,7 @@ export function processCode(
   source: InputContainer,
   externalDecorations: InputDecoration[],
   tabSize: number
-): Box<TextToken, Decoration<TextToken>> {
+): Box<TextTokens, Decoration<TextTokens>> {
   const result = tokenize(extractCode(source), tabSize);
   result.decorations.push(
     ...processExternalDecorations(externalDecorations, result)

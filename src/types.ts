@@ -1,19 +1,19 @@
-// The general input to DiffMorph is code. Code can be either stings or
-// container objects, which in turn can contain strings and container objects.
-// Container objects can be constructed from DOM nodes, JSON data or really
-// anything else. They carry a bit of metadata, most important of all a flag
-// on whether the container is a regular container or a highlight. Regular
-// containers constrain the diffing algorithm to their content, which highlights
-// do not; highlights are intended to be rendered in the final output to create
-// squiggly lines or other text decorations.
+// Input to DiffMorph is code. Code can be either stings or container objects,
+// which in turn can contain strings and other container objects. Container
+// objects can be constructed from DOM nodes, JSON data or really anything else.
+// They carry a bit of metadata, most important of all a flag on whether the
+// container is a regular container or a decoration wrapper. Regular containers
+// constrain the diffing algorithm to the container's content, which decorations
+// do not; decorations are intended to be rendered in the final output to create
+// squiggly lines, highlights or other text decorations.
 
 import { LanguageTheme } from "./lib/theme";
 
-// Represents a bit of code
+// Represents a bit of code as defined above
 export type Code = string | CodeContainer;
 
 // Represents some kind of container object, either a regular container or a
-// highlight container. Two container with the same hash are considered
+// decoration wrapper container. Two container with the same hash are considered
 // exchangeable, containers with the same ID are considered identical. Because
 // container content can change between frames, the hash (and by proxy the ID as
 // well) is build from the container's data and language. Identifying a
@@ -31,20 +31,29 @@ export type CodeContainer = {
 // Decorations. Tokens represent bits of text, Decorations represent annotations
 // such as highlights and squiggly lines, and Boxes contain Tokens, Decorations
 // and other Boxes. A whole frame of code is thus represented as a nested
-// structure with a Box at the root. In addition, Tokens also form a linked list
-// among themselves. The linked list allows certain functions (primarily
-// language definitions) to view a frame as just a linked list of text chunks,
-// while the recursive structure makes operations on the entire frame (like
-// diffing) possible. Note that every Box can contain code for a different
-// language, to enable embedding eg. CSS in HTML. In this case the linked list
-// inside the box in question is not part of the linked list that the tokens in
-// the parent frame are part of.
+// structure with a Box at the root. In addition, Tokens *can* also form a
+// linked list among themselves. The linked list allows certain functions
+// (primarily language definitions) to view a frame as just a linked list of
+// text chunks, while the recursive structure makes operations on the entire
+// frame (like diffing) possible. Note that every Box can contain code for a
+// different language than its parent box, to enable embedding eg. CSS in HTML.
+// In this case the linked list inside the box in question is not part of the
+// linked list that the tokens in the parent frame are part of.
 
-// Fields common to Boxes, Decorations and all subtypes of tokens. All of those
-// the above types also have a readonly "kind" discriminant and a string id.
-// The height is irrelevant for text tokens, but for simplicity's sake it's
-// always there and always 1. All coordinates are absolute, even those for
-// tokens nested in boxes.
+// Linked list functionality to wrap all possible types of tokens. The
+// linked-list-ness is not part of the token's types because only certain parts
+// of DiffMorph depend on this functionality and making it an addon type makes
+// writing some code (and some tests) way simpler.
+type LinkedListOf<T, Prev = T, Next = T> = T & {
+  prev: LinkedListOf<Prev> | undefined;
+  next: LinkedListOf<Next> | undefined;
+  parent: Box<T | Prev | Next, Decoration<LinkedListOf<T | Prev | Next>>>;
+};
+
+// This type defined fields common to Boxes, Decorations and all subtypes of
+// Tokens. The height is strictly speaking irrelevant for text tokens, but for
+// simplicity's sake it's always there and always 1. All coordinates are
+// absolute, even those for tokens nested in boxes.
 export type Token = {
   x: number;
   y: number;
@@ -78,37 +87,28 @@ export type Decoration<Content> = Token & {
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
 // information, and thus missing both a hash and an ID.
 export type TextToken = Omit<Token, "hash"> & {
-  readonly kind: "TEXT";
   text: string;
-  next: TextToken | undefined;
-  prev: TextToken | undefined;
-  parent: Box<TextToken, Decoration<TextToken>>;
 };
 
-// Represents a text token that has been linked up to its siblings and parent
-// box. Gets passed into a language function in this format. Note that the type
-// of "prev" type is an already-typed token (as it has been passed through the
-// language function before the current token)
-export type RawToken = Token & {
-  id: string; // hash plus count for unique identification
-  readonly kind: "RAW";
-  text: string;
-  prev: TypedToken | undefined;
-  next: RawToken | undefined;
-  parent: Box<RawToken, Decoration<RawToken>>;
-};
+// The tokenizer links up all text tokens into a linked list
+export type TextTokens = LinkedListOf<TextToken>;
+
+// Represents a text token list that is being processed by a language function.
+// Note that the type of "prev" type is an already-typed token (as it has been
+// passed through the language function before the current token)
+// The tokenizer links up all text tokens into a linked list
+export type LanguageTokens = LinkedListOf<TextToken, TypedToken, TextToken>;
 
 // Represents a text token that has been passed through a language function and
-// has thus been assigned a type.
+// has thus been assigned a type and a hash.
 export type TypedToken = Token & {
-  readonly kind: "TYPED";
   text: string;
   type: string;
   hash: string;
-  prev: TypedToken | undefined;
-  next: TypedToken | undefined;
-  parent: Box<TypedToken, Decoration<TypedToken>>;
 };
+
+// Important for language postprocessors
+export type TypedTokens = LinkedListOf<TypedToken>;
 
 // Describes how to render the token with the given id.
 type BasePosition = {
@@ -154,8 +154,8 @@ export type RenderData<T, D> = {
   maxHeight: number;
 };
 
-export type LanguageFunction = (token: RawToken) => LanguageFunctionResult;
-export type LanguagePostprocessor = (token: TypedToken) => boolean;
+export type LanguageFunction = (token: LanguageTokens) => LanguageFunctionResult;
+export type LanguagePostprocessor = (token: TypedTokens) => boolean;
 
 export type TokenReplacementResult = {
   replacements: { text: string; type: string }[];

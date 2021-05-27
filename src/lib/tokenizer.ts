@@ -4,7 +4,7 @@
 // tokens (the _actual_ content) in a doubly-linked list. Note that all tokens
 // use absolute positions and can be nested inside boxes of arbitrary depth.
 
-import { Box, Code, CodeContainer, Decoration, TextToken } from "../types";
+import { Box, Code, CodeContainer, Decoration, TextTokens } from "../types";
 import { getFirstTextToken, getLastTextToken } from "./util";
 
 const ONLY_WHITESPACE_RE = /^\s+$/;
@@ -71,8 +71,8 @@ type TokenizerResult<T, D> = {
 
 /* eslint-disable */
 type FullTokenizerResult = TokenizerResult<
-  TextToken | Box<TextToken, Decoration<TextToken>>,
-  Decoration<TextToken>
+  TextTokens | Box<TextTokens, Decoration<TextTokens>>,
+  Decoration<TextTokens>
 >;
 /* eslint-enable */
 
@@ -80,14 +80,14 @@ function tokenizeText(
   text: string,
   x: number,
   y: number,
-  prev: TextToken | undefined,
-  parent: Box<TextToken, Decoration<TextToken>>,
+  prev: TextTokens | undefined,
+  parent: Box<TextTokens, Decoration<TextTokens>>,
   tabSize: number
-): TokenizerResult<TextToken, never> {
+): TokenizerResult<TextTokens, never> {
   let maxX = x;
   let maxY = y;
   const parts = splitText(text);
-  const content: TextToken[] = [];
+  const content: TextTokens[] = [];
   for (const part of parts) {
     if (ONLY_WHITESPACE_RE.test(part)) {
       const { breaks, length } = measureWhitespace(part, tabSize);
@@ -98,8 +98,7 @@ function tokenizeText(
         x += length;
       }
     } else {
-      const token: TextToken = {
-        kind: "TEXT",
+      const token: TextTokens = {
         x,
         y,
         prev,
@@ -137,11 +136,11 @@ function tokenizeContainer(
   container: CodeContainer,
   x: number,
   y: number,
-  prev: TextToken | undefined,
-  parent: Box<TextToken, Decoration<TextToken>> | undefined,
+  prev: TextTokens | undefined,
+  parent: Box<TextTokens, Decoration<TextTokens>> | undefined,
   tabSize: number
-): TokenizerResult<Box<TextToken, Decoration<TextToken>>, never> {
-  const box: Box<TextToken, Decoration<TextToken>> = {
+): TokenizerResult<Box<TextTokens, Decoration<TextTokens>>, never> {
+  const box: Box<TextTokens, Decoration<TextTokens>> = {
     kind: "BOX",
     x,
     y,
@@ -174,15 +173,15 @@ function tokenizeDecoration(
   container: CodeContainer,
   x: number,
   y: number,
-  prev: TextToken | undefined,
-  parent: Box<TextToken, Decoration<TextToken>>,
+  prev: TextTokens | undefined,
+  parent: Box<TextTokens, Decoration<TextTokens>>,
   tabSize: number
 ): FullTokenizerResult {
   const result = tokenizeCodes(container.content, x, y, prev, parent, tabSize);
   const width = result.maxX - x;
   const height = result.maxY - y + 1;
   const content = result.content;
-  const decoration: Decoration<TextToken> = {
+  const decoration: Decoration<TextTokens> = {
     x,
     y,
     width,
@@ -206,8 +205,8 @@ function tokenizeCodes(
   codes: Code[],
   x: number,
   y: number,
-  prev: TextToken | undefined,
-  parent: Box<TextToken, Decoration<TextToken>>,
+  prev: TextTokens | undefined,
+  parent: Box<TextTokens, Decoration<TextTokens>>,
   tabSize: number
 ): FullTokenizerResult {
   let maxX = x;
@@ -269,7 +268,7 @@ function tokenizeCodes(
 export function tokenize(
   root: CodeContainer,
   tabSize: number
-): Box<TextToken, Decoration<TextToken>> {
+): Box<TextTokens, Decoration<TextTokens>> {
   return tokenizeContainer(root, 0, 0, undefined, undefined, tabSize)
     .content[0];
 }

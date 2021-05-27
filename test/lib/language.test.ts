@@ -91,7 +91,6 @@ describe("In-place modifications", () => {
       parent: undefined,
       content: [
         {
-          kind: "TEXT",
           x: 0,
           y: 0,
           width: 13,
@@ -147,7 +146,6 @@ describe("In-place modifications", () => {
       parent: undefined,
       content: [
         {
-          kind: "TEXT",
           x: 0,
           y: 0,
           width: 6,
@@ -172,7 +170,6 @@ describe("In-place modifications", () => {
           parent: output,
           content: [
             {
-              kind: "TEXT",
               x: 7,
               y: 0,
               width: 2,
@@ -188,7 +185,6 @@ describe("In-place modifications", () => {
           decorations: [],
         },
         {
-          kind: "TEXT",
           x: 10,
           y: 0,
           width: 6,
@@ -243,7 +239,6 @@ describe("In-place modifications", () => {
       parent: undefined,
       content: [
         {
-          kind: "TEXT",
           x: 0,
           y: 0,
           width: 16,

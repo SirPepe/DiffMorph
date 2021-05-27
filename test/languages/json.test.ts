@@ -6,7 +6,6 @@ describe("Basic JSON", () => {
     const tokens = json(`{}`);
     expect(tokens).toEqual([
       {
-        kind: "TEXT",
         x: 0,
         y: 0,
         width: 1,
@@ -19,7 +18,6 @@ describe("Basic JSON", () => {
         prev: undefined,
       },
       {
-        kind: "TEXT",
         x: 1,
         y: 0,
         width: 1,
@@ -38,7 +36,6 @@ describe("Basic JSON", () => {
     const tokens = json(`"string"`);
     expect(tokens).toEqual([
       {
-        kind: "TEXT",
         x: 0,
         y: 0,
         width: 8,

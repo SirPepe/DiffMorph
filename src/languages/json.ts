@@ -3,7 +3,14 @@
 
 import { isAdjacent, isNewLine } from "../lib/util";
 import { LanguageTheme, themeColors } from "../lib/theme";
-import { LanguageDefinition, RawToken, TypedToken } from "../types";
+import {
+  LanguageDefinition,
+  LanguageFunction,
+  LanguageFunctionResult,
+  LanguageTokens,
+  TextTokens,
+  TypedTokens
+} from "../types";
 
 type Flags = {
   comments: boolean;
@@ -23,7 +30,7 @@ function defaultState() {
   };
 }
 
-function parseNumeric(token: RawToken): string[] | null {
+function parseNumeric(token: TextTokens): string[] | null {
   if (token.text === "." && token.next && isAdjacent(token, token.next)) {
     const rest = parseNumeric(token.next);
     if (rest) {
@@ -35,13 +42,11 @@ function parseNumeric(token: RawToken): string[] | null {
   return null;
 }
 
-function defineJSON(
-  flags: Flags = { comments: false }
-): (token: RawToken) => string | string[] {
+function defineJSON(flags: Flags = { comments: false }): LanguageFunction {
   const state = defaultState();
   const { comments } = flags;
 
-  return (token: RawToken): string | string[] => {
+  return (token: LanguageTokens): LanguageFunctionResult => {
     if (comments) {
       // exit line comment state (on new line)
       if (state.lineComment && token.prev && token.y > token.prev.y) {
@@ -168,7 +173,7 @@ function defineJSON(
   };
 }
 
-function postprocessJSON(token: TypedToken): boolean {
+function postprocessJSON(token: TypedTokens): boolean {
   if (token.type.startsWith("comment")) {
     return isAdjacent(token, token.prev);
   }
