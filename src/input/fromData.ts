@@ -17,15 +17,14 @@ import { applyLanguage } from "../lib/language";
 import { toRenderData } from "../lib/render";
 import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
-import { createIdGenerator } from "../lib/util";
 import { toLifecycle } from "../lib/lifecycle";
 import { InputOptions, withDefaults } from "./options";
+import { hashBoxes } from "../lib/hash";
 
 type Input = string | InputContainer;
 
 type InputContainer = {
   content: Input[];
-  id: string;
   isDecoration: boolean;
   language: string | undefined;
 };
@@ -39,7 +38,6 @@ type InputDecoration = {
 };
 
 function extractCode(source: InputContainer): CodeContainer {
-  const idGenerator = createIdGenerator();
   const content: Code[] = [];
   for (const input of source.content) {
     if (typeof input === "string") {
@@ -52,8 +50,6 @@ function extractCode(source: InputContainer): CodeContainer {
     content,
     isDecoration: source.isDecoration,
     language: source.language,
-    hash: source.id,
-    id: idGenerator(null, source.id),
     data: {},
   };
 }
@@ -64,12 +60,10 @@ function processExternalDecorations(
 ): Decoration<TextTokens>[] {
   return input.map(({ x, y, width, height, data }): Decoration<TextTokens> => {
     return {
-      kind: "DECO",
       parent,
       data,
       x,
       y,
-      hash: data.hash || "",
       width,
       height,
     };
@@ -107,6 +101,6 @@ export function fromData(
     }
     return applyLanguage(tokenized);
   });
-  const diffs = optimizeDiffs(diff(typed));
+  const diffs = optimizeDiffs(diff(hashBoxes(typed)));
   return toRenderData(toLifecycle(diffs, true));
 }

@@ -5,16 +5,12 @@ describe("processing code from a data source", () => {
   test("splitting code", () => {
     const rootContainer = {
       content: ["const a = 42;"],
-      id: "root",
       isDecoration: false,
       language: "base",
     };
     const root = processCode(rootContainer, [], 2);
     expect(root).toEqual({
-      kind: "BOX",
       data: {},
-      id: "root0",
-      hash: "root",
       language: "base",
       x: 0,
       y: 0,
@@ -39,16 +35,12 @@ describe("processing code from a data source", () => {
   test("multiple chunks of code", () => {
     const rootContainer = {
       content: ["const a", " =", " 42;"],
-      id: "root",
       isDecoration: false,
       language: "base",
     };
     const root = processCode(rootContainer, [], 2);
     expect(root).toEqual({
-      kind: "BOX",
       data: {},
-      id: "root0",
-      hash: "root",
       language: "base",
       x: 0,
       y: 0,
@@ -76,7 +68,6 @@ describe("processing code from a data source", () => {
       content: [`const a
   =
     42;`],
-      id: "root",
       isDecoration: false,
       language: undefined,
     };
@@ -105,7 +96,6 @@ describe("processing code from a data source", () => {
     const rootContainer = {
       content: [`const a
 \t= 42;`],
-      id: "root",
       isDecoration: false,
       language: undefined,
     };
@@ -134,7 +124,6 @@ describe("processing code from a data source", () => {
     const rootContainer = {
       content: [`const a
 \t= 42;`],
-      id: "root",
       isDecoration: false,
       language: undefined,
     };
@@ -164,21 +153,16 @@ describe("processing code from a data source", () => {
         "const ",
         {
           content: ["a = 42;"],
-          id: "box",
           isDecoration: false,
           language: undefined,
         },
       ],
-      id: "root",
       isDecoration: false,
       language: "javascript",
     };
     const root = processCode(rootContainer, [], 2);
     expect(root).toEqual({
-      kind: "BOX",
       data: {},
-      id: "root0",
-      hash: "root",
       language: "javascript",
       x: 0,
       y: 0,
@@ -202,10 +186,7 @@ describe("processing code from a data source", () => {
       parent: root,
     });
     expect(box).toEqual({
-      kind: "BOX",
       data: {},
-      id: "box0",
-      hash: "box",
       language: "javascript",
       x: 6,
       y: 0,
@@ -231,22 +212,17 @@ describe("processing code from a data source", () => {
         "const ",
         {
           content: ["a"],
-          id: "box",
           isDecoration: false,
           language: undefined,
         },
         " = 42;",
       ],
-      id: "root",
       isDecoration: false,
       language: "javascript",
     };
     const root = processCode(rootContainer, [], 2);
     expect(root).toEqual({
-      kind: "BOX",
       data: {},
-      id: "root0",
-      hash: "root",
       language: "javascript",
       x: 0,
       y: 0,
@@ -259,10 +235,7 @@ describe("processing code from a data source", () => {
     const content = root.content;
     const box = content[1] as Box<TextToken, never>;
     expect(box).toEqual({
-      kind: "BOX",
       data: {},
-      id: "box0",
-      hash: "box",
       language: "javascript",
       x: 6,
       y: 0,
@@ -297,20 +270,17 @@ describe("processing code from a data source", () => {
   test("boxes with content in one string equal boxes made up of chunks", () => {
     const aBox = {
       content: ["a = 42;"],
-      id: "box",
       isDecoration: false,
       language: undefined,
     };
     const bBox = {
       content: ["a", " = ", "42;"],
-      id: "box",
       isDecoration: false,
       language: undefined,
     };
     const aRoot = processCode(
       {
         content: ["const ", aBox],
-        id: "root",
         isDecoration: false,
         language: "javascript",
       },
@@ -320,7 +290,6 @@ describe("processing code from a data source", () => {
     const bRoot = processCode(
       {
         content: ["const ", bBox],
-        id: "root",
         isDecoration: false,
         language: "javascript",
       },
@@ -339,12 +308,10 @@ describe("processing code from a data source", () => {
             `a =
   42;`,
           ],
-          id: "box",
           isDecoration: false,
           language: undefined,
         },
       ],
-      id: "root",
       isDecoration: false,
       language: "javascript",
     };
@@ -396,13 +363,11 @@ describe("processing code from a data source", () => {
   42
 ]`,
           ],
-          id: "box",
           isDecoration: false,
           language: undefined,
         },
         ";",
       ],
-      id: "root",
       isDecoration: false,
       language: "javascript",
     };
@@ -465,17 +430,14 @@ describe("processing code from a data source", () => {
             "a = () => ",
             {
               content: [`{ return 42; }`],
-              id: "nested",
               isDecoration: false,
               language: undefined,
             },
           ],
-          id: "box",
           isDecoration: false,
           language: undefined,
         },
       ],
-      id: "root",
       isDecoration: false,
       language: "javascript",
     };
@@ -547,17 +509,14 @@ describe("processing code from a data source", () => {
           content: [
             {
               content: ["let x = 42"],
-              id: "nested",
               isDecoration: false,
               language: undefined,
             },
           ],
-          id: "box",
           isDecoration: false,
           language: undefined,
         },
       ],
-      id: "root",
       isDecoration: false,
       language: "javascript",
     };
@@ -572,26 +531,20 @@ describe("processing code from a data source", () => {
     const contentBox = (root as any).content[0].content[0];
     expect(root.content).toEqual([
       {
-        kind: "BOX",
         x: 0,
         y: 0,
         width: 10,
         height: 1,
         language: "javascript",
-        id: "box0",
-        hash: "box",
         data: {},
         parent: root,
         content: [
           {
-            kind: "BOX",
             x: 0,
             y: 0,
             width: 10,
             height: 1,
             language: "javascript",
-            id: "nested0",
-            hash: "nested",
             data: {},
             parent: root.content[0],
             content: [
@@ -616,15 +569,11 @@ describe("processing code from a data source", () => {
         "const a = () => ",
         {
           content: ["42"],
-          id: "red",
-          hash: "red",
           data: {},
           isDecoration: true,
           language: undefined,
         },
       ],
-      id: "root",
-      hash: "root",
       data: {},
       isDecoration: false,
       language: undefined,
@@ -645,12 +594,10 @@ describe("processing code from a data source", () => {
     ]);
     expect(decorations).toEqual([
       {
-        kind: "DECO",
         x: 16,
         y: 0,
         width: 2,
         height: 1,
-        hash: "red",
         data: {},
         parent: root,
       },
@@ -660,15 +607,13 @@ describe("processing code from a data source", () => {
   test("external decorations", () => {
     const rootContainer: CodeContainer = {
       content: ["const a = () => 42"],
-      id: "root",
-      hash: "root",
       data: {},
       isDecoration: false,
       language: undefined,
     };
     const root = processCode(
       rootContainer,
-      [{ x: 16, y: 0, width: 2, height: 1, data: { hash: "red" } }],
+      [{ x: 16, y: 0, width: 2, height: 1, data: { test: "42" } }],
       2
     );
     const { content, decorations } = root;
@@ -686,14 +631,12 @@ describe("processing code from a data source", () => {
     ]);
     expect(decorations).toEqual([
       {
-        kind: "DECO",
         x: 16,
         y: 0,
         width: 2,
         height: 1,
-        hash: "red",
         data: {
-          hash: "red",
+          test: "42",
         },
         parent: root,
       },
@@ -706,22 +649,18 @@ describe("processing code from a data source", () => {
         "const a = () => ",
         {
           content: ["42"],
-          id: "red",
-          hash: "red",
           data: {},
           isDecoration: true,
           language: undefined,
         },
       ],
-      id: "root",
-      hash: "root",
       data: {},
       isDecoration: false,
       language: undefined,
     };
     const root = processCode(
       rootContainer,
-      [{ x: 0, y: 0, width: 5, height: 1, data: { hash: "green" } }],
+      [{ x: 0, y: 0, width: 5, height: 1, data: { test: "23" } }],
       2
     );
     const { content, decorations } = root;
@@ -739,24 +678,20 @@ describe("processing code from a data source", () => {
     ]);
     expect(decorations).toEqual([
       {
-        kind: "DECO",
         x: 16,
         y: 0,
         width: 2,
         height: 1,
-        hash: "red",
         data: {},
         parent: root,
       },
       {
-        kind: "DECO",
         x: 0,
         y: 0,
         width: 5,
         height: 1,
-        hash: "green",
         data: {
-          hash: "green",
+          test: "23",
         },
         parent: root,
       },

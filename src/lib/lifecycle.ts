@@ -1,16 +1,15 @@
-import { Box, Token } from "../types";
+import { DiffBox, DiffDecoration, DiffToken, Token } from "../types";
 import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "./diff";
 import { minmax } from "./util";
 
 export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
 
-export type BoxLifecycle<T, D> = {
-  readonly kind: "BOX";
-  base: Box<T, D>;
-  self: Map<number, ExtendedDiffOp<Box<T, D>> | BOX<Box<T, D>>>;
-  text: Lifecycle<T>[];
-  decorations: Lifecycle<D>[];
-  boxes: BoxLifecycle<T, D>[];
+export type BoxLifecycle = {
+  base: DiffBox;
+  self: Map<number, ExtendedDiffOp<DiffBox> | BOX<DiffBox>>;
+  text: Lifecycle<DiffToken>[];
+  decorations: Lifecycle<DiffDecoration>[];
+  boxes: BoxLifecycle[];
 };
 
 function toPosition({ x, y, width, height }: Token): string {
@@ -21,19 +20,19 @@ function toTokenLifecycles<T extends Token>(
   frames: DiffOp<T>[][],
   startIdx: number
 ): [Lifecycle<T>[], never];
-function toTokenLifecycles<T extends Token, D extends Token>(
-  frames: (DiffTree<T, D> | DiffOp<T>)[][],
+function toTokenLifecycles<T extends Token>(
+  frames: (DiffTree | DiffOp<T>)[][],
   startIdx: number
-): [Lifecycle<T>[], BoxLifecycle<T, D>[]];
-function toTokenLifecycles<T extends Token, D extends Token>(
-  frames: (DiffTree<T, D> | DiffOp<T>)[][],
+): [Lifecycle<T>[], BoxLifecycle[]];
+function toTokenLifecycles<T extends Token>(
+  frames: (DiffTree | DiffOp<T>)[][],
   startIdx: number
-): [Lifecycle<T>[], BoxLifecycle<T, D>[]] {
+): [Lifecycle<T>[], BoxLifecycle[]] {
   // Last token position -> lifecycle
   const lifecycles = new Map<string, Lifecycle<T>>();
   const finished: Lifecycle<T>[] = [];
   // id -> [first index, trees[]]
-  const trees = new Map<string, [number, DiffTree<T, D>[]]>();
+  const trees = new Map<number, [number, DiffTree[]]>();
   for (let i = 0; i < frames.length; i++) {
     const frameIdx = i + startIdx;
     // First pass: free positions and collect trees
@@ -102,10 +101,7 @@ function toTokenLifecycles<T extends Token, D extends Token>(
   return [tokenLifecycles, treeLifecycles];
 }
 
-function toBoxLifecycle<T extends Token, D extends Token>(
-  diffs: DiffTree<T, D>[],
-  frameOffset: number
-): BoxLifecycle<T, D> {
+function toBoxLifecycle(diffs: DiffTree[], frameOffset: number): BoxLifecycle {
   const self = new Map(diffs.map((diff, i) => [i + frameOffset, diff.root]));
   const [text, boxes] = toTokenLifecycles(
     diffs.map(({ content }) => content),
@@ -116,7 +112,6 @@ function toBoxLifecycle<T extends Token, D extends Token>(
     frameOffset
   );
   return {
-    kind: "BOX",
     base: diffs[0].root.item,
     self,
     text,
@@ -250,9 +245,7 @@ function expandLifecycle(
   }
 }
 
-function expandBoxLifecycles<T extends Token, D extends Token>(
-  lifecycle: BoxLifecycle<T, D>
-): void {
+function expandBoxLifecycles(lifecycle: BoxLifecycle): void {
   const [minFrame, maxFrame] = minmax(lifecycle.self.keys());
   for (const box of lifecycle.boxes) {
     expandLifecycle(box.self, minFrame, maxFrame);
@@ -266,10 +259,10 @@ function expandBoxLifecycles<T extends Token, D extends Token>(
   }
 }
 
-export function toLifecycle<T extends Token, D extends Token>(
-  diffs: DiffTree<T, D>[],
+export function toLifecycle(
+  diffs: DiffTree[],
   expand: boolean
-): BoxLifecycle<T, D> | null {
+): BoxLifecycle | null {
   if (diffs.length === 0) {
     return null;
   }

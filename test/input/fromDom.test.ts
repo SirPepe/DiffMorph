@@ -20,7 +20,6 @@ describe("processing code from a DOM source", () => {
     container.innerHTML = "const a = () => 42";
     const root = processCode(container, 2);
     expect(root).toEqual({
-      kind: "BOX",
       x: 0,
       y: 0,
       width: 18,
@@ -29,8 +28,6 @@ describe("processing code from a DOM source", () => {
         attributes: [],
         tagName: "pre",
       },
-      hash: expect.any(String),
-      id: root.hash + "0",
       content: expect.any(Array),
       decorations: [],
       parent: undefined,
@@ -171,7 +168,6 @@ describe("processing code from a DOM source", () => {
       parent: root,
     });
     expect(box).toEqual({
-      kind: "BOX",
       x: 6,
       y: 0,
       width: 1,
@@ -181,8 +177,6 @@ describe("processing code from a DOM source", () => {
         tagName: "span",
         attributes: [["foo", "bar"]],
       },
-      hash: expect.any(String),
-      id: box.hash + "0",
       content: [
         {
           x: 6,
@@ -229,7 +223,6 @@ describe("processing code from a DOM source", () => {
       /* eslint-enable */
     ]);
     expect(box).toEqual({
-      kind: "BOX",
       x: 16,
       y: 0,
       width: 1,
@@ -239,8 +232,6 @@ describe("processing code from a DOM source", () => {
         tagName: "span",
         attributes: [["class", "a"]],
       },
-      hash: expect.any(String),
-      id: box.hash + "0",
       content: [
         /* eslint-disable */
         { x: 16, y: 0, text: "{", height: 1, width: 1, next: box.content[1], prev: textTokens[6], parent: box },
@@ -273,7 +264,6 @@ describe("processing code from a DOM source", () => {
       parent: root,
     });
     expect(outerBox).toEqual({
-      kind: "BOX",
       x: 6,
       y: 0,
       width: 12,
@@ -283,8 +273,6 @@ describe("processing code from a DOM source", () => {
         tagName: "span",
         attributes: [["foo", "bar"]],
       },
-      hash: expect.any(String),
-      id: expect.any(String),
       content: [
         /* eslint-disable */
         { x: 6, y: 0, text: "a", height: 1, width: 1, prev: firstToken, next: outerBox.content[1], parent: outerBox },
@@ -299,7 +287,6 @@ describe("processing code from a DOM source", () => {
       parent: root,
     });
     expect(innerBox).toEqual({
-      kind: "BOX",
       x: 10,
       y: 0,
       width: 2,
@@ -309,8 +296,6 @@ describe("processing code from a DOM source", () => {
         tagName: "b",
         attributes: [],
       },
-      hash: expect.any(String),
-      id: expect.any(String),
       content: [
         /* eslint-disable */
         { x: 10, y: 0, text: "(", height: 1, width: 1, prev: outerBox.content[1], next: innerBox.content[1], parent: innerBox },
@@ -344,7 +329,6 @@ describe("processing code from a DOM source", () => {
       parent: root,
     });
     expect(outerBox).toEqual({
-      kind: "BOX",
       x: 6,
       y: 0,
       width: 5,
@@ -354,8 +338,6 @@ describe("processing code from a DOM source", () => {
         tagName: "span",
         attributes: [["foo", "bar"]],
       },
-      hash: expect.any(String),
-      id: expect.any(String),
       content: [
         /* eslint-disable */
         { x: 6, y: 0, text: "a", height: 1, width: 1, prev: firstToken, next: outerBox.content[1], parent: outerBox },
@@ -376,14 +358,11 @@ describe("processing code from a DOM source", () => {
       y: 0,
       width: 1,
       height: 3,
-      kind: "BOX",
       language: root.language,
       data: {
         tagName: "b",
         attributes: [],
       },
-      hash: expect.any(String),
-      id: expect.any(String),
       content: [
         /* eslint-disable */
         { x: 10, y: 0, text: "(", height: 1, width: 1, prev: outerBox.content[1], next: innerBox.content[1], parent: innerBox },
@@ -424,7 +403,6 @@ describe("processing code from a DOM source", () => {
     ]);
     expect(decorations).toEqual([
       {
-        kind: "DECO",
         x: 16,
         y: 0,
         width: 2,
@@ -433,7 +411,6 @@ describe("processing code from a DOM source", () => {
           tagName: "mark",
           attributes: [],
         },
-        hash: expect.any(String),
         parent: root,
       },
     ]);
@@ -457,13 +434,11 @@ describe("processing code from a DOM source", () => {
     ]);
     expect(decorations).toEqual([
       {
-        kind: "DECO",
         x: 16,
         y: 0,
         width: 2,
         height: 1,
         data: {},
-        hash: "",
         parent: root,
       },
     ]);
@@ -488,7 +463,6 @@ describe("processing code from a DOM source", () => {
     ]);
     expect(decorations).toEqual([
       {
-        kind: "DECO",
         x: 6,
         y: 0,
         width: 1,
@@ -497,11 +471,9 @@ describe("processing code from a DOM source", () => {
           tagName: "mark",
           attributes: [["class", "a"]],
         },
-        hash: expect.any(String),
         parent: root,
       },
       {
-        kind: "DECO",
         x: 16,
         y: 0,
         width: 2,
@@ -510,7 +482,6 @@ describe("processing code from a DOM source", () => {
           tagName: "mark",
           attributes: [["class", "b"]],
         },
-        hash: expect.any(String),
         parent: root,
       },
     ]);
@@ -540,7 +511,6 @@ describe("processing code from a DOM source", () => {
     ]);
     expect(decorations).toEqual([
       {
-        kind: "DECO",
         x: 16,
         y: 0,
         width: 1,
@@ -549,7 +519,6 @@ describe("processing code from a DOM source", () => {
           tagName: "mark",
           attributes: [],
         },
-        hash: expect.any(String),
         parent: root,
       },
     ]);
@@ -573,7 +542,6 @@ describe("processing code from a DOM source", () => {
       parent: root,
     });
     expect(outerBox).toEqual({
-      kind: "BOX",
       x: 6,
       y: 0,
       width: 12,
@@ -583,8 +551,6 @@ describe("processing code from a DOM source", () => {
         tagName: "span",
         attributes: [["foo", "bar"]],
       },
-      hash: expect.any(String),
-      id: expect.any(String),
       content: [
         /* eslint-disable */
         { x: 6, y: 0, text: "a", height: 1, width: 1, prev: firstToken, next: outerBox.content[1], parent: outerBox },
@@ -599,7 +565,6 @@ describe("processing code from a DOM source", () => {
       parent: root,
     });
     expect(innerBox).toEqual({
-      kind: "BOX",
       x: 10,
       y: 0,
       width: 2,
@@ -609,8 +574,6 @@ describe("processing code from a DOM source", () => {
         tagName: "b",
         attributes: [],
       },
-      hash: expect.any(String),
-      id: expect.any(String),
       content: [
         /* eslint-disable */
         { x: 10, y: 0, text: "(", height: 1, width: 1, prev: outerBox.content[1], next: innerBox.content[1], parent: innerBox },
@@ -619,7 +582,6 @@ describe("processing code from a DOM source", () => {
       ],
       decorations: [
         {
-          kind: "DECO",
           x: 10,
           y: 0,
           width: 2,
@@ -628,7 +590,6 @@ describe("processing code from a DOM source", () => {
             tagName: "mark",
             attributes: [],
           },
-          hash: expect.any(String),
           parent: innerBox,
         },
       ],

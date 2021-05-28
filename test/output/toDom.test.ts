@@ -13,8 +13,8 @@ describe("toDom", () => {
     const renderTokens = el.querySelector("pre > .language-json")?.children;
     expect(renderTokens?.length).toBe(2);
     const [a, b] = Array.from(renderTokens as any);
-    expect(a).toMatchObject({ tagName: "SPAN", innerHTML: "{" });
-    expect(b).toMatchObject({ tagName: "SPAN", innerHTML: "}" });
+    expect(a).toMatchObject({ tagName: "SPAN", innerHTML: "}" });
+    expect(b).toMatchObject({ tagName: "SPAN", innerHTML: "{" });
   });
 
   test("renders tokens in boxes to DOM", () => {
@@ -25,8 +25,6 @@ describe("toDom", () => {
           "[",
           {
             content: ["null"],
-            hash: "asdf",
-            id: "asdf1",
             isDecoration: false,
             language: undefined,
             data: { id: "hello" },
@@ -43,7 +41,6 @@ describe("toDom", () => {
     const [a, b, c] = Array.from(renderTokens as any);
     expect(a).toMatchObject({ tagName: "SPAN", innerHTML: "[" });
     expect(b).toMatchObject({ tagName: "SPAN", innerHTML: "]" });
-    expect(c).toMatchObject({ className: expect.stringContaining("asdf1") });
     expect(c).toMatchObject({ className: expect.stringContaining("dm-box") });
     expect(c.children.length).toBe(1);
     expect(c.children[0]).toMatchObject({ tagName: "SPAN", innerHTML: "null" });

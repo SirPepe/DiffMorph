@@ -141,13 +141,10 @@ function tokenizeContainer(
   tabSize: number
 ): TokenizerResult<Box<TextTokens, Decoration<TextTokens>>, never> {
   const box: Box<TextTokens, Decoration<TextTokens>> = {
-    kind: "BOX",
     x,
     y,
     width: 0, // will be updated in a few lines
     height: 0, // will be updated in a few lines
-    id: container.id,
-    hash: container.hash,
     data: container.data,
     language: container.language || parent?.language,
     content: [], // will be updated in a few lines
@@ -186,8 +183,6 @@ function tokenizeDecoration(
     y,
     width,
     height,
-    kind: "DECO",
-    hash: container.hash,
     data: container.data,
     parent,
   };

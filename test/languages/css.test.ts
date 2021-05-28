@@ -15,8 +15,7 @@ const inlineCss = type("inline-css");
 
 describe("Basic CSS", () => {
   test("Simple rule", () => {
-    const tokens = css(`div { color: red; font-family: sans-serif; }`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`div { color: red; font-family: sans-serif; }`);
     expect(types).toEqual([
       "selector",
       "punctuation rule-start",
@@ -35,10 +34,9 @@ describe("Basic CSS", () => {
   });
 
   test("Simple rule with non-trivial selector", () => {
-    const tokens = css(
+    const types = css(
       `div + .foo, :host([disabled="true"]) ~ a { color: red; }`
     );
-    const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "selector",
       "keyword combinator",
@@ -66,8 +64,7 @@ describe("Basic CSS", () => {
   });
 
   test("Universal selector", () => {
-    const tokens = css(`* { color: red; }`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`* { color: red; }`);
     expect(types).toEqual([
       "selector",
       "punctuation rule-start",
@@ -80,8 +77,7 @@ describe("Basic CSS", () => {
   });
 
   test("Universal selector in a list", () => {
-    const tokens = css(`*::before, *::after, * { color: red; }`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`*::before, *::after, * { color: red; }`);
     expect(types).toEqual([
       "selector",
       "selector",
@@ -102,8 +98,7 @@ describe("Basic CSS", () => {
   });
 
   test("Universal selector following a comment ", () => {
-    const tokens = css(`/* Yo */* { color: red; }`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`/* Yo */* { color: red; }`);
     expect(types).toEqual([
       "comment",
       "comment",
@@ -119,8 +114,7 @@ describe("Basic CSS", () => {
   });
 
   test("Two simple rules", () => {
-    const tokens = css(`div { color: red; } #foo { font-family: sans-serif; }`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`div { color: red; } #foo { font-family: sans-serif; }`);
     expect(types).toEqual([
       "selector",
       "punctuation rule-start",
@@ -142,8 +136,7 @@ describe("Basic CSS", () => {
   });
 
   test("Color values", () => {
-    const tokens = css(`a { color: red; background: #C00000; outline: #F00; }`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`a { color: red; background: #C00000; outline: #F00; }`);
     expect(types).toEqual([
       "selector",
       "punctuation rule-start",
@@ -164,8 +157,7 @@ describe("Basic CSS", () => {
   });
 
   test("Numeric values", () => {
-    const tokens = css(`* { foo: 10px; bar: 10%; baz: 0; }`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`* { foo: 10px; bar: 10%; baz: 0; }`);
     expect(types).toEqual([
       "selector",
       "punctuation rule-start",
@@ -188,8 +180,7 @@ describe("Basic CSS", () => {
   });
 
   test("Custom properties", () => {
-    const tokens = css(`:root { --foo: red } .foo { color: var(--foo) }`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`:root { --foo: red } .foo { color: var(--foo) }`);
     expect(types).toEqual([
       "selector",
       "punctuation rule-start",
@@ -214,8 +205,7 @@ describe("Basic CSS", () => {
 
 describe("Comments", () => {
   test("basic comment", () => {
-    const tokens = css(`/* Hello foo-bar */`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`/* Hello foo-bar */`);
     expect(types).toEqual([
       "comment", // "/*"
       "comment", // "Hello"
@@ -227,8 +217,7 @@ describe("Comments", () => {
 
 describe("At-rules", () => {
   test("Simple media query", () => {
-    const tokens = css(`@media print {}`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`@media print {}`);
     expect(types).toEqual([
       "keyword at-media",
       "keyword media-type",
@@ -238,8 +227,7 @@ describe("At-rules", () => {
   });
 
   test("Simple media query with media features", () => {
-    const tokens = css(`@media (min-width: 800px) {}`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`@media (min-width: 800px) {}`);
     expect(types).toEqual([
       "keyword at-media",
       "punctuation at-media-argument",
@@ -256,8 +244,7 @@ describe("At-rules", () => {
   });
 
   test("Simple media query with media type and features", () => {
-    const tokens = css(`@media screen and (min-width: 800px) {}`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`@media screen and (min-width: 800px) {}`);
     expect(types).toEqual([
       "keyword at-media",
       "keyword media-type",
@@ -276,10 +263,9 @@ describe("At-rules", () => {
   });
 
   test("Nested media queries", () => {
-    const tokens = css(
+    const types = css(
       `@media screen and (min-width: 800px) { @media print {} }`
     );
-    const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword at-media",
       "keyword media-type",
@@ -302,8 +288,7 @@ describe("At-rules", () => {
   });
 
   test("Simple @supports query", () => {
-    const tokens = css(`@supports (display: flex) {}`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`@supports (display: flex) {}`);
     expect(types).toEqual([
       "keyword at-supports",
       "punctuation at-supports-argument",
@@ -317,8 +302,7 @@ describe("At-rules", () => {
   });
 
   test("@import with bare string", () => {
-    const tokens = css(`@import "foo.css"`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`@import "foo.css"`);
     expect(types).toEqual([
       "keyword at-import",
       "string",
@@ -330,8 +314,7 @@ describe("At-rules", () => {
   });
 
   test("@import with quoted url", () => {
-    const tokens = css(`@import url("foo.css")`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`@import url("foo.css")`);
     expect(types).toEqual([
       "keyword at-import",
       "keyword",
@@ -346,8 +329,7 @@ describe("At-rules", () => {
   });
 
   test("@import with unquoted url", () => {
-    const tokens = css(`@import url(foo.css)`);
-    const types = tokens.map((token) => token.type);
+    const types = css(`@import url(foo.css)`);
     expect(types).toEqual([
       "keyword at-import",
       "keyword",
@@ -360,12 +342,11 @@ describe("At-rules", () => {
   });
 
   test("@keyframes", () => {
-    const tokens = css(`@keyframes foo {
+    const types = css(`@keyframes foo {
   from { opacity: 0; }
   30% { opacity: 0.5; }
   68%, 72% { opacity: 0.9; }
 }`);
-    const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "keyword at-keyframes",
       "token",
@@ -403,8 +384,7 @@ describe("At-rules", () => {
 
 describe("Inline CSS", () => {
   test("Inline CSS", () => {
-    const tokens = inlineCss(`color: red; font-family: sans-serif`);
-    const types = tokens.map((token) => token.type);
+    const types = inlineCss(`color: red; font-family: sans-serif`);
     expect(types).toEqual([
       "property",
       "punctuation",

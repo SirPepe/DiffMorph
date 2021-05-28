@@ -1,10 +1,11 @@
 // Assigns concrete render tokens based on lifecycles. The outcome of this
-// module could be vastly improved by prioritizing MOV ops over all other
-// operations across all lifecycles. No Idea if this is feasible.
+// module could be probably be improved by prioritizing MOV ops over all other
+// operations across all lifecycles.
 
 import {
-  Decoration,
   DecorationPosition,
+  DiffDecoration,
+  DiffToken,
   RenderData,
   RenderDecoration,
   RenderPositions,
@@ -12,12 +13,12 @@ import {
   RenderText,
   TextPosition,
   Token,
-  TypedToken,
 } from "../types";
 import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
-import { assertIs, createIdGenerator } from "./util";
+import { assertIs, createIdGenerator, toString } from "./util";
 
+type InputToken = Token & { hash: number };
 type OutputToken = { id: string };
 
 function toRenderPosition<Input extends Token>(
@@ -28,11 +29,11 @@ function toRenderPosition<Input extends Token>(
   return { id, x, y, width, height, alpha: Number(isVisible) };
 }
 
-class TokenPool<Input extends Token, Output extends OutputToken> {
+class TokenPool<Input extends InputToken, Output extends OutputToken> {
   private nextId = createIdGenerator();
 
   // hash -> list of currently not used output token
-  private available = new Map<string, Output[]>();
+  private available = new Map<number, Output[]>();
 
   // holder -> [output, last position]
   private inUse = new Map<Lifecycle<Input>, [Output, TextPosition]>();
@@ -56,7 +57,8 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
         // New list remains empty as the output token goes into use right away
         this.available.set(item.hash, []);
       }
-      const output = this.toOutput(item, this.nextId(null, item.hash));
+      const nextId = this.nextId(null, toString(item.hash));
+      const output = this.toOutput(item, nextId);
       const position = toRenderPosition(item, output.id, isVisible);
       this.inUse.set(holder, [output, position]);
       return [output, position];
@@ -110,7 +112,7 @@ class TokenPool<Input extends Token, Output extends OutputToken> {
   }
 }
 
-function renderToken<Input extends Token, Output extends OutputToken>(
+function renderToken<Input extends InputToken, Output extends OutputToken>(
   lifecycle: Lifecycle<Input>,
   frame: number,
   pool: TokenPool<Input, Output>
@@ -122,19 +124,19 @@ function renderToken<Input extends Token, Output extends OutputToken>(
   return pool.use(lifecycle, operation);
 }
 
-function toRenderText({ type, text }: TypedToken, id: string): RenderText {
+function toRenderText({ type, text }: DiffToken, id: string): RenderText {
   return { type, text, id };
 }
 
 function toRenderDecoration(
-  { data }: Decoration<any>,
+  { data }: DiffDecoration,
   id: string
 ): RenderDecoration {
   return { data, id };
 }
 
 function renderFrames(
-  lifecycle: BoxLifecycle<TypedToken, Decoration<any>>
+  lifecycle: BoxLifecycle
 ): [RenderRoot<RenderText, RenderDecoration>, Map<number, RenderPositions>] {
   const frames = new Map<number, RenderPositions>();
   const textTokens = new Map<string, RenderText>();
@@ -195,7 +197,7 @@ function renderFrames(
 }
 
 export function toRenderData(
-  rootLifecycle: BoxLifecycle<TypedToken, Decoration<any>> | null
+  rootLifecycle: BoxLifecycle | null
 ): RenderData<RenderText, RenderDecoration> {
   if (rootLifecycle === null) {
     return {

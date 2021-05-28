@@ -5,12 +5,7 @@
 // the "any" in the following lines. Beware of applyLanguage() in particular as
 // it WILL modify its input with extreme prejudice.
 
-import {
-  createIdGenerator,
-  getFirstTextToken,
-  hash,
-  spliceBoxContent,
-} from "./util";
+import { getFirstTextToken, spliceBoxContent } from "./util";
 import {
   Box,
   Decoration,
@@ -38,18 +33,16 @@ function isTokenReplacementResult(x: any): x is TokenReplacementResult {
 
 function embeddedLanguageBoxFactory(
   parent: Box<any, any>,
-  id: string,
   language: string
 ): Box<any, any> {
   return {
-    kind: "BOX" as const,
     x: 0,
     y: 0,
     width: 0,
     height: 0,
-    hash: parent.hash + "-embedded-" + language,
-    id,
-    data: {},
+    data: {
+      embedded: `embedded Ͼ ${language}`,
+    },
     language,
     content: [],
     decorations: [],
@@ -75,13 +68,12 @@ function applyPostprocessor(token: TypedTokens | undefined): void {
       token.prev &&
       token.prev.y === token.y &&
       token.prev.type === token.type && // don't join non-equal types
-      token.parent.hash === token.prev.parent.hash && // don't join across boxes
+      token.parent === token.prev.parent && // don't join across boxes
       postprocessor(token)
     ) {
       const padding = Math.abs(token.prev.x + token.prev.width - token.x);
       token.prev.text += " ".repeat(padding) + token.text;
       token.prev.width += padding + token.width;
-      token.prev.hash = hash(hash(token.prev.type) + hash(token.prev.text));
       token.prev.next = token.next;
       // This indexOf() is expensive, but keeping track of the index while the
       // loop runs is cumbersome because tokens are mixed with boxes. So
@@ -106,7 +98,6 @@ function applyPostprocessor(token: TypedTokens | undefined): void {
 export function applyLanguage(
   root: Box<TextTokens, Decoration<TextTokens>>
 ): Box<TypedTokens, Decoration<TypedTokens>> {
-  const nextEmbeddedId = createIdGenerator();
   const languageDefinition =
     root.language && languages[root.language]
       ? languages[root.language]
@@ -121,17 +112,12 @@ export function applyLanguage(
       const type = types[i];
       if (typeof type === "string") {
         current.type = type;
-        current.hash = hash(hash(current.type) + hash(current.text));
         current = current.next;
       } else if (isEmbeddedLanguageResult(type)) {
         // Move embedded languages items into their own box(es) before
         // processing their actual types
         spliceBoxContent(current, type.types.length, (parent) =>
-          embeddedLanguageBoxFactory(
-            parent,
-            nextEmbeddedId(type.language, parent.hash),
-            type.language
-          )
+          embeddedLanguageBoxFactory(parent, type.language)
         );
         // Insert new types into the current type array and re-process the
         // current token with the then-current type
@@ -150,7 +136,6 @@ export function applyLanguage(
             text: replacement.text,
             type: replacement.type,
             parent: current.parent,
-            hash: hash(hash(replacement.type) + hash(replacement.text)),
             width: replacement.text.length,
             height: 1,
           };

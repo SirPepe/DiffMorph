@@ -9,7 +9,6 @@ describe("Lifecycles", () => {
     const diffs = optimizeDiffs(diff([tokenize(".."), tokenize(". .")]));
     const res = toLifecycle(diffs, false);
     expect(res).toEqual({
-      kind: "BOX",
       base: diffs[0].root.item,
       self: new Map([
         [0, diffs[0].root],
@@ -34,8 +33,6 @@ describe("Lifecycles", () => {
         tokenize(
           ".",
           {
-            id: "box",
-            hash: "asdf",
             language: undefined,
             data: {},
             isDecoration: false,
@@ -63,7 +60,6 @@ describe("Lifecycles", () => {
       ]),
     ]);
     expect(res?.boxes[0]).toEqual({
-      kind: "BOX",
       base: (diffs[1].content[1] as any).root.item,
       self: new Map([
         [1, (diffs[1].content[1] as any).root],
@@ -84,7 +80,6 @@ describe("Lifecycles", () => {
   test("single frame", () => {
     const res = toLifecycle(optimizeDiffs(diff([tokenize(".")])), false);
     expect(res).toEqual({
-      kind: "BOX",
       base: expect.any(Object),
       self: new Map([[0, { kind: "ADD", item: res?.base }]]),
       text: [new Map([[0, expect.any(Object)]])],
@@ -206,8 +201,6 @@ describe("Expanded lifecycles", () => {
     const diffs = optimizeDiffs(
       diff([
         tokenize({
-          id: "box",
-          hash: "asdf",
           language: undefined,
           data: {},
           isDecoration: false,
@@ -245,8 +238,6 @@ describe("Expanded lifecycles", () => {
     const diffs = optimizeDiffs(
       diff([
         tokenize({
-          id: "box",
-          hash: "asdf",
           language: undefined,
           data: {},
           isDecoration: false,
@@ -289,8 +280,6 @@ describe("Expanded lifecycles", () => {
         tokenize(""),
         tokenize(""),
         tokenize({
-          id: "box",
-          hash: "asdf",
           language: undefined,
           data: {},
           isDecoration: false,
@@ -337,8 +326,6 @@ describe("Expanded lifecycles", () => {
         tokenize(""),
         tokenize(""),
         tokenize({
-          id: "box",
-          hash: "asdf",
           language: undefined,
           data: {},
           isDecoration: false,

@@ -20,13 +20,18 @@
 
 import { diffArrays } from "diff";
 import { groupBy } from "@sirpepe/shed";
-import { Box, Token } from "../types";
-import { createIdGenerator, isAdjacent, isBox } from "./util";
+import {
+  Box,
+  Decoration,
+  DiffBox,
+  DiffDecoration,
+  DiffToken,
+  Token,
+  TypedToken,
+} from "../types";
+import { createUniqueHashGenerator, hash, isAdjacent, isBox } from "./util";
 import { pickAlternative } from "./heuristics";
-
-// The text is only needed for pattern matching on token sequences. This type is
-// therefore only a requirement for content tokens and not for decorations.
-type DiffableContent = Token & { text: string };
+import { assignHashes } from "./hash";
 
 // ADD does not need a "from" field because it is by definition an initial
 // addition. It may get translated to a BAD + MOV pair, but there then BAD is
@@ -82,57 +87,58 @@ export type BOX<T> = {
 };
 
 // Models a box in the diff result
-export type DiffTree<T, D> = {
+export type DiffTree = {
   readonly kind: "TREE";
-  root: DiffOp<Box<T, D>> | BOX<Box<T, D>>;
-  content: (DiffOp<T> | DiffTree<T, D>)[];
-  decorations: DiffOp<D>[];
+  root: DiffOp<DiffBox> | BOX<DiffBox>;
+  content: (DiffOp<DiffToken> | DiffTree)[];
+  decorations: DiffOp<DiffDecoration>[];
 };
 
-type Line<T extends Token> = {
+type Line = {
   readonly x: number;
   readonly y: number;
-  readonly id: string;
-  readonly hash: string;
-  readonly items: T[];
+  readonly id: number;
+  readonly hash: number;
+  readonly items: DiffToken[];
 };
 
 // Compatible to the type Optimizable used in optimizer and heuristics
-type Pattern<T extends DiffableContent> = Token & {
-  items: T[];
-  parent: Box<any, any>;
+type Pattern = Token & {
+  readonly hash: number;
+  readonly items: DiffToken[];
+  readonly parent: Box<any, any>;
 };
 
 // Create a hash of a list of tokens by concatenating the token's hashes and
 // their *relative* distance on the x axis. The allover level of indentation is
 // not reflected in the hash - two lines containing the same characters the same
 // distance apart get the same hash, no matter the indentation
-function hashLine(items: Token[]): string {
-  const hashes = items.map((item, idx) => {
+function hashItems(items: DiffToken[]): number {
+  const hashes = items.flatMap((item, idx) => {
     const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
-    return item.hash + String(xDelta);
+    return [item.hash, String(xDelta)];
   });
-  return hashes.join("");
+  return hash(hashes);
 }
 
 // Organize tokens into lines
-function asLines<T extends Token>(tokens: T[]): Line<T>[] {
-  const nextId = createIdGenerator();
+function asLines(tokens: DiffToken[]): Line[] {
   const byLine = groupBy(tokens, "y");
+  const generator = createUniqueHashGenerator();
   return Array.from(byLine, ([y, items]) => {
-    const hash = hashLine(items);
-    const id = nextId(null, hash);
+    const hash = hashItems(items);
+    const id = generator([hash]);
     const x = items.length > 0 ? items[0].x : 0;
     return { hash, id, items, x, y };
   });
 }
 
 // Diff entire lines of tokens
-function diffLines<T extends Token>(
-  from: Line<T>[],
-  to: Line<T>[]
-): { result: MOV<T>[]; restFrom: T[]; restTo: T[] } {
-  const result: MOV<T>[] = [];
+function diffLines(
+  from: Line[],
+  to: Line[]
+): { result: MOV<DiffToken>[]; restFrom: DiffToken[]; restTo: DiffToken[] } {
+  const result: MOV<DiffToken>[] = [];
   const toById = new Map(to.map((line) => [line.id, line]));
   const fromById = new Map(from.map((line) => [line.id, line]));
   const changes = diffArrays(from, to, {
@@ -178,21 +184,12 @@ function diffLines<T extends Token>(
 }
 
 // Organize items into pattern objects
-function asPattern<T extends DiffableContent>(
-  items: T[],
-  parent: Box<T, any>
-): Pattern<T> {
+function asPattern(items: DiffToken[], parent: Box<DiffToken, any>): Pattern {
   const [{ x, y }] = items;
-  const hash = items
-    .map((item, idx) => {
-      const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
-      return item.hash + String(xDelta);
-    })
-    .join("");
   return {
     x,
     y,
-    hash,
+    hash: hashItems(items),
     width: 0, // irrelevant for patterns, only required for type compatibility
     height: 0, // irrelevant for patterns, only required for type compatibility
     items,
@@ -202,11 +199,11 @@ function asPattern<T extends DiffableContent>(
 
 // Take items from "items", starting at index "from" until "done" returns either
 // true or null (the latter signalling an abort)
-function consume<T extends DiffableContent>(
-  items: T[],
+function consume(
+  items: DiffToken[],
   from: number,
-  done: (item: T) => boolean | null // null = abort
-): { result: T[]; position: number } {
+  done: (item: DiffToken) => boolean | null // null = abort
+): { result: DiffToken[]; position: number } {
   const consumed = [];
   for (let i = from; i < items.length; i++) {
     const result = done(items[i]);
@@ -227,10 +224,10 @@ function consume<T extends DiffableContent>(
 //   * string sequences wrapped in ", ', or `
 //   * some variable-name-like text followed by =
 // Only exported for unit tests
-export function findPatterns<T extends DiffableContent>(
-  items: T[],
-  parent: Box<T, any>
-): Pattern<T>[] {
+export function findPatterns(
+  items: DiffToken[],
+  parent: Box<DiffToken, any>
+): Pattern[] {
   const patterns = [];
   for (let i = 0; i < items.length; i++) {
     if (
@@ -268,19 +265,19 @@ export function findPatterns<T extends DiffableContent>(
 }
 
 // This should work now
-function diffPatterns<T extends DiffableContent>(
-  from: T[],
-  fromParent: Box<T, any> | undefined,
-  to: T[],
-  toParent: Box<T, any> | undefined
-): { result: MOV<T>[]; restFrom: T[]; restTo: T[] } {
+function diffPatterns(
+  from: DiffToken[],
+  fromParent: Box<DiffToken, any> | undefined,
+  to: DiffToken[],
+  toParent: Box<DiffToken, any> | undefined
+): { result: MOV<DiffToken>[]; restFrom: DiffToken[]; restTo: DiffToken[] } {
   // This does never happen in practice, probably
   if (!fromParent || !toParent) {
     return { result: [], restFrom: from, restTo: to };
   }
   const fromPatternsByHash = groupBy(findPatterns(from, fromParent), "hash");
   const toPatternsByHash = groupBy(findPatterns(to, toParent), "hash");
-  const result: MOV<T>[] = [];
+  const result: MOV<DiffToken>[] = [];
   for (const [hash, fromPatterns] of fromPatternsByHash) {
     const toPatterns = new Set(toPatternsByHash.get(hash) ?? []);
     for (const fromPattern of fromPatterns) {
@@ -312,8 +309,8 @@ function diffPatterns<T extends DiffableContent>(
 }
 
 // Diff individual tokes by their hash and x/y positions
-function diffTokens<T extends Token>(from: T[], to: T[]): DiffOp<T>[] {
-  const result: DiffOp<T>[] = [];
+function diffTokens(from: DiffToken[], to: DiffToken[]): DiffOp<DiffToken>[] {
+  const result: DiffOp<DiffToken>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
     ignoreCase: false,
@@ -331,8 +328,11 @@ function diffTokens<T extends Token>(from: T[], to: T[]): DiffOp<T>[] {
 }
 
 // Diff decorations by their hashes, positions and dimensions
-function diffDecorations<T extends Token>(from: T[], to: T[]): DiffOp<T>[] {
-  const result: DiffOp<T>[] = [];
+function diffDecorations(
+  from: DiffDecoration[],
+  to: DiffDecoration[]
+): DiffOp<DiffDecoration>[] {
+  const result: DiffOp<DiffDecoration>[] = [];
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash && dimensionsEql(a, b),
     ignoreCase: false,
@@ -361,10 +361,10 @@ function dimensionsEql(a: Token, b: Token): boolean {
   return true;
 }
 
-function diffBox<T, D>(
-  from: Box<T, D> | undefined,
-  to: Box<T, D> | undefined
-): DiffOp<Box<T, D>> | BOX<Box<T, D>> {
+function diffBox(
+  from: DiffBox | undefined,
+  to: DiffBox | undefined
+): DiffOp<DiffBox> | BOX<DiffBox> {
   if (from && !to) {
     return {
       kind: "DEL",
@@ -394,35 +394,35 @@ function diffBox<T, D>(
   throw new Error("This can never happen");
 }
 
-function partitionTokens<T extends Token, D extends Token>(
-  source: Box<T, D> | undefined
-): [Map<string, Box<T, D>>, T[], D[]] {
+function partitionTokens(
+  source: DiffBox | undefined
+): [Map<string, DiffBox>, DiffToken[], DiffDecoration[]] {
   const boxes = new Map();
-  const textTokens: T[] = [];
+  const textTokens: DiffToken[] = [];
   if (!source) {
     return [new Map(), [], []];
   }
   for (const item of source.content) {
-    if (isBox(item)) {
+    if (isBox<DiffBox>(item)) {
       boxes.set(item.id, item);
-    } else {
+    } else if (!isBox(item)) {
       textTokens.push(item);
     }
   }
   return [boxes, textTokens, source.decorations];
 }
 
-function diffBoxes<T extends DiffableContent, D extends Token>(
-  from: Box<T, D> | undefined,
-  to: Box<T, D> | undefined
-): DiffTree<T, D> {
+function diffBoxes(
+  from: DiffBox | undefined,
+  to: DiffBox | undefined
+): DiffTree {
   if (!from && !to) {
     throw new Error("Refusing to diff two undefined frames!");
   }
-  const root = diffBox<T, D>(from, to);
-  const textOps: DiffOp<T>[] = [];
-  const decoOps: DiffOp<D>[] = [];
-  const boxOps: DiffTree<T, D>[] = [];
+  const root = diffBox(from, to);
+  const textOps: DiffOp<DiffToken>[] = [];
+  const decoOps: DiffOp<DiffDecoration>[] = [];
+  const boxOps: DiffTree[] = [];
   const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
   const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
   // First pass: diff entire lines
@@ -450,21 +450,22 @@ function diffBoxes<T extends DiffableContent, D extends Token>(
   }
   return {
     kind: "TREE",
-    root: root,
+    root,
     content: [...textOps, ...boxOps],
     decorations: decoOps,
   };
 }
 
-export const diff = <T extends DiffableContent, D extends Token>(
-  roots: Box<T, D>[]
-): DiffTree<T, D>[] => {
+export function diff(
+  roots: Box<TypedToken, Decoration<TypedToken>>[]
+): DiffTree[] {
   if (roots.length === 0) {
     return [];
   }
-  const diffs: DiffTree<T, D>[] = [diffBoxes(undefined, roots[0])];
-  for (let i = 0; i < roots.length - 1; i++) {
-    diffs.push(diffBoxes(roots[i], roots[i + 1]));
+  const hashedRoots = assignHashes(roots);
+  const diffs: DiffTree[] = [diffBoxes(undefined, hashedRoots[0])];
+  for (let i = 0; i < hashedRoots.length - 1; i++) {
+    diffs.push(diffBoxes(hashedRoots[i], hashedRoots[i + 1]));
   }
   return diffs;
-};
+}

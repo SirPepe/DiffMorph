@@ -87,7 +87,7 @@ describe("Optimizer", () => {
     expect(res.length).toBe(2);
     expect(res[0].content.map((op) => op.kind)).toEqual(["ADD", "ADD", "ADD"]);
     // Stay with the closing curly brace
-    expect(res[1].content[2]).toMatchObject({
+    expect(res[1].content[5]).toMatchObject({
       kind: "MOV",
       item: { x: 1, y: 2, text: "," },
       from: { x: 2, y: 0 },
@@ -119,7 +119,7 @@ describe("Optimizer", () => {
       "ADD",
     ]);
     // Stay with the closing curly brace
-    expect(res[1].content[3]).toMatchObject({
+    expect(res[1].content[6]).toMatchObject({
       kind: "MOV",
       item: { x: 3, y: 3, text: "," },
       from: { x: 9, y: 1 },
@@ -130,13 +130,10 @@ describe("Optimizer", () => {
 describe("Optimizer on decorations", () => {
   test("It turns a single addition/deletion into a movement", () => {
     const a: Box<any, Decoration<any>> = {
-      kind: "BOX",
       x: 0,
       y: 0,
-      hash: "root",
       width: 0,
       height: 0,
-      id: "root0",
       data: {},
       language: "none",
       content: [],
@@ -144,8 +141,6 @@ describe("Optimizer on decorations", () => {
       parent: undefined,
     };
     a.decorations.push({
-      kind: "DECO",
-      hash: "foo",
       x: 0,
       y: 0,
       width: 10,
@@ -154,13 +149,10 @@ describe("Optimizer on decorations", () => {
       parent: a,
     });
     const b: Box<any, Decoration<any>> = {
-      kind: "BOX",
       x: 0,
       y: 0,
-      hash: "root",
       width: 0,
       height: 0,
-      id: "root0",
       data: {},
       language: "none",
       content: [],
@@ -168,8 +160,6 @@ describe("Optimizer on decorations", () => {
       parent: undefined,
     };
     b.decorations.push({
-      kind: "DECO",
-      hash: "foo",
       x: 10,
       y: 0,
       width: 10,

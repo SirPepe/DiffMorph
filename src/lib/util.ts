@@ -1,6 +1,19 @@
 import { Box, Decoration } from "../types";
 
-export function hash(input: string): string {
+const CHARSET =
+  "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+export function toString(number: number): string {
+  let res = "";
+  while (number > 0) {
+    res = CHARSET[number % 62] + res;
+    number = Math.floor(number / 62);
+  }
+  return res;
+}
+
+export function hash(inputs: (string | number)[]): number {
+  let input = inputs.join("Ͼ");
   let hash = 2166136261;
   let nonAscii = false;
   for (let i = 0; i < input.length; i++) {
@@ -14,7 +27,25 @@ export function hash(input: string): string {
     hash +=
       (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
   }
-  return (hash >>> 0).toString(36);
+  return hash >>> 0;
+}
+
+// Returns functions that generate unique hashes
+export function createUniqueHashGenerator(): (
+  inputs: (string | number)[]
+) => number {
+  const counter = new Map<number, number>();
+  return function uniqueHash(inputs: (string | number)[]): number {
+    const h = hash(inputs);
+    const count = counter.get(h);
+    if (typeof count === "undefined") {
+      counter.set(h, 0);
+      return h;
+    } else {
+      counter.set(h, count + 1);
+      return uniqueHash([...inputs, count]);
+    }
+  };
 }
 
 export function is<T>(x: T | undefined | null): x is T {
@@ -92,27 +123,22 @@ export function getLanguage(element: Element): string | undefined {
   return match;
 }
 
-export function isBox<T, D>(x: any): x is Box<T, D> {
-  if (typeof x === "object" && x.kind === "BOX") {
-    return true;
-  }
-  return false;
-}
-
-export function isDecoration<T = any>(x: any): x is Decoration<T> {
-  if (typeof x === "object" && x.kind === "DECO") {
+export function isBox<T extends Box<any, any>>(x: T | any): x is T {
+  if (
+    x !== null &&
+    typeof x === "object" &&
+    Array.isArray(x.content) &&
+    Array.isArray(x.decorations)
+  ) {
     return true;
   }
   return false;
 }
 
 export function getFirstTextToken<T>(
-  tokens: (T | Decoration<T> | Box<T, Decoration<T>>)[]
+  tokens: (T | Box<T, Decoration<T>>)[]
 ): T | undefined {
   for (const token of tokens) {
-    if (isDecoration(token)) {
-      continue;
-    }
     if (isBox(token)) {
       const first = getFirstTextToken(token.content);
       if (first) {
@@ -126,13 +152,10 @@ export function getFirstTextToken<T>(
 }
 
 export function getLastTextToken<T>(
-  tokens: (T | Decoration<T> | Box<T, Decoration<T>>)[]
+  tokens: (T | Box<T, Decoration<T>>)[]
 ): T | undefined {
   for (let i = tokens.length - 1; i >= 0; i--) {
     const token = tokens[i];
-    if (isDecoration(token)) {
-      continue;
-    }
     if (isBox(token)) {
       const first = getLastTextToken(token.content);
       if (first) {
@@ -156,18 +179,20 @@ export function flattenTokens<T extends { next: T | undefined }>(
   return result;
 }
 
-export const createIdGenerator = (): ((realm: any, hash: any) => string) => {
+export const createIdGenerator = (): ((realm: any, hash: string) => string) => {
   const counters = new Map();
-  return (realm: any, hash: any): string => {
+  return (realm: any, hash: string): string => {
     let counter = counters.get(realm);
     if (!counter) {
       counter = new Map();
       counters.set(realm, counter);
     }
     const num = counter.has(hash) ? counter.get(hash) + 1 : 0;
-    const id = `${hash}${num}`;
     counter.set(hash, num);
-    return id;
+    if (num === 0) {
+      return String(hash);
+    }
+    return `${hash}${num}`;
   };
 };
 

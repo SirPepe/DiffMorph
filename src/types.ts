@@ -12,6 +12,9 @@ import { LanguageTheme } from "./lib/theme";
 // Represents a bit of code as defined above
 export type Code = string | CodeContainer;
 
+// tag name and attributes for DOM sources
+type ContainerData = Record<string, string | string[] | string[][]>;
+
 // Represents some kind of container object, either a regular container or a
 // decoration wrapper container. Two container with the same hash are considered
 // exchangeable, containers with the same ID are considered identical. Because
@@ -19,10 +22,8 @@ export type Code = string | CodeContainer;
 // well) is build from the container's data and language. Identifying a
 // container with a "key" prop like in React is totally possible!
 export type CodeContainer = {
-  id: string; // hash plus count for unique identification
-  hash: string; // built from "meta"
   language: string | undefined; // must be defined on the top-level container
-  data: Record<string, any>; // tag name and attributes for DOM sources
+  data: ContainerData;
   isDecoration: boolean; // whether to turn this into a Box or Decoration
   content: Code[];
 };
@@ -57,7 +58,6 @@ type LinkedListOf<T, Prev = T, Next = T> = T & {
 export type Token = {
   x: number;
   y: number;
-  hash: string;
   width: number;
   height: number;
 };
@@ -67,9 +67,7 @@ export type Token = {
 // the "data" field, which together with the language attribute serves as the
 // input to the box hash.
 export type Box<Content, Deco> = Token & {
-  id: string; // hash plus count for unique identification
-  readonly kind: "BOX";
-  data: Record<string, any>; // tag name and attributes for DOM sources
+  data: ContainerData;
   language: string | undefined;
   content: (Content | Box<Content, Deco>)[];
   decorations: Deco[];
@@ -79,16 +77,13 @@ export type Box<Content, Deco> = Token & {
 // Represents a marker token that takes up no space and contains no other
 // elements, but has set dimensions over a number of lines.
 export type Decoration<Content> = Token & {
-  readonly kind: "DECO";
-  data: Record<string, any>; // tag name and attributes for DOM sources
+  data: ContainerData;
   parent: Box<Content, Decoration<Content>>;
 };
 
 // Represents a text token. Returned by the tokenizer and devoid of any semantic
 // information, and thus missing both a hash and an ID.
-export type TextToken = Omit<Token, "hash"> & {
-  text: string;
-};
+export type TextToken = Token & { text: string };
 
 // The tokenizer links up all text tokens into a linked list
 export type TextTokens = LinkedListOf<TextToken>;
@@ -101,14 +96,25 @@ export type LanguageTokens = LinkedListOf<TextToken, TypedToken, TextToken>;
 
 // Represents a text token that has been passed through a language function and
 // has thus been assigned a type and a hash.
-export type TypedToken = Token & {
-  text: string;
-  type: string;
-  hash: string;
-};
+export type TypedToken = TextToken & { type: string };
 
 // Important for language postprocessors
 export type TypedTokens = LinkedListOf<TypedToken>;
+
+// Typed token with a hash over their text and type
+export type DiffToken = TypedToken & { hash: number };
+
+// Decoration's hashes at the diff stage are built from their data field.
+export type DiffDecoration = Decoration<DiffToken> & { hash: number };
+
+// Boxes' hashes at the diff stage are built from their data field, but they
+// also have an id that marks them as unique in their respective parent boxes:
+// If two boxes with the same data yield the same "real" hash, that second hash
+// is amended to be unique, turned into a string and gets used as the id.
+export type DiffBox = Box<DiffToken, DiffDecoration> & {
+  hash: number;
+  id: string;
+};
 
 // Describes how to render the token with the given id.
 type BasePosition = {
@@ -127,10 +133,10 @@ export type DecorationPosition = BasePosition;
 export type RenderPositions = BasePosition & { frame: Frame };
 
 export type RenderText = { id: string; text: string; type: string };
-export type RenderDecoration = { id: string; data: Record<string, any> };
+export type RenderDecoration = { id: string; data: ContainerData };
 export type RenderRoot<T, D> = {
   id: string;
-  data: Record<string, any>;
+  data: ContainerData;
   language: string | undefined;
   content: {
     text: Map<string, T>;
@@ -154,7 +160,9 @@ export type RenderData<T, D> = {
   maxHeight: number;
 };
 
-export type LanguageFunction = (token: LanguageTokens) => LanguageFunctionResult;
+export type LanguageFunction = (
+  token: LanguageTokens
+) => LanguageFunctionResult;
 export type LanguagePostprocessor = (token: TypedTokens) => boolean;
 
 export type TokenReplacementResult = {
