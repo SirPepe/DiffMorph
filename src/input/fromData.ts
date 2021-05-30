@@ -19,7 +19,6 @@ import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
 import { toLifecycle } from "../lib/lifecycle";
 import { InputOptions, withDefaults } from "./options";
-import { hashBoxes } from "../lib/hash";
 
 type Input = string | InputContainer;
 
@@ -101,6 +100,6 @@ export function fromData(
     }
     return applyLanguage(tokenized);
   });
-  const diffs = optimizeDiffs(diff(hashBoxes(typed)));
+  const diffs = optimizeDiffs(diff(typed));
   return toRenderData(toLifecycle(diffs, true));
 }

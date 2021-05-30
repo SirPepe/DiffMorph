@@ -32,7 +32,7 @@ function toTokenLifecycles<T extends Token>(
   const lifecycles = new Map<string, Lifecycle<T>>();
   const finished: Lifecycle<T>[] = [];
   // id -> [first index, trees[]]
-  const trees = new Map<number, [number, DiffTree[]]>();
+  const trees = new Map<string, [number, DiffTree[]]>();
   for (let i = 0; i < frames.length; i++) {
     const frameIdx = i + startIdx;
     // First pass: free positions and collect trees
