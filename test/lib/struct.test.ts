@@ -29,6 +29,7 @@ describe("finding structures", () => {
     const actual = findStructures(input);
     expect(actual).toEqual([
       {
+        type: "string string",
         hash: expect.any(Number),
         items: [input[2], input[3], input[4], input[5]],
         structures: [],
@@ -51,10 +52,12 @@ describe("finding structures", () => {
     const actual = findStructures(input);
     expect(actual).toEqual([
       {
+        type: "punctuation array",
         hash: expect.any(Number),
         items: [input[2], input[3], input[4], input[5], input[6]],
         structures: [
           {
+            type: "punctuation array",
             hash: expect.any(Number),
             items: [input[3], input[4], input[5]],
             structures: [],
@@ -80,11 +83,13 @@ describe("finding structures", () => {
     const actual = findStructures(input);
     expect(actual).toEqual([
       {
+        type: "punctuation array",
         hash: expect.any(Number),
         items: [input[2], input[3]],
         structures: [],
       },
       {
+        type: "punctuation array",
         hash: expect.any(Number),
         items: [input[5], input[6], input[7]],
         structures: [],

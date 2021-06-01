@@ -4,6 +4,7 @@ import { DiffTokens } from "../types";
 import { hash } from "./util";
 
 export type Structure = {
+  readonly type: string;
   readonly hash: number;
   readonly items: DiffTokens[];
   readonly structures: Structure[];
@@ -49,6 +50,7 @@ export function findStructures(items: DiffTokens[]): Structure[] {
       });
       if (result.length > 0) {
         structures.push({
+          type,
           hash: hash(result.map(({ hash }) => hash)),
           items: result,
           structures: findStructures(result.slice(1, -1)),
