@@ -1,7 +1,7 @@
 // This module is strictly speaking a sub module of the diff module and assigns
 // hashes (which in the case of boxes are locally unique) to tokens, boxes and
-// decorations. This all happens in-place which is why there's a lot of any
-// "any" annotations and type assertions.
+// decorations. This all happens in-place which is why there's a lot of "any"
+// annotations and type assertions.
 
 import { Box, Decoration, DiffBox, TypedToken } from "../types";
 import { createUniqueHashGenerator, hash, toString, isBox } from "./util";
