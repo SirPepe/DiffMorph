@@ -5,7 +5,7 @@
 import {
   DecorationPosition,
   DiffDecoration,
-  DiffToken,
+  DiffTokens,
   RenderData,
   RenderDecoration,
   RenderPositions,
@@ -124,7 +124,7 @@ function renderToken<Input extends InputToken, Output extends OutputToken>(
   return pool.use(lifecycle, operation);
 }
 
-function toRenderText({ type, text }: DiffToken, id: string): RenderText {
+function toRenderText({ type, text }: DiffTokens, id: string): RenderText {
   return { type, text, id };
 }
 

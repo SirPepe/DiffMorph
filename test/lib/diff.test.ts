@@ -1,6 +1,6 @@
 import { diff, findPatterns } from "../../src/lib/diff";
 import { Box } from "../../src/types";
-import { stubBox } from "../helpers";
+import { link, stubBox } from "../helpers";
 
 describe("finding patterns", () => {
   const rootBox: Box<any, any> = {
@@ -16,12 +16,12 @@ describe("finding patterns", () => {
   };
 
   test("directly adjacent tokens separated by : or -", () => {
-    const input = [
+    const input = link([
       { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
       { x: 2, y: 0, width: 1, height: 1, hash: 1, text: "a", type: "" },
       { x: 3, y: 0, width: 1, height: 1, hash: 2, text: "-", type: "" },
       { x: 4, y: 0, width: 1, height: 1, hash: 3, text: "b", type: "" },
-    ];
+    ]);
     const actual = findPatterns(input, rootBox);
     expect(actual).toEqual([
       {
@@ -37,14 +37,14 @@ describe("finding patterns", () => {
   });
 
   test("string sequence", () => {
-    const input = [
+    const input = link([
       { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
       { x: 2, y: 0, width: 1, height: 1, hash: 1, text: ":", type: "" },
       { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "'", type: "" },
       { x: 5, y: 0, width: 1, height: 1, hash: 3, text: "h", type: "" },
       { x: 6, y: 0, width: 1, height: 1, hash: 4, text: "i", type: "" },
       { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "" },
-    ];
+    ]);
     const actual = findPatterns(input, rootBox);
     expect(actual).toEqual([
       {
@@ -60,11 +60,11 @@ describe("finding patterns", () => {
   });
 
   test("identifier/assignment pair", () => {
-    const input = [
+    const input = link([
       { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
       { x: 2, y: 0, width: 1, height: 1, hash: 1, text: "=", type: "" },
       { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "42", type: "" },
-    ];
+    ]);
     const actual = findPatterns(input, rootBox);
     expect(actual).toEqual([
       {
@@ -80,14 +80,14 @@ describe("finding patterns", () => {
   });
 
   test("string sequence and identifier/operator pair", () => {
-    const input = [
+    const input = link([
       { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
       { x: 2, y: 0, width: 1, height: 1, hash: 1, text: "=", type: "" },
       { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "'", type: "" },
       { x: 5, y: 0, width: 1, height: 1, hash: 3, text: "h", type: "" },
       { x: 6, y: 0, width: 1, height: 1, hash: 4, text: "i", type: "" },
       { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "" },
-    ];
+    ]);
     const actual = findPatterns(input, rootBox);
     expect(actual).toEqual([
       {
@@ -112,12 +112,12 @@ describe("finding patterns", () => {
   });
 
   test("no patterns", () => {
-    const input = [
+    const input = link([
       { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
       { x: 2, y: 0, width: 1, height: 1, hash: 1, text: "a", type: "" },
       { x: 3, y: 0, width: 1, height: 1, hash: 2, text: "g", type: "" },
       { x: 4, y: 0, width: 1, height: 1, hash: 3, text: "b", type: "" },
-    ];
+    ]);
     const actual = findPatterns(input, rootBox);
     expect(actual).toEqual([]);
   });

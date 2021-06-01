@@ -3,7 +3,7 @@
 // this - it's just a bunch of heuristics applied in a brute-force manner.
 
 import { mapBy } from "@sirpepe/shed";
-import { Box, DiffToken, Token } from "../types";
+import { Box, DiffTokens, Token } from "../types";
 import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
 import { pickAlternative } from "./heuristics";
 
@@ -26,8 +26,8 @@ function optimizeOperations<T extends Optimizable>(
   operations: DiffOp<T>[]
 ): DiffOp<T>[];
 function optimizeOperations(
-  operations: (DiffTree | DiffOp<DiffToken>)[]
-): (DiffTree | DiffOp<DiffToken>)[];
+  operations: (DiffTree | DiffOp<DiffTokens>)[]
+): (DiffTree | DiffOp<DiffTokens>)[];
 function optimizeOperations<T extends Optimizable>(
   operations: (DiffTree | DiffOp<T>)[]
 ): (DiffTree | DiffOp<T>)[] {

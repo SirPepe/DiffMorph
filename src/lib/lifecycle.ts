@@ -1,4 +1,4 @@
-import { DiffBox, DiffDecoration, DiffToken, Token } from "../types";
+import { DiffBox, DiffDecoration, DiffTokens, Token } from "../types";
 import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "./diff";
 import { minmax } from "./util";
 
@@ -7,7 +7,7 @@ export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
 export type BoxLifecycle = {
   base: DiffBox;
   self: Map<number, ExtendedDiffOp<DiffBox> | BOX<DiffBox>>;
-  text: Lifecycle<DiffToken>[];
+  text: Lifecycle<DiffTokens>[];
   decorations: Lifecycle<DiffDecoration>[];
   boxes: BoxLifecycle[];
 };

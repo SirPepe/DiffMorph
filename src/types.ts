@@ -45,7 +45,7 @@ export type CodeContainer = {
 // linked-list-ness is not part of the token's types because only certain parts
 // of DiffMorph depend on this functionality and making it an addon type makes
 // writing some code (and some tests) way simpler.
-type LinkedListOf<T, Prev = T, Next = T> = T & {
+export type LinkedListOf<T, Prev = T, Next = T> = T & {
   prev: LinkedListOf<Prev> | undefined;
   next: LinkedListOf<Next> | undefined;
   parent: Box<T | Prev | Next, Decoration<LinkedListOf<T | Prev | Next>>>;
@@ -101,17 +101,17 @@ export type TypedToken = TextToken & { type: string };
 // Important for language postprocessors
 export type TypedTokens = LinkedListOf<TypedToken>;
 
-// Typed token with a hash over their text and type
-export type DiffToken = TypedToken & { hash: number };
+// Typed tokens with a hash over their text and type
+export type DiffTokens = LinkedListOf<TypedToken & { hash: number }>;
 
 // Decoration's hashes at the diff stage are built from their data field.
-export type DiffDecoration = Decoration<DiffToken> & { hash: number };
+export type DiffDecoration = Decoration<DiffTokens> & { hash: number };
 
 // Boxes' hashes at the diff stage are built from their data field, but they
 // also have an id that marks them as unique in their respective parent boxes:
 // If two boxes with the same data yield the same "real" hash, that second hash
 // is amended to be unique, turned into a string and gets used as the id.
-export type DiffBox = Box<DiffToken, DiffDecoration> & {
+export type DiffBox = Box<DiffTokens, DiffDecoration> & {
   hash: number;
   id: string;
 };

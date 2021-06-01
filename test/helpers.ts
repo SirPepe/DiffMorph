@@ -4,7 +4,7 @@ import { toLifecycle } from "../src/lib/lifecycle";
 import { optimizeDiffs } from "../src/lib/optimize";
 import { tokenize } from "../src/lib/tokenizer";
 import { flattenTokens, getFirstTextToken } from "../src/lib/util";
-import { Box, Code, Decoration, TypedTokens } from "../src/types";
+import { Box, Code, Decoration, LinkedListOf, TypedTokens } from "../src/types";
 
 type DecorationArgs = Omit<Decoration<any>, "parent">;
 
@@ -64,6 +64,15 @@ export function stubBox<T, D extends DecorationArgs>(
     return item as Decoration<any>;
   });
   return result;
+}
+
+export function link<T, P = any>(items: T[], parent?: P): LinkedListOf<T>[] {
+  for (let i = 0; i < items.length; i++) {
+    (items[i] as any).next = items[i + 1];
+    (items[i] as any).prev = items[i - 1];
+    (items[i] as any).parent = parent;
+  }
+  return items as LinkedListOf<T>[];
 }
 
 /* eslint-disable */
