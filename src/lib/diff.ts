@@ -97,7 +97,8 @@ export type DiffTree = {
 type Line = {
   readonly x: number;
   readonly y: number;
-  readonly id: number;
+  readonly width: number;
+  readonly height: number;
   readonly hash: number;
   readonly items: DiffTokens[];
 };
@@ -124,12 +125,11 @@ function hashItems(items: DiffTokens[]): number {
 // Organize tokens into lines
 function asLines(tokens: DiffTokens[]): Line[] {
   const byLine = groupBy(tokens, "y");
-  const generator = createUniqueHashGenerator();
   return Array.from(byLine, ([y, items]) => {
     const hash = hashItems(items);
-    const id = generator([hash]);
     const x = items.length > 0 ? items[0].x : 0;
-    return { hash, id, items, x, y };
+    const width = items[items.length - 1].x + items[items.length - 1].width - x;
+    return { hash, items, x, y, width, height: 1 };
   });
 }
 
@@ -154,16 +154,23 @@ function diffLines(
   to: Line[]
 ): { result: MOV<DiffTokens>[]; restFrom: DiffTokens[]; restTo: DiffTokens[] } {
   const result: MOV<DiffTokens>[] = [];
+  const fromByHash = groupBy(from, "hash");
   const doneFrom = new Set<DiffTokens>();
   const doneTo = new Set<DiffTokens>();
-  const fromById = mapBy(from, "id");
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash,
     ignoreCase: false,
   });
   for (const change of changes) {
+    if (change.removed) {
+      continue; // nothing to move
+    }
     for (const line of change.value) {
-      const previous = fromById.get(line.id);
+      const candidates = fromByHash.get(line.hash);
+      if (!candidates) {
+        continue; // no alternatives, line may have been removed or changed
+      }
+      const previous = pickAlternative(line, candidates);
       if (previous && previous !== line) {
         result.push(...shiftLine(previous, line));
         previous.items.forEach((item) => doneFrom.add(item));

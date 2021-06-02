@@ -256,6 +256,41 @@ describe("diffing lines", () => {
     });
   });
 
+  test("diffing longer lines (swap on y axis with alternatives)", () => {
+    const aTokens = [
+      { x: 0, y: 0, width: 1, height: 1, text: "", type: "a" },
+      { x: 1, y: 0, width: 1, height: 1, text: "", type: "b" },
+      { x: 0, y: 1, width: 1, height: 1, text: "", type: "x" },
+      { x: 0, y: 2, width: 1, height: 1, text: "", type: "c" },
+      { x: 1, y: 2, width: 1, height: 1, text: "", type: "d" },
+      { x: 0, y: 3, width: 1, height: 1, text: "", type: "c" },
+      { x: 1, y: 3, width: 1, height: 1, text: "", type: "d" },
+    ];
+    const bTokens = [
+      { x: 0, y: 0, width: 1, height: 1, text: "", type: "c" }, // was: y = 2
+      { x: 1, y: 0, width: 1, height: 1, text: "", type: "d" }, // was: y = 2
+      { x: 0, y: 1, width: 1, height: 1, text: "", type: "x" }, // unchanged
+      { x: 0, y: 2, width: 1, height: 1, text: "", type: "a" }, // was: y = 0
+      { x: 1, y: 2, width: 1, height: 1, text: "", type: "b" }, // was: y = 0
+      { x: 0, y: 3, width: 1, height: 1, text: "", type: "c" }, // unchanged
+      { x: 1, y: 3, width: 1, height: 1, text: "", type: "d" }, // unchanged
+    ];
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
+    const [, actual] = diff([a, b]);
+    expect(actual).toEqual({
+      kind: "TREE",
+      root: { kind: "BOX", item: b },
+      content: [
+        { kind: "MOV", item: bTokens[0], from: aTokens[3] },
+        { kind: "MOV", item: bTokens[1], from: aTokens[4] },
+        { kind: "MOV", item: bTokens[3], from: aTokens[0] },
+        { kind: "MOV", item: bTokens[4], from: aTokens[1] },
+      ],
+      decorations: [],
+    });
+  });
+
   test("diffing longer lines (swap on y axis) and modify a line", () => {
     const aTokens = [
       { x: 0, y: 0, width: 1, height: 1, text: "", type: "a" },
@@ -284,6 +319,37 @@ describe("diffing lines", () => {
         { kind: "MOV", item: bTokens[4], from: aTokens[0] },
         { kind: "MOV", item: bTokens[5], from: aTokens[1] },
         { kind: "ADD", item: bTokens[3] },
+      ],
+      decorations: [],
+    });
+  });
+
+  test("chaotic line movements", () => {
+    const aTokens = [
+      { x: 2, y: 0, width: 1, height: 1, text: "", type: "a" },
+      { x: 3, y: 0, width: 1, height: 1, text: "", type: "b" },
+      { x: 0, y: 1, width: 1, height: 1, text: "", type: "x" },
+      { x: 0, y: 2, width: 1, height: 1, text: "", type: "c" },
+      { x: 1, y: 2, width: 1, height: 1, text: "", type: "d" },
+    ];
+    const bTokens = [
+      { x: 0, y: 0, width: 1, height: 1, text: "", type: "c" }, // was x 0, y 2
+      { x: 1, y: 0, width: 1, height: 1, text: "", type: "d" }, // was x 1, y 2
+      { x: 0, y: 1, width: 1, height: 1, text: "", type: "x" }, // unchanged
+      { x: 0, y: 2, width: 1, height: 1, text: "", type: "a" }, // was: x 2 y 0
+      { x: 1, y: 2, width: 1, height: 1, text: "", type: "b" }, // was: x 3 y 0
+    ];
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
+    const [, actual] = diff([a, b]);
+    expect(actual).toEqual({
+      kind: "TREE",
+      root: { kind: "BOX", item: b },
+      content: [
+        { kind: "MOV", item: bTokens[0], from: aTokens[3] },
+        { kind: "MOV", item: bTokens[1], from: aTokens[4] },
+        { kind: "MOV", item: bTokens[3], from: aTokens[0] },
+        { kind: "MOV", item: bTokens[4], from: aTokens[1] },
       ],
       decorations: [],
     });
