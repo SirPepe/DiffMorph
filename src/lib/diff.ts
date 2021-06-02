@@ -170,7 +170,7 @@ function diffLines(
       if (!candidates) {
         continue; // no alternatives, line may have been removed or changed
       }
-      const previous = pickAlternative(line, candidates);
+      const [previous] = pickAlternative(line, candidates);
       if (previous && previous !== line) {
         result.push(...shiftLine(previous, line));
         previous.items.forEach((item) => doneFrom.add(item));
@@ -285,7 +285,7 @@ function diffPatterns(
   for (const [hash, fromPatterns] of fromPatternsByHash) {
     const toPatterns = new Set(toPatternsByHash.get(hash) ?? []);
     for (const fromPattern of fromPatterns) {
-      const match = pickAlternative(fromPattern, toPatterns);
+      const [match] = pickAlternative(fromPattern, Array.from(toPatterns));
       if (match) {
         toPatterns.delete(match);
         // Remove the matching items from the source lists as the are definitely

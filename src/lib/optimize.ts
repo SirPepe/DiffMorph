@@ -3,11 +3,18 @@
 // this - it's just a bunch of heuristics applied in a brute-force manner.
 
 import { mapBy } from "@sirpepe/shed";
-import { Box, DiffTokens, Token } from "../types";
+import { DiffTokens, Token } from "../types";
 import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
 import { pickAlternative } from "./heuristics";
 
-export type Optimizable = Token & { hash: any; parent: Box<any, any> };
+// "next" and "prev" are useful inputs to the optimizer, but they must not be
+// strictly required, otherwise only linked list members can be optimized and
+// stuff like structures or decorations can't.
+export type Optimizable = Token & {
+  hash: any;
+  prev?: Optimizable | undefined;
+  next?: Optimizable | undefined;
+};
 
 export function optimizeDiffs(diffs: DiffTree[]): DiffTree[] {
   return diffs.map(optimizeDiff);
@@ -74,7 +81,7 @@ function resolveOptimizations<T extends Optimizable>(
   const movements: MOV<T>[] = [];
   const additionsByItem = mapBy(additions, "item");
   for (const deletion of deletions) {
-    const alternative = pickAlternative(
+    const [alternative] = pickAlternative(
       deletion.item,
       Array.from(additions, (op) => op.item)
     );
