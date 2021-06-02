@@ -133,54 +133,51 @@ function asLines(tokens: DiffTokens[]): Line[] {
   });
 }
 
+// If a line was moved on some axis, create MOV ops for the affected tokens
+function shiftLine(from: Line, to: Line): MOV<DiffTokens>[] {
+  const ops: MOV<DiffTokens>[] = [];
+  if (from.x !== to.x || from.y !== to.y) {
+    for (let i = 0; i < from.items.length; i++) {
+      ops.push({
+        kind: "MOV",
+        item: to.items[i],
+        from: from.items[i],
+      });
+    }
+  }
+  return ops;
+}
+
 // Diff entire lines of tokens
 function diffLines(
   from: Line[],
   to: Line[]
 ): { result: MOV<DiffTokens>[]; restFrom: DiffTokens[]; restTo: DiffTokens[] } {
   const result: MOV<DiffTokens>[] = [];
-  const toById = new Map(to.map((line) => [line.id, line]));
-  const fromById = new Map(from.map((line) => [line.id, line]));
+  const doneFrom = new Set<DiffTokens>();
+  const doneTo = new Set<DiffTokens>();
+  const fromById = mapBy(from, "id");
   const changes = diffArrays(from, to, {
     comparator: (a, b) => a.hash === b.hash,
     ignoreCase: false,
   });
   for (const change of changes) {
     for (const line of change.value) {
-      // Line was "added" or "removed" (either added/removed in actuality or
-      // some of its tokens changed), so its content must be looked at closer
-      // in another stage.
-      if (change.added || change.removed) {
-        continue;
+      const previous = fromById.get(line.id);
+      if (previous && previous !== line) {
+        result.push(...shiftLine(previous, line));
+        previous.items.forEach((item) => doneFrom.add(item));
+        line.items.forEach((item) => doneTo.add(item));
       }
-      // Otherwise the line was either completely unchanged or just moved with
-      // all of its tokens, so it can be taken out of the rest of the process.
-      const fromLine = fromById.get(line.id);
-      if (!fromLine) {
-        throw new Error("Expected fromLine to be defined");
-      }
-      if (fromLine.x !== line.x || fromLine.y !== line.y) {
-        // Line was moved on some axis! Link tokens to their predecessors and
-        // push them to the moved list (and thus out of the way for the rest of
-        // the diffing process)
-        for (let i = 0; i < line.items.length; i++) {
-          result.push({
-            kind: "MOV",
-            item: line.items[i],
-            from: fromLine.items[i],
-          });
-        }
-      }
-      // Indented or unchanged, thus taken care of and can be removed
-      fromById.delete(line.id);
-      toById.delete(line.id);
     }
   }
-  return {
-    result,
-    restTo: Array.from(toById.values()).flatMap(({ items }) => items),
-    restFrom: Array.from(fromById.values()).flatMap(({ items }) => items),
-  };
+  const restFrom = from.flatMap(({ items }) =>
+    items.filter((item) => !doneFrom.has(item))
+  );
+  const restTo = to.flatMap(({ items }) =>
+    items.filter((item) => !doneTo.has(item))
+  );
+  return { result, restFrom, restTo };
 }
 
 // Organize items into pattern objects
