@@ -356,6 +356,47 @@ describe("diffing lines", () => {
   });
 });
 
+describe("diff structures", () => {
+  test("switch lines", () => {
+    const aTokens = [
+      { x: 0, y: 0, width: 1, height: 1, text: "x", type: "" },
+      { x: 1, y: 0, width: 1, height: 1, text: "=", type: "" },
+      { x: 2, y: 0, width: 1, height: 1, text: "[", type: "foo foo-start-0" },
+      { x: 3, y: 0, width: 1, height: 1, text: "1", type: "" },
+      { x: 4, y: 0, width: 1, height: 1, text: "]", type: "foo foo-end-0" },
+      { x: 0, y: 0, width: 1, height: 1, text: "y", type: "" },
+      { x: 1, y: 0, width: 1, height: 1, text: "=", type: "" },
+      { x: 2, y: 1, width: 1, height: 1, text: "[", type: "foo foo-start-0" },
+      { x: 3, y: 1, width: 1, height: 1, text: "2", type: "" },
+      { x: 4, y: 1, width: 1, height: 1, text: "]", type: "foo foo-end-0" },
+    ];
+    const bTokens = [
+      { x: 0, y: 0, width: 1, height: 1, text: "x", type: "" },
+      { x: 1, y: 0, width: 1, height: 1, text: "=", type: "" },
+      { x: 2, y: 0, width: 1, height: 1, text: "[", type: "foo foo-start-0" },
+      { x: 3, y: 0, width: 1, height: 1, text: "2", type: "" },
+      { x: 4, y: 0, width: 1, height: 1, text: "]", type: "foo foo-end-0" },
+      { x: 0, y: 0, width: 1, height: 1, text: "y", type: "" },
+      { x: 1, y: 0, width: 1, height: 1, text: "=", type: "" },
+      { x: 2, y: 1, width: 1, height: 1, text: "[", type: "foo foo-start-0" },
+      { x: 3, y: 1, width: 1, height: 1, text: "1", type: "" },
+      { x: 4, y: 1, width: 1, height: 1, text: "]", type: "foo foo-end-0" },
+    ];
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
+    const [, actual] = diff([a, b]);
+    // 6x MOV for language constructs [1] and [2]
+    expect(actual.content.map(({ kind }) => kind)).toEqual([
+      "MOV",
+      "MOV",
+      "MOV",
+      "MOV",
+      "MOV",
+      "MOV",
+    ]);
+  });
+});
+
 describe("diff tokens", () => {
   test("diffing tokens (addition at end of line)", () => {
     const aTokens = [

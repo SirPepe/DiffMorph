@@ -5,13 +5,13 @@
 //    boxes positions and dimensions stay the same, but contents may have
 //    changed.
 // 2. diff typed tokens by
-//    a. organizing them in lines and diffing the lines by a hash chain. Lines
-//       that changed get translated into MOV operations for their constituent
-//       typed tokens, which are thus removed from the diffing problem. This
-//       could some day be optimized even further by diffing comment and
-//       non-comment tokens as lines in two passes, which would prevent changes
-//       in comments from breaking up entire lines and leading to confusing
-//       diffs.
+//    a. organizing them into structures and diffing them by a hash chain. All
+//       structures that moved without any other changes translated into MOV
+//       operations for their constituent typed tokens, which are thus removed
+//       from the diffing problem. This could some day be optimized even further
+//       by diffing comment and non-comment tokens as lines in two passes, which
+//       would prevent changes in comments from breaking up entire structures
+//       and leading to confusing diffs.
 //    b. diffing the remaining tokens individually, returning only ADD and DEL
 //       operations. The optimizer stage is responsible for turning an ADD and a
 //       DEL on equivalent tokens into a MOV operation
@@ -29,9 +29,10 @@ import {
   Token,
   TypedToken,
 } from "../types";
-import { createUniqueHashGenerator, hash, isAdjacent, isBox } from "./util";
+import { hash, isAdjacent, isBox } from "./util";
 import { pickAlternative } from "./heuristics";
 import { assignHashes } from "./hash";
+import { diffLinesAndStructures } from "./struct";
 
 // ADD does not need a "from" field because it is by definition an initial
 // addition. It may get translated to a BAD + MOV pair, but there then BAD is
@@ -94,15 +95,6 @@ export type DiffTree = {
   decorations: DiffOp<DiffDecoration>[];
 };
 
-type Line = {
-  readonly x: number;
-  readonly y: number;
-  readonly width: number;
-  readonly height: number;
-  readonly hash: number;
-  readonly items: DiffTokens[];
-};
-
 // Compatible to the type Optimizable used in optimizer and heuristics
 type Pattern = Token & {
   readonly hash: number;
@@ -122,71 +114,6 @@ function hashItems(items: DiffTokens[]): number {
   return hash(hashes);
 }
 
-// Organize tokens into lines
-function asLines(tokens: DiffTokens[]): Line[] {
-  const byLine = groupBy(tokens, "y");
-  return Array.from(byLine, ([y, items]) => {
-    const hash = hashItems(items);
-    const x = items.length > 0 ? items[0].x : 0;
-    const width = items[items.length - 1].x + items[items.length - 1].width - x;
-    return { hash, items, x, y, width, height: 1 };
-  });
-}
-
-// If a line was moved on some axis, create MOV ops for the affected tokens
-function shiftLine(from: Line, to: Line): MOV<DiffTokens>[] {
-  const ops: MOV<DiffTokens>[] = [];
-  if (from.x !== to.x || from.y !== to.y) {
-    for (let i = 0; i < from.items.length; i++) {
-      ops.push({
-        kind: "MOV",
-        item: to.items[i],
-        from: from.items[i],
-      });
-    }
-  }
-  return ops;
-}
-
-// Diff entire lines of tokens
-function diffLines(
-  from: Line[],
-  to: Line[]
-): { result: MOV<DiffTokens>[]; restFrom: DiffTokens[]; restTo: DiffTokens[] } {
-  const result: MOV<DiffTokens>[] = [];
-  const fromByHash = groupBy(from, "hash");
-  const doneFrom = new Set<DiffTokens>();
-  const doneTo = new Set<DiffTokens>();
-  const changes = diffArrays(from, to, {
-    comparator: (a, b) => a.hash === b.hash,
-    ignoreCase: false,
-  });
-  for (const change of changes) {
-    if (change.removed) {
-      continue; // nothing to move
-    }
-    for (const line of change.value) {
-      const candidates = fromByHash.get(line.hash);
-      if (!candidates) {
-        continue; // no alternatives, line may have been removed or changed
-      }
-      const [previous] = pickAlternative(line, candidates);
-      if (previous && previous !== line) {
-        result.push(...shiftLine(previous, line));
-        previous.items.forEach((item) => doneFrom.add(item));
-        line.items.forEach((item) => doneTo.add(item));
-      }
-    }
-  }
-  const restFrom = from.flatMap(({ items }) =>
-    items.filter((item) => !doneFrom.has(item))
-  );
-  const restTo = to.flatMap(({ items }) =>
-    items.filter((item) => !doneTo.has(item))
-  );
-  return { result, restFrom, restTo };
-}
-
 // Organize items into pattern objects
 function asPattern(items: DiffTokens[], parent: Box<DiffTokens, any>): Pattern {
   const [{ x, y }] = items;
@@ -201,31 +128,8 @@ function asPattern(items: DiffTokens[], parent: Box<DiffTokens, any>): Pattern {
   };
 }
 
-// Take items from "items", starting at index "from" until "done" returns either
-// true or null (the latter signalling an abort)
-function consume(
-  items: DiffTokens[],
-  from: number,
-  done: (item: DiffTokens) => boolean | null // null = abort
-): { result: DiffTokens[]; position: number } {
-  const consumed = [];
-  for (let i = from; i < items.length; i++) {
-    const result = done(items[i]);
-    if (result === null) {
-      return { result: [], position: i };
-    } else {
-      consumed.push(items[i]);
-      if (result === true) {
-        return { result: consumed, position: i };
-      }
-    }
-  }
-  return { result: [], position: items.length };
-}
-
 // Find generic patterns that are common to many languages:
 //   * tokens separated by : or - (eg. namespaced tags in xml)
-//   * string sequences wrapped in ", ', or `
 //   * some variable-name-like text followed by =
 // Only exported for unit tests
 export function findPatterns(
@@ -241,19 +145,6 @@ export function findPatterns(
     ) {
       patterns.push(asPattern([items[i - 1], items[i], items[i + 1]], parent));
       i += 2;
-      continue;
-    }
-    if (['"', "'", "`"].includes(items[i].text)) {
-      const { result, position } = consume(items, i + 1, (curr) => {
-        if (curr.y !== items[i].y) {
-          return null; // abort on new line
-        }
-        return curr.text === items[i].text;
-      });
-      if (result.length > 0) {
-        patterns.push(asPattern([items[i], ...result], parent));
-      }
-      i += position;
       continue;
     }
     if (
@@ -432,15 +323,15 @@ function diffBoxes(
   const boxOps: DiffTree[] = [];
   const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
   const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
-  // First pass: diff entire lines
-  const lineDiff = diffLines(asLines(fromTokens), asLines(toTokens));
-  textOps.push(...lineDiff.result);
+  // First pass: diff mayor structures (language constructs and lines of code)
+  const structureDiff = diffLinesAndStructures(fromTokens, toTokens);
+  textOps.push(...structureDiff.result);
   // Second pass: diff common patterns. This is less of a traditional diff but
   // rather a shortcut directly to optimizing heuristics.
   const patternDiff = diffPatterns(
-    lineDiff.restFrom,
+    structureDiff.restFrom,
     from,
-    lineDiff.restTo,
+    structureDiff.restTo,
     to
   );
   textOps.push(...patternDiff.result);
