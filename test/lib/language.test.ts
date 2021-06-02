@@ -27,6 +27,7 @@ registerLanguage({
     return "f";
   },
   postprocessor: (): boolean => false,
+  patternHints: [],
 });
 
 describe("Basic input", () => {

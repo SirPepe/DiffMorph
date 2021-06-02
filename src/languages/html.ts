@@ -331,33 +331,22 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
 
 function glueHTML(token: TypedTokens): boolean {
   // Fuse XML tags
-  if (token.type === "tag-xml" && token?.prev?.type === "tag-xml") {
-    return true;
+  if (token.type === "tag-xml") {
+    return isAdjacent(token, token.prev);
   }
   // Fuse custom element tags
   if (
     token.type === "tag" &&
-    (token.text.startsWith("-") || token?.prev?.text.endsWith("-")) &&
-    token?.prev?.type === "tag"
+    (token.text.startsWith("-") || token?.prev?.text.endsWith("-"))
   ) {
-    return true;
+    return isAdjacent(token, token.prev);
   }
   // Fuse attribute names
-  if (
-    token.type.startsWith("attribute") &&
-    token?.prev?.type === token.type &&
-    isAdjacent(token, token.prev)
-  ) {
-    return true;
+  if (token.type.startsWith("attribute")) {
+    return isAdjacent(token, token.prev);
   }
   // Fuse closing slashes to end tags' closing bracket
-  if (
-    token.type === "tag" &&
-    token.text === "/" &&
-    token.prev &&
-    token.prev.type === "tag" &&
-    token.prev.text === "<"
-  ) {
+  if (token.type === "tag" && token.text === "/" && token.prev?.text === "<") {
     return true;
   }
   // Fuse closing brackets to self-closing tags
@@ -386,12 +375,8 @@ function glueHTML(token: TypedTokens): boolean {
   }
   // Join comments that are directly adjacent, such as "<" and "!" or "foo", "-"
   // and "bar"
-  if (
-    token.type === "comment" &&
-    token?.prev?.type === "comment" &&
-    isAdjacent(token, token.prev)
-  ) {
-    return true;
+  if (token.type === "comment" && token?.prev?.type === "comment") {
+    return isAdjacent(token, token.prev);
   }
   // Fuse non-quote bits of attribute values
   if (
@@ -445,4 +430,5 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineHTML,
   postprocessor: glueHTML,
+  patternHints: [],
 };

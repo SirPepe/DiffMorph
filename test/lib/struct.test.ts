@@ -15,7 +15,7 @@ describe("finding structures", () => {
     parent: undefined,
   };
 
-  test("string sequence", () => {
+  test("string sequence by type", () => {
     const input = link([
       /* eslint-disable */
       { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },

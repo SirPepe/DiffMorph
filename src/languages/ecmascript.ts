@@ -600,9 +600,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return "call";
       }
       // Identifier in a list
-      if (
-        lookbehindType(token, ["punctuation", "token"])
-      ) {
+      if (lookbehindType(token, ["punctuation", "token"])) {
         return "token";
       }
     }
@@ -688,4 +686,5 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineECMAScript,
   postprocessor: postprocessECMAScript,
+  patternHints: [],
 };

@@ -9,7 +9,7 @@ import {
   LanguageFunctionResult,
   LanguageTokens,
   TextTokens,
-  TypedTokens
+  TypedTokens,
 } from "../types";
 
 type Flags = {
@@ -220,4 +220,5 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineJSON,
   postprocessor: postprocessJSON,
+  patternHints: [],
 };

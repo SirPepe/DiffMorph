@@ -8,6 +8,7 @@ registerLanguage({
   definitionFactory: () =>
     languageDefinition.definitionFactory({ inline: true }),
   postprocessor: languageDefinition.postprocessor,
+  patternHints: [],
 });
 
 const css = type("css");

@@ -176,7 +176,8 @@ type StructDiff = {
 
 export function diffLinesAndStructures(
   fromTokens: DiffTokens[],
-  toTokens: DiffTokens[]
+  toTokens: DiffTokens[],
+  hints: (string | RegExp)[][]
 ): StructDiff {
   const result: DiffOp<DiffTokens>[] = [];
   // First pass: find and keep unique language structures

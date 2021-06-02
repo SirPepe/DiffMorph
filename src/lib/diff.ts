@@ -29,6 +29,7 @@ import {
   Token,
   TypedToken,
 } from "../types";
+import { languages } from "../languages";
 import { hash, isAdjacent, isBox } from "./util";
 import { pickAlternative } from "./heuristics";
 import { assignHashes } from "./hash";
@@ -324,7 +325,11 @@ function diffBoxes(
   const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
   const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
   // First pass: diff mayor structures (language constructs and lines of code)
-  const structureDiff = diffLinesAndStructures(fromTokens, toTokens);
+  const structureDiff = diffLinesAndStructures(
+    fromTokens,
+    toTokens,
+    languages[root.item.language || "none"]?.patternHints ?? []
+  );
   textOps.push(...structureDiff.result);
   // Second pass: diff common patterns. This is less of a traditional diff but
   // rather a shortcut directly to optimizing heuristics.

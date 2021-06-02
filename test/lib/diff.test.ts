@@ -36,29 +36,6 @@ describe("finding patterns", () => {
     ]);
   });
 
-  test("string sequence", () => {
-    const input = link([
-      { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
-      { x: 2, y: 0, width: 1, height: 1, hash: 1, text: ":", type: "" },
-      { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "'", type: "" },
-      { x: 5, y: 0, width: 1, height: 1, hash: 3, text: "h", type: "" },
-      { x: 6, y: 0, width: 1, height: 1, hash: 4, text: "i", type: "" },
-      { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "" },
-    ]);
-    const actual = findPatterns(input, rootBox);
-    expect(actual).toEqual([
-      {
-        x: 4,
-        y: 0,
-        width: 0,
-        height: 0,
-        hash: expect.any(Number),
-        items: [input[2], input[3], input[4], input[5]],
-        parent: rootBox,
-      },
-    ]);
-  });
-
   test("identifier/assignment pair", () => {
     const input = link([
       { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
@@ -74,38 +51,6 @@ describe("finding patterns", () => {
         height: 0,
         hash: expect.any(Number),
         items: [input[0], input[1]],
-        parent: rootBox,
-      },
-    ]);
-  });
-
-  test("string sequence and identifier/operator pair", () => {
-    const input = link([
-      { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
-      { x: 2, y: 0, width: 1, height: 1, hash: 1, text: "=", type: "" },
-      { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "'", type: "" },
-      { x: 5, y: 0, width: 1, height: 1, hash: 3, text: "h", type: "" },
-      { x: 6, y: 0, width: 1, height: 1, hash: 4, text: "i", type: "" },
-      { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "" },
-    ]);
-    const actual = findPatterns(input, rootBox);
-    expect(actual).toEqual([
-      {
-        x: 0,
-        y: 0,
-        width: 0,
-        height: 0,
-        hash: expect.any(Number),
-        items: [input[0], input[1]],
-        parent: rootBox,
-      },
-      {
-        x: 4,
-        y: 0,
-        width: 0,
-        height: 0,
-        hash: expect.any(Number),
-        items: [input[2], input[3], input[4], input[5]],
         parent: rootBox,
       },
     ]);
