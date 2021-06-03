@@ -52,18 +52,49 @@ function consume(
   return { result: [], position: items.length };
 }
 
+type EndMatcher = {
+  type: string;
+  match: (item: DiffTokens) => boolean;
+};
+
+function matchStructureStart(item: DiffTokens): EndMatcher | null {
+  const typeMatch = /(.*)-start-(\d)+$/.exec(item.type);
+  if (typeMatch && typeMatch.length === 3) {
+    const [, type, level] = typeMatch;
+    return {
+      type,
+      match: (end: DiffTokens) =>
+        new RegExp(`${type}-end-${level}`).test(end.type),
+    };
+  }
+  if (item.type.startsWith("string")) {
+    const quotesMatch = /^(?<!\\)(["'`])+/.exec(item.text);
+    if (quotesMatch && quotesMatch.length === 2) {
+      const [, quotes] = quotesMatch;
+      return {
+        type: "string",
+        match: (end: DiffTokens) =>
+          end.type.startsWith("string") &&
+          !end.prev?.text.endsWith("\\") &&
+          new RegExp(`(?<!\\\\)[${quotes}]$`).test(end.text),
+      };
+    }
+  }
+  return null;
+}
+
+// Only exported for unit tests
 export function findStructures(items: DiffTokens[]): Structure[] {
   const structures: Structure[] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    const structMatch = /(.*)-start-(\d)+$/.exec(item.type);
-    if (structMatch && structMatch.length === 3) {
-      const [, type, level] = structMatch;
+    const endMatcher = matchStructureStart(item);
+    if (endMatcher) {
       const { result, position } = consume(items, i, (next) => {
         if (next.parent !== item.parent) {
           return null;
         }
-        if (next.type.match(new RegExp(`${type}-end-${level}`))) {
+        if (next !== item && endMatcher.match(next)) {
           return true;
         }
         return false;
@@ -75,7 +106,7 @@ export function findStructures(items: DiffTokens[]): Structure[] {
           y,
           width: findMaxValue(result, (item) => item.x + item.width - x),
           height: findMaxValue(result, (item) => item.y + item.height - y),
-          type,
+          type: endMatcher.type,
           hash: hashItems(result),
           items: result,
           structures: findStructures(result.slice(1, -1)),

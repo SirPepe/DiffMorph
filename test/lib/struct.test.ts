@@ -41,6 +41,83 @@ describe("finding structures", () => {
     ]);
   });
 
+  test("string sequence by text", () => {
+    const input = link([
+      /* eslint-disable */
+      { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
+      { x: 2, y: 0, width: 1, height: 1, hash: 1, text: "=", type: "" },
+      { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "'", type: "string" },
+      { x: 5, y: 0, width: 1, height: 1, hash: 3, text: "h", type: "string" },
+      { x: 6, y: 0, width: 1, height: 1, hash: 4, text: "i", type: "string" },
+      { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "string" },
+      /* eslint-enable */
+    ]);
+    const actual = findStructures(input);
+    expect(actual).toEqual([
+      {
+        x: 4,
+        y: 0,
+        width: 4,
+        height: 1,
+        type: "string",
+        hash: expect.any(Number),
+        items: [input[2], input[3], input[4], input[5]],
+        structures: [],
+      },
+    ]);
+  });
+
+  test("string sequence by text (escape in text token)", () => {
+    const input = link([
+      /* eslint-disable */
+      { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
+      { x: 2, y: 0, width: 1, height: 1, hash: 1, text: "=", type: "" },
+      { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "'", type: "string" },
+      { x: 5, y: 0, width: 2, height: 1, hash: 3, text: "\\'", type: "string" },
+      { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "string" },
+      /* eslint-enable */
+    ]);
+    const actual = findStructures(input);
+    expect(actual).toEqual([
+      {
+        x: 4,
+        y: 0,
+        width: 4,
+        height: 1,
+        type: "string",
+        hash: expect.any(Number),
+        items: [input[2], input[3], input[4]],
+        structures: [],
+      },
+    ]);
+  });
+
+  test("string sequence by text (escape in prev token)", () => {
+    const input = link([
+      /* eslint-disable */
+      { x: 0, y: 0, width: 1, height: 1, hash: 0, text: "x", type: "" },
+      { x: 2, y: 0, width: 1, height: 1, hash: 1, text: "=", type: "" },
+      { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "'", type: "string" },
+      { x: 5, y: 0, width: 1, height: 1, hash: 3, text: "\\", type: "string" },
+      { x: 6, y: 0, width: 1, height: 1, hash: 4, text: "'", type: "string" },
+      { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "string" },
+      /* eslint-enable */
+    ]);
+    const actual = findStructures(input);
+    expect(actual).toEqual([
+      {
+        x: 4,
+        y: 0,
+        width: 4,
+        height: 1,
+        type: "string",
+        hash: expect.any(Number),
+        items: [input[2], input[3], input[4], input[5]],
+        structures: [],
+      },
+    ]);
+  });
+
   test("nested array sequence", () => {
     const input = link([
       /* eslint-disable */
