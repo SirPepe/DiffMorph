@@ -61,8 +61,8 @@ function toStructure(
   return {
     x,
     y,
-    width: findMaxValue(items, (item) => item.x + item.width - x),
-    height: findMaxValue(items, (item) => item.y + item.height - y),
+    width: findMaxValue(items, (item) => item.x + item.width) - x,
+    height: findMaxValue(items, (item) => item.y + item.height) - y,
     type,
     hash: hashItems(items),
     items,
@@ -150,7 +150,7 @@ export function findStructures(
     const hintsMatch = matchHints(item, hints);
     if (hintsMatch.length > 0) {
       structures.push(toStructure(hintsMatch, "hint", hints));
-      i += hintsMatch.length;
+      i += hintsMatch.length - 1;
       continue;
     }
     const endMatcher = matchStructureStart(item);

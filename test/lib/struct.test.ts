@@ -199,8 +199,8 @@ describe("finding hints", () => {
       /* eslint-disable */
       { x: 0, y: 0, width: 2, height: 1, hash: 0, text: "<a", type: "tag" },
       { x: 2, y: 0, width: 1, height: 1, hash: 1, text: ":", type: "operator-namespace" },
-      { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "b", type: "tag" },
-      { x: 5, y: 0, width: 1, height: 1, hash: 3, text: ">", type: "tag" },
+      { x: 3, y: 0, width: 1, height: 1, hash: 2, text: "b", type: "tag" },
+      { x: 4, y: 0, width: 1, height: 1, hash: 3, text: ">", type: "tag" },
       /* eslint-enable */
     ]);
     const actual = findStructures(input, []);
@@ -208,11 +208,49 @@ describe("finding hints", () => {
       {
         x: 0,
         y: 0,
-        width: 5,
+        width: 4,
         height: 1,
         type: "hint",
         hash: expect.any(Number),
         items: [input[0], input[1], input[2]],
+        structures: [],
+      },
+    ]);
+  });
+
+  test("multiple implicit operator hints", () => {
+    const input = link([
+      /* eslint-disable */
+      { x: 0, y: 0, width: 2, height: 1, hash: 0, text: "<a", type: "tag" },
+      { x: 2, y: 0, width: 1, height: 1, hash: 1, text: ":", type: "operator-namespace" },
+      { x: 3, y: 0, width: 1, height: 1, hash: 2, text: "b", type: "tag" },
+      { x: 4, y: 0, width: 1, height: 1, hash: 3, text: ">", type: "tag" },
+      { x: 5, y: 0, width: 2, height: 1, hash: 0, text: "<c", type: "tag" },
+      { x: 7, y: 0, width: 1, height: 1, hash: 1, text: ":", type: "operator-namespace" },
+      { x: 8, y: 0, width: 1, height: 1, hash: 2, text: "d", type: "tag" },
+      { x: 9, y: 0, width: 1, height: 1, hash: 3, text: ">", type: "tag" },
+      /* eslint-enable */
+    ]);
+    const actual = findStructures(input, []);
+    expect(actual).toEqual([
+      {
+        x: 0,
+        y: 0,
+        width: 4,
+        height: 1,
+        type: "hint",
+        hash: expect.any(Number),
+        items: [input[0], input[1], input[2]],
+        structures: [],
+      },
+      {
+        x: 5,
+        y: 0,
+        width: 4,
+        height: 1,
+        type: "hint",
+        hash: expect.any(Number),
+        items: [input[4], input[5], input[6]],
         structures: [],
       },
     ]);
