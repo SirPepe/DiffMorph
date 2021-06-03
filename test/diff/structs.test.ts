@@ -1,4 +1,4 @@
-import { findStructures } from "../../src/lib/struct";
+import { findStructs } from "../../src/diff/structs";
 import { link } from "../helpers";
 
 describe("finding structures", () => {
@@ -13,8 +13,8 @@ describe("finding structures", () => {
       { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "string string-end-0" },
       /* eslint-enable */
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([
       {
         x: 4,
         y: 0,
@@ -23,9 +23,9 @@ describe("finding structures", () => {
         type: "string string",
         hash: expect.any(Number),
         items: [input[2], input[3], input[4], input[5]],
-        structures: [],
       },
     ]);
+    expect(actual.rest).toEqual([input[0], input[1]]);
   });
 
   test("string sequence by text", () => {
@@ -39,8 +39,8 @@ describe("finding structures", () => {
       { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "string" },
       /* eslint-enable */
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([
       {
         x: 4,
         y: 0,
@@ -49,9 +49,9 @@ describe("finding structures", () => {
         type: "string",
         hash: expect.any(Number),
         items: [input[2], input[3], input[4], input[5]],
-        structures: [],
       },
     ]);
+    expect(actual.rest).toEqual([input[0], input[1]]);
   });
 
   test("string sequence by text (escape in text token)", () => {
@@ -64,8 +64,8 @@ describe("finding structures", () => {
       { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "string" },
       /* eslint-enable */
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([
       {
         x: 4,
         y: 0,
@@ -74,9 +74,9 @@ describe("finding structures", () => {
         type: "string",
         hash: expect.any(Number),
         items: [input[2], input[3], input[4]],
-        structures: [],
       },
     ]);
+    expect(actual.rest).toEqual([input[0], input[1]]);
   });
 
   test("string sequence by text (escape in prev token)", () => {
@@ -90,8 +90,8 @@ describe("finding structures", () => {
       { x: 7, y: 0, width: 1, height: 1, hash: 5, text: "'", type: "string" },
       /* eslint-enable */
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([
       {
         x: 4,
         y: 0,
@@ -100,9 +100,9 @@ describe("finding structures", () => {
         type: "string",
         hash: expect.any(Number),
         items: [input[2], input[3], input[4], input[5]],
-        structures: [],
       },
     ]);
+    expect(actual.rest).toEqual([input[0], input[1]]);
   });
 
   test("nested array sequence", () => {
@@ -117,8 +117,8 @@ describe("finding structures", () => {
       { x: 9, y: 0, width: 1, height: 1, hash: 5, text: "]", type: "punctuation array-end-0" },
       /* eslint-enable */
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([
       {
         x: 4,
         y: 0,
@@ -127,20 +127,9 @@ describe("finding structures", () => {
         type: "punctuation array",
         hash: expect.any(Number),
         items: [input[2], input[3], input[4], input[5], input[6]],
-        structures: [
-          {
-            x: 5,
-            y: 0,
-            width: 4,
-            height: 1,
-            type: "punctuation array",
-            hash: expect.any(Number),
-            items: [input[3], input[4], input[5]],
-            structures: [],
-          },
-        ],
       },
     ]);
+    expect(actual.rest).toEqual([input[0], input[1]]);
   });
 
   test("multiple array sequences", () => {
@@ -156,8 +145,8 @@ describe("finding structures", () => {
       { x: 11, y: 0, width: 1, height: 1, hash: 4, text: "]", type: "punctuation array-end-0" },
       /* eslint-enable */
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([
       {
         x: 4,
         y: 0,
@@ -166,7 +155,6 @@ describe("finding structures", () => {
         type: "punctuation array",
         hash: expect.any(Number),
         items: [input[2], input[3]],
-        structures: [],
       },
       {
         x: 8,
@@ -176,9 +164,9 @@ describe("finding structures", () => {
         type: "punctuation array",
         hash: expect.any(Number),
         items: [input[5], input[6], input[7]],
-        structures: [],
       },
     ]);
+    expect(actual.rest).toEqual([input[0], input[1], input[4]]);
   });
 
   test("no structures", () => {
@@ -188,13 +176,14 @@ describe("finding structures", () => {
       { x: 3, y: 0, width: 1, height: 1, hash: 2, text: "g", type: "" },
       { x: 4, y: 0, width: 1, height: 1, hash: 3, text: "b", type: "" },
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([]);
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([]);
+    expect(actual.rest).toEqual([...input]);
   });
 });
 
-describe("finding hints", () => {
-  test("implicit operator hints", () => {
+describe("finding patterns", () => {
+  test("implicit operator pattern", () => {
     const input = link([
       /* eslint-disable */
       { x: 0, y: 0, width: 2, height: 1, hash: 0, text: "<a", type: "tag" },
@@ -203,22 +192,22 @@ describe("finding hints", () => {
       { x: 4, y: 0, width: 1, height: 1, hash: 3, text: ">", type: "tag" },
       /* eslint-enable */
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([
       {
         x: 0,
         y: 0,
         width: 4,
         height: 1,
-        type: "hint",
+        type: "pattern",
         hash: expect.any(Number),
         items: [input[0], input[1], input[2]],
-        structures: [],
       },
     ]);
+    expect(actual.rest).toEqual([input[3]]);
   });
 
-  test("multiple implicit operator hints", () => {
+  test("multiple implicit operator patterns", () => {
     const input = link([
       /* eslint-disable */
       { x: 0, y: 0, width: 2, height: 1, hash: 0, text: "<a", type: "tag" },
@@ -231,76 +220,27 @@ describe("finding hints", () => {
       { x: 9, y: 0, width: 1, height: 1, hash: 3, text: ">", type: "tag" },
       /* eslint-enable */
     ]);
-    const actual = findStructures(input, []);
-    expect(actual).toEqual([
+    const actual = findStructs(input);
+    expect(actual.structs).toEqual([
       {
         x: 0,
         y: 0,
         width: 4,
         height: 1,
-        type: "hint",
+        type: "pattern",
         hash: expect.any(Number),
         items: [input[0], input[1], input[2]],
-        structures: [],
       },
       {
         x: 5,
         y: 0,
         width: 4,
         height: 1,
-        type: "hint",
+        type: "pattern",
         hash: expect.any(Number),
         items: [input[4], input[5], input[6]],
-        structures: [],
       },
     ]);
-  });
-
-  test("string hints in pseudo-xml", () => {
-    const input = link([
-      /* eslint-disable */
-      { x: 0, y: 0, width: 2, height: 1, hash: 0, text: "<a", type: "tag" },
-      { x: 2, y: 0, width: 1, height: 1, hash: 1, text: ":", type: "namespace" },
-      { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "b", type: "tag" },
-      { x: 5, y: 0, width: 1, height: 1, hash: 3, text: ">", type: "tag" },
-      /* eslint-enable */
-    ]);
-    const actual = findStructures(input, [["tag", "namespace", "tag"]]);
-    expect(actual).toEqual([
-      {
-        x: 0,
-        y: 0,
-        width: 5,
-        height: 1,
-        type: "hint",
-        hash: expect.any(Number),
-        items: [input[0], input[1], input[2]],
-        structures: [],
-      },
-    ]);
-  });
-
-  test("regex hints in pseudo-xml", () => {
-    const input = link([
-      /* eslint-disable */
-      { x: 0, y: 0, width: 2, height: 1, hash: 0, text: "<a", type: "tag" },
-      { x: 2, y: 0, width: 1, height: 1, hash: 1, text: ":", type: "x-namespace-y" },
-      { x: 4, y: 0, width: 1, height: 1, hash: 2, text: "b", type: "tag" },
-      { x: 5, y: 0, width: 1, height: 1, hash: 3, text: ">", type: "tag" },
-      /* eslint-enable */
-    ]);
-    const actual = findStructures(input, [["tag", /namespace/, "tag"]]);
-    expect(actual).toEqual([
-      {
-        x: 0,
-        y: 0,
-        width: 5,
-        height: 1,
-        type: "hint",
-        hash: expect.any(Number),
-        items: [input[0], input[1], input[2]],
-        structures: [],
-      },
-    ]);
+    expect(actual.rest).toEqual([input[3], input[7]]);
   });
 });

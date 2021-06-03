@@ -686,5 +686,4 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineECMAScript,
   postprocessor: postprocessECMAScript,
-  patternHints: [],
 };

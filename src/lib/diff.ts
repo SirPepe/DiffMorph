@@ -28,7 +28,6 @@ import {
   Token,
   TypedToken,
 } from "../types";
-import { languages } from "../languages";
 import { isBox } from "./util";
 import { assignHashes } from "./hash";
 import { diffLinesAndStructures } from "./struct";
@@ -215,11 +214,7 @@ function diffBoxes(
   const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
   const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
   // First pass: diff mayor structures (language constructs and lines of code)
-  const structureDiff = diffLinesAndStructures(
-    fromTokens,
-    toTokens,
-    languages[root.item.language || "none"]?.patternHints ?? []
-  );
+  const structureDiff = diffLinesAndStructures(fromTokens, toTokens);
   textOps.push(...structureDiff.result);
   // Second pass: diff the remaining tokens on an individual basis
   textOps.push(...diffTokens(structureDiff.restFrom, structureDiff.restTo));

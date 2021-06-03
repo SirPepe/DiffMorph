@@ -189,5 +189,4 @@ export type LanguageDefinition<Flags extends Record<string, any>> = {
   theme: LanguageTheme;
   definitionFactory: LanguageFunctionFactory<Flags>;
   postprocessor: LanguagePostprocessor;
-  patternHints: (string | RegExp)[][];
 };

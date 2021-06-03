@@ -430,5 +430,4 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineHTML,
   postprocessor: glueHTML,
-  patternHints: [],
 };

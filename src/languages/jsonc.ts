@@ -12,5 +12,4 @@ export const languageDefinition: LanguageDefinition<Record<string, any>> = {
   theme: JSON.theme,
   definitionFactory: defineJSONC,
   postprocessor: JSON.postprocessor,
-  patternHints: [],
 };

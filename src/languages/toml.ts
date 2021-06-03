@@ -269,5 +269,4 @@ export const languageDefinition: LanguageDefinition<Record<string, unknown>> = {
   theme,
   definitionFactory: defineTOML,
   postprocessor: postprocessTOML,
-  patternHints: [],
 };

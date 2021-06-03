@@ -220,5 +220,4 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineJSON,
   postprocessor: postprocessJSON,
-  patternHints: [],
 };

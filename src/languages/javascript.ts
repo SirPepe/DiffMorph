@@ -12,5 +12,4 @@ export const languageDefinition: LanguageDefinition<Record<string, any>> = {
   theme: ECMAScript.theme,
   definitionFactory: defineJavaScript,
   postprocessor: ECMAScript.postprocessor,
-  patternHints: [],
 };

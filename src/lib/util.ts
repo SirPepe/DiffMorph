@@ -196,6 +196,28 @@ export const createIdGenerator = (): ((realm: any, hash: string) => string) => {
   };
 };
 
+// Take items from "items", starting at index "from" until "done" returns either
+// true or null (the latter signalling an abort)
+export function consume<T extends { next: T | undefined }>(
+  items: T[],
+  from: number,
+  done: (item: T) => boolean | null // null = abort
+): { result: T[]; position: number } {
+  const consumed = [];
+  for (let i = from; i < items.length; i++) {
+    const result = done(items[i]);
+    if (result === null) {
+      return { result: [], position: i };
+    } else {
+      consumed.push(items[i]);
+      if (result === true) {
+        return { result: consumed, position: i };
+      }
+    }
+  }
+  return { result: [], position: items.length };
+}
+
 type PositionedToken = {
   x: number;
   y: number;

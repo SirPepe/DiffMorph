@@ -404,5 +404,4 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineCss,
   postprocessor: postprocessCss,
-  patternHints: [],
 };
