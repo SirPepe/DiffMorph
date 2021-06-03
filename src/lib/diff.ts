@@ -19,7 +19,6 @@
 //    DEL operations. The optimizer stage can again turn ADD and DEL into MOV.
 
 import { diffArrays } from "diff";
-import { groupBy } from "@sirpepe/shed";
 import {
   Box,
   Decoration,
@@ -30,8 +29,7 @@ import {
   TypedToken,
 } from "../types";
 import { languages } from "../languages";
-import { hash, isAdjacent, isBox } from "./util";
-import { pickAlternative } from "./heuristics";
+import { isBox } from "./util";
 import { assignHashes } from "./hash";
 import { diffLinesAndStructures } from "./struct";
 
@@ -95,114 +93,6 @@ export type DiffTree = {
   content: (DiffOp<DiffTokens> | DiffTree)[];
   decorations: DiffOp<DiffDecoration>[];
 };
-
-// Compatible to the type Optimizable used in optimizer and heuristics
-type Pattern = Token & {
-  readonly hash: number;
-  readonly items: DiffTokens[];
-  readonly parent: Box<any, any>;
-};
-
-// Create a hash of a list of tokens by concatenating the token's hashes and
-// their *relative* distance on the x axis. The allover level of indentation is
-// not reflected in the hash - two lines containing the same characters the same
-// distance apart get the same hash, no matter the indentation
-function hashItems(items: DiffTokens[]): number {
-  const hashes = items.flatMap((item, idx) => {
-    const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
-    return [item.hash, String(xDelta)];
-  });
-  return hash(hashes);
-}
-
-// Organize items into pattern objects
-function asPattern(items: DiffTokens[], parent: Box<DiffTokens, any>): Pattern {
-  const [{ x, y }] = items;
-  return {
-    x,
-    y,
-    hash: hashItems(items),
-    width: 0, // irrelevant for patterns, only required for type compatibility
-    height: 0, // irrelevant for patterns, only required for type compatibility
-    items,
-    parent,
-  };
-}
-
-// Find generic patterns that are common to many languages:
-//   * tokens separated by : or - (eg. namespaced tags in xml)
-//   * some variable-name-like text followed by =
-// Only exported for unit tests
-export function findPatterns(
-  items: DiffTokens[],
-  parent: Box<DiffTokens, any>
-): Pattern[] {
-  const patterns = [];
-  for (let i = 0; i < items.length; i++) {
-    if (
-      (items[i].text === ":" || items[i].text === "-") &&
-      isAdjacent(items[i], items[i - 1]) &&
-      isAdjacent(items[i], items[i + 1])
-    ) {
-      patterns.push(asPattern([items[i - 1], items[i], items[i + 1]], parent));
-      i += 2;
-      continue;
-    }
-    if (
-      items[i].text?.match(/^[$_a-z][$_a-z0-9]*$/i) &&
-      items[i + 1]?.text === "="
-    ) {
-      patterns.push(asPattern([items[i], items[i + 1]], parent));
-      i++;
-      continue;
-    }
-  }
-  return patterns;
-}
-
-// This should work now
-function diffPatterns(
-  from: DiffTokens[],
-  fromParent: Box<DiffTokens, any> | undefined,
-  to: DiffTokens[],
-  toParent: Box<DiffTokens, any> | undefined
-): { result: MOV<DiffTokens>[]; restFrom: DiffTokens[]; restTo: DiffTokens[] } {
-  // This does never happen in practice, probably
-  if (!fromParent || !toParent) {
-    return { result: [], restFrom: from, restTo: to };
-  }
-  const fromPatternsByHash = groupBy(findPatterns(from, fromParent), "hash");
-  const toPatternsByHash = groupBy(findPatterns(to, toParent), "hash");
-  const result: MOV<DiffTokens>[] = [];
-  for (const [hash, fromPatterns] of fromPatternsByHash) {
-    const toPatterns = new Set(toPatternsByHash.get(hash) ?? []);
-    for (const fromPattern of fromPatterns) {
-      const [match] = pickAlternative(fromPattern, Array.from(toPatterns));
-      if (match) {
-        toPatterns.delete(match);
-        // Remove the matching items from the source lists as the are definitely
-        // taken care of, no matter if they do or don't change.
-        from = from.filter((item) => !fromPattern.items.includes(item));
-        to = to.filter((item) => !match.items.includes(item));
-        // If coordinates don't match, turn the removed items into a bunch of
-        // movement ops
-        if (match.x !== fromPattern.x || match.y !== fromPattern.y) {
-          for (let i = 0; i < match.items.length; i++) {
-            result.push({
-              kind: "MOV",
-              item: match.items[i],
-              from: fromPattern.items[i],
-            });
-          }
-        }
-        if (toPatterns.size === 0) {
-          break;
-        }
-      }
-    }
-  }
-  return { result, restFrom: from, restTo: to };
-}
 
 // Diff individual tokes by their hash and x/y positions
 function diffTokens(
@@ -331,17 +221,8 @@ function diffBoxes(
     languages[root.item.language || "none"]?.patternHints ?? []
   );
   textOps.push(...structureDiff.result);
-  // Second pass: diff common patterns. This is less of a traditional diff but
-  // rather a shortcut directly to optimizing heuristics.
-  const patternDiff = diffPatterns(
-    structureDiff.restFrom,
-    from,
-    structureDiff.restTo,
-    to
-  );
-  textOps.push(...patternDiff.result);
-  // Final pass: diff the remaining tokens on an individual basis
-  textOps.push(...diffTokens(patternDiff.restFrom, patternDiff.restTo));
+  // Second pass: diff the remaining tokens on an individual basis
+  textOps.push(...diffTokens(structureDiff.restFrom, structureDiff.restTo));
   // Decorations are less numerous than text token and thus can probably do with
   // just a single pass.
   decoOps.push(...diffDecorations(fromDecorations, toDecorations));
