@@ -1,6 +1,13 @@
 import { LanguageTheme, themeColors } from "../lib/theme";
 import { isAdjacent, lookaheadText } from "../lib/util";
-import { LanguageDefinition, RawToken, TypedToken } from "../types";
+import {
+  LanguageDefinition,
+  LanguageFunction,
+  LanguageFunctionResult,
+  LanguageTokens,
+  TextTokens,
+  TypedTokens,
+} from "../types";
 
 const KEYWORDS = ["null", "true", "false"];
 const NUMBER_RE =
@@ -28,10 +35,10 @@ function defaultState(): State {
   };
 }
 
-function defineTOML(): (token: RawToken) => string | string[] {
+function defineTOML(): LanguageFunction {
   const state = defaultState();
 
-  return (token: RawToken): string | string[] => {
+  return (token: LanguageTokens): LanguageFunctionResult => {
     // exit comment state on incoming new line
     if (state.comment && token.next && token.next.y > token.y) {
       state.comment = false;
@@ -111,7 +118,7 @@ function defineTOML(): (token: RawToken) => string | string[] {
     if (
       state.string === "ms" &&
       token.text === '"' &&
-      lookaheadText(token, ['"', '"'])
+      lookaheadText<TextTokens>(token, ['"', '"'])
     ) {
       state.string = false;
       return ["value", "value", "value"];
@@ -119,7 +126,7 @@ function defineTOML(): (token: RawToken) => string | string[] {
     if (
       state.string === "ml" &&
       token.text === "'" &&
-      lookaheadText(token, ["'", "'"])
+      lookaheadText<TextTokens>(token, ["'", "'"])
     ) {
       state.string = false;
       return ["value", "value", "value"];
@@ -127,7 +134,7 @@ function defineTOML(): (token: RawToken) => string | string[] {
     // enter value sting states
     if (!state.comment && !state.string) {
       if (token.text === '"') {
-        if (lookaheadText(token, ['"', '"'])) {
+        if (lookaheadText<TextTokens>(token, ['"', '"'])) {
           state.string = "ms";
           return ["value", "value", "value"];
         }
@@ -135,7 +142,7 @@ function defineTOML(): (token: RawToken) => string | string[] {
         return "value";
       }
       if (token.text === "'") {
-        if (lookaheadText(token, ["'", "'"])) {
+        if (lookaheadText<TextTokens>(token, ["'", "'"])) {
           state.string = "ml";
           return ["value", "value", "value"];
         }
@@ -210,7 +217,7 @@ function defineTOML(): (token: RawToken) => string | string[] {
   };
 }
 
-function postprocessTOML(token: TypedToken): boolean {
+function postprocessTOML(token: TypedTokens): boolean {
   if (
     token.type === "comment" ||
     token.type === "number" ||
@@ -262,4 +269,5 @@ export const languageDefinition: LanguageDefinition<Record<string, unknown>> = {
   theme,
   definitionFactory: defineTOML,
   postprocessor: postprocessTOML,
+  patternHints: [],
 };

@@ -9,8 +9,9 @@ import {
   LanguageDefinition,
   LanguageFunction,
   LanguageFunctionResult,
-  RawToken,
-  TypedToken,
+  LanguageTokens,
+  TextTokens,
+  TypedTokens,
 } from "../types";
 import { LanguageTheme, themeColors } from "../lib/theme";
 
@@ -42,7 +43,7 @@ function defaultState(): State {
 }
 
 function processInlineCss(
-  start: RawToken,
+  start: TextTokens,
   attributeEnd: string
 ): EmbeddedLanguageFunctionResult {
   const language = css.definitionFactory({ inline: true });
@@ -60,7 +61,7 @@ function processInlineCss(
 }
 
 function processEmbeddedCss(
-  start: RawToken | undefined
+  start: TextTokens | undefined
 ): EmbeddedLanguageFunctionResult {
   const language = css.definitionFactory({ inline: false });
   const types = [];
@@ -80,7 +81,7 @@ function processEmbeddedCss(
 }
 
 function processEmbeddedJavaScript(
-  start: RawToken | undefined
+  start: TextTokens | undefined
 ): EmbeddedLanguageFunctionResult {
   const language = js.definitionFactory({ inline: false });
   const types = [];
@@ -103,7 +104,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
   const state = defaultState();
   const { xml } = flags;
 
-  return (token: RawToken): LanguageFunctionResult => {
+  return (token: LanguageTokens): LanguageFunctionResult => {
     // handle comments and doctypes
     if (
       state.commentState === false &&
@@ -130,7 +131,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     if (
       state.commentState === "cdata" &&
       token.text === "]" &&
-      lookaheadText(token, ["]", ">"])
+      lookaheadText<TextTokens>(token, ["]", ">"])
     ) {
       state.commentState = false;
       return ["comment cdata", "comment cdata", "comment cdata"];
@@ -328,35 +329,24 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
   };
 }
 
-function glueHTML(token: TypedToken): boolean {
+function glueHTML(token: TypedTokens): boolean {
   // Fuse XML tags
-  if (token.type === "tag-xml" && token?.prev?.type === "tag-xml") {
-    return true;
+  if (token.type === "tag-xml") {
+    return isAdjacent(token, token.prev);
   }
   // Fuse custom element tags
   if (
     token.type === "tag" &&
-    (token.text.startsWith("-") || token?.prev?.text.endsWith("-")) &&
-    token?.prev?.type === "tag"
+    (token.text.startsWith("-") || token?.prev?.text.endsWith("-"))
   ) {
-    return true;
+    return isAdjacent(token, token.prev);
   }
   // Fuse attribute names
-  if (
-    token.type.startsWith("attribute") &&
-    token?.prev?.type === token.type &&
-    isAdjacent(token, token.prev)
-  ) {
-    return true;
+  if (token.type.startsWith("attribute")) {
+    return isAdjacent(token, token.prev);
   }
   // Fuse closing slashes to end tags' closing bracket
-  if (
-    token.type === "tag" &&
-    token.text === "/" &&
-    token.prev &&
-    token.prev.type === "tag" &&
-    token.prev.text === "<"
-  ) {
+  if (token.type === "tag" && token.text === "/" && token.prev?.text === "<") {
     return true;
   }
   // Fuse closing brackets to self-closing tags
@@ -385,12 +375,8 @@ function glueHTML(token: TypedToken): boolean {
   }
   // Join comments that are directly adjacent, such as "<" and "!" or "foo", "-"
   // and "bar"
-  if (
-    token.type === "comment" &&
-    token?.prev?.type === "comment" &&
-    isAdjacent(token, token.prev)
-  ) {
-    return true;
+  if (token.type === "comment" && token?.prev?.type === "comment") {
+    return isAdjacent(token, token.prev);
   }
   // Fuse non-quote bits of attribute values
   if (
@@ -444,4 +430,5 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineHTML,
   postprocessor: glueHTML,
+  patternHints: [],
 };

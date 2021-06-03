@@ -10,14 +10,13 @@ import {
   RenderData,
   RenderDecoration,
   RenderText,
-  TextToken,
+  TextTokens,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
 import { applyLanguage } from "../lib/language";
 import { toRenderData } from "../lib/render";
 import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
-import { createIdGenerator } from "../lib/util";
 import { toLifecycle } from "../lib/lifecycle";
 import { InputOptions, withDefaults } from "./options";
 
@@ -25,7 +24,6 @@ type Input = string | InputContainer;
 
 type InputContainer = {
   content: Input[];
-  id: string;
   isDecoration: boolean;
   language: string | undefined;
 };
@@ -39,7 +37,6 @@ type InputDecoration = {
 };
 
 function extractCode(source: InputContainer): CodeContainer {
-  const idGenerator = createIdGenerator();
   const content: Code[] = [];
   for (const input of source.content) {
     if (typeof input === "string") {
@@ -52,24 +49,20 @@ function extractCode(source: InputContainer): CodeContainer {
     content,
     isDecoration: source.isDecoration,
     language: source.language,
-    hash: source.id,
-    id: idGenerator(null, source.id),
     data: {},
   };
 }
 
 function processExternalDecorations(
   input: InputDecoration[],
-  parent: Box<TextToken, any>
-): Decoration<TextToken>[] {
-  return input.map(({ x, y, width, height, data }): Decoration<TextToken> => {
+  parent: Box<TextTokens, any>
+): Decoration<TextTokens>[] {
+  return input.map(({ x, y, width, height, data }): Decoration<TextTokens> => {
     return {
-      kind: "DECO",
       parent,
       data,
       x,
       y,
-      hash: data.hash || "",
       width,
       height,
     };
@@ -81,7 +74,7 @@ export function processCode(
   source: InputContainer,
   externalDecorations: InputDecoration[],
   tabSize: number
-): Box<TextToken, Decoration<TextToken>> {
+): Box<TextTokens, Decoration<TextTokens>> {
   const result = tokenize(extractCode(source), tabSize);
   result.decorations.push(
     ...processExternalDecorations(externalDecorations, result)

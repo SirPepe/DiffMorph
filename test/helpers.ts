@@ -4,55 +4,52 @@ import { toLifecycle } from "../src/lib/lifecycle";
 import { optimizeDiffs } from "../src/lib/optimize";
 import { tokenize } from "../src/lib/tokenizer";
 import { flattenTokens, getFirstTextToken } from "../src/lib/util";
-import { Box, Code, Decoration, TypedToken } from "../src/types";
+import { Box, Code, Decoration, LinkedListOf, TypedTokens } from "../src/types";
 
-type BoxArgs<T, D> = {
+type DecorationArgs = Omit<Decoration<any>, "parent">;
+
+type BoxArgs<T, D extends DecorationArgs = Decoration<T>> = {
   x?: number;
   y?: number;
   width?: number;
   height?: number;
   content?: (T | BoxArgs<T, D>)[];
   decorations?: D[];
-  id?: string;
-  hash?: string;
   language?: string;
   data?: Record<string, any>;
   parent?: any;
 };
 
-function isBoxArgs<T, D>(x: any | BoxArgs<T, D>): x is BoxArgs<T, D> {
+function isBoxArgs<T, D extends DecorationArgs>(
+  x: any | BoxArgs<T, D>
+): x is BoxArgs<T, D> {
   return typeof x.x === "undefined" && typeof x.y === "undefined";
 }
 
-export function stubBox<T, D>(
+export function stubBox<T, D extends DecorationArgs>(
   args: BoxArgs<T, D>,
   nested = 0,
-  parent?: Box<T, D>
-): Box<T, D> {
+  parent?: Box<T, Decoration<T>>
+): Box<T, Decoration<T>> {
   const {
     x = 0,
     y = 0,
     width = 0,
     height = 0,
-    id = nested ? `nested-${nested}` : "root",
-    hash = nested ? `nested-${nested}` : "root",
     language = "none",
     data = {},
     content = [],
     decorations = [],
   } = args;
-  const result: Box<T, D> = {
-    kind: "BOX",
+  const result: Box<T, Decoration<T>> = {
     x,
     y,
-    id,
-    hash,
     width,
     height,
     language,
     data,
     content: [],
-    decorations,
+    decorations: [],
     parent,
   };
   result.content = content.map((token) => {
@@ -62,33 +59,53 @@ export function stubBox<T, D>(
       return token;
     }
   });
+  result.decorations = decorations.map((item: any) => {
+    item.parent = result;
+    return item as Decoration<any>;
+  });
   return result;
 }
 
-export const lang = (language: string) => (
-  ...input: Code[]
-): Box<TypedToken, Decoration<TypedToken>> => {
-  return applyLanguage(
-    tokenize(
-      {
-        content: input,
-        hash: "root",
-        id: "root",
-        language,
-        isDecoration: false,
-        data: {},
-      },
-      2
-    )
-  );
-};
+export function link<T, P = any>(items: T[], parent?: P): LinkedListOf<T>[] {
+  for (let i = 0; i < items.length; i++) {
+    (items[i] as any).next = items[i + 1];
+    (items[i] as any).prev = items[i - 1];
+    (items[i] as any).parent = parent;
+  }
+  return items as LinkedListOf<T>[];
+}
 
-export const type = (language: string) => (...input: Code[]): TypedToken[] => {
-  return flattenTokens(getFirstTextToken([lang(language)(...input)]));
-};
+/* eslint-disable */
+export const lang =
+  (lang: string) =>
+  (...input: Code[]): Box<TypedTokens, Decoration<TypedTokens>> => {
+    return applyLanguage(
+      tokenize(
+        {
+          content: input,
+          language: lang,
+          isDecoration: false,
+          data: {},
+        },
+        2
+      )
+    );
+  };
 
-export const process = (language: string) => (...input: Code[][]) =>
-  toLifecycle(
-    optimizeDiffs(diff(input.map((code) => lang(language)(...code)))),
-    true
-  );
+export const type =
+  (language: string) =>
+  (...input: Code[]): string[] => {
+    return flattenTokens(getFirstTextToken([lang(language)(...input)]))
+      .map(({ type }) => type);
+  };
+
+export const process =
+  (language: string) =>
+  (...input: Code[][]) =>
+    toLifecycle(
+      optimizeDiffs(
+        diff(input.map((code) => lang(language)(...code)))
+      ),
+      true
+    );
+/* eslint-enable */

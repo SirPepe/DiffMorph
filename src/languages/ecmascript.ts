@@ -8,8 +8,9 @@ import {
   LanguageDefinition,
   LanguageFunction,
   LanguageFunctionResult,
-  RawToken,
-  TypedToken,
+  LanguageTokens,
+  TextTokens,
+  TypedTokens,
 } from "../types";
 
 type CurlyType =
@@ -136,7 +137,7 @@ type Flags = {
   types: boolean;
 };
 
-function startRegex(token: RawToken): boolean {
+function startRegex(token: LanguageTokens): boolean {
   if (token.text !== "/") {
     return false;
   }
@@ -159,7 +160,7 @@ function startRegex(token: RawToken): boolean {
   return true;
 }
 
-function endRegex(token: RawToken): boolean {
+function endRegex(token: TextTokens): boolean {
   const endWithFlag = token.prev?.text === "/" && token.text.match(RE_FLAGS_RE);
   const endWithPunctuation = token.text === "/" && token.next?.text === ";";
   if (endWithFlag || endWithPunctuation) {
@@ -168,7 +169,7 @@ function endRegex(token: RawToken): boolean {
   return false;
 }
 
-function searchAheadForArrow(token: RawToken | undefined): boolean {
+function searchAheadForArrow(token: TextTokens | undefined): boolean {
   let nested = 0;
   while (token) {
     if (token.text === "(") {
@@ -291,7 +292,7 @@ function defaultState(): State {
 function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
   const state = defaultState();
 
-  return function ecmaScript(token: RawToken): LanguageFunctionResult {
+  return function ecmaScript(token: LanguageTokens): LanguageFunctionResult {
     // exit line comment state (on new line)
     if (state.lineCommentState && isNewLine(token)) {
       state.lineCommentState = false;
@@ -599,9 +600,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return "call";
       }
       // Identifier in a list
-      if (
-        lookbehindType<RawToken | TypedToken>(token, ["punctuation", "token"])
-      ) {
+      if (lookbehindType(token, ["punctuation", "token"])) {
         return "token";
       }
     }
@@ -662,7 +661,7 @@ const theme: LanguageTheme = {
   },
 };
 
-function postprocessECMAScript(token: TypedToken): boolean {
+function postprocessECMAScript(token: TypedTokens): boolean {
   // Join rest/spread
   if (
     token.text === "." &&
@@ -687,4 +686,5 @@ export const languageDefinition: LanguageDefinition<Flags> = {
   theme,
   definitionFactory: defineECMAScript,
   postprocessor: postprocessECMAScript,
+  patternHints: [],
 };

@@ -2,7 +2,7 @@ import { registerLanguage } from "../../src/languages";
 import { applyLanguage } from "../../src/lib/language";
 import { tokenize } from "../../src/lib/tokenizer";
 import { Box } from "../../src/types";
-import { type } from "../helpers";
+import { lang, type } from "../helpers";
 
 // Test language types tokens "a", "b" as "a" and "b" IF they are directly
 // adjacent. This can be used to test the continuous coordinate system.
@@ -27,38 +27,147 @@ registerLanguage({
     return "f";
   },
   postprocessor: (): boolean => false,
+  patternHints: [],
+});
+
+describe("Basic input", () => {
+  test("Basic JSON object", () => {
+    const parent = lang("json")(`{}`);
+    expect(parent.content).toEqual([
+      {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+        text: "{",
+        type: "punctuation object-start-0",
+        parent,
+        next: parent.content[1],
+        prev: undefined,
+      },
+      {
+        x: 1,
+        y: 0,
+        width: 1,
+        height: 1,
+        text: "}",
+        type: "punctuation object-end-0",
+        parent,
+        next: undefined,
+        prev: parent.content[0],
+      },
+    ]);
+  });
+
+  test("Basic JSON box", () => {
+    const parent = lang("json")(
+      "[",
+      {
+        data: {},
+        content: ["null"],
+        isDecoration: false,
+        language: undefined,
+      },
+      "]"
+    );
+    expect(parent.content).toEqual([
+      {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+        text: "[",
+        type: "punctuation array-start-0",
+        parent,
+        next: (parent.content[1] as any).content[0],
+        prev: undefined,
+      },
+      {
+        x: 1,
+        y: 0,
+        height: 1,
+        width: 4,
+        language: "json",
+        data: {},
+        content: [
+          {
+            x: 1,
+            y: 0,
+            width: 4,
+            height: 1,
+            text: "null",
+            type: "keyword",
+            parent: parent.content[1],
+            next: parent.content[2],
+            prev: parent.content[0],
+          },
+        ],
+        decorations: [],
+        parent,
+      },
+      {
+        x: 5,
+        y: 0,
+        width: 1,
+        height: 1,
+        text: "]",
+        type: "punctuation array-end-0",
+        parent,
+        next: undefined,
+        prev: (parent.content[1] as any).content[0],
+      },
+    ]);
+  });
+
+  test("JSON box between theoretically joinable tokens", () => {
+    const types = type("json")(
+      '{"foo',
+      {
+        data: {
+          tagName: "span",
+          attributes: [],
+        },
+        content: ['bar"'],
+        isDecoration: false,
+        language: undefined,
+      },
+      ": 42}"
+    );
+    expect(types).toEqual([
+      "punctuation object-start-0", // {
+      "string", // "foo
+      "string", // bar" (inside box, must not be joined with rest)
+      "punctuation", // :
+      "number", // 42
+      "punctuation object-end-0", // }
+    ]);
+  });
 });
 
 describe("Unexpected input", () => {
   test("No input", () => {
-    const tokens = type("test")();
-    const types = tokens.map((token) => token.type);
+    const types = type("test")();
     expect(types).toEqual([]);
   });
   test("Whitespace-only input", () => {
-    const tokens = type("test")("  ");
-    const types = tokens.map((token) => token.type);
+    const types = type("test")("  ");
     expect(types).toEqual([]);
   });
 });
 
 describe("Continuous coordinate system", () => {
   test("continuous coordinate system without boxes", () => {
-    const tokens = type("test")("a", "b");
-    const types = tokens.map((token) => token.type);
+    const types = type("test")("a", "b");
     expect(types).toEqual(["a", "b"]);
   });
 
   test("continuous coordinate system with boxes", () => {
-    const tokens = type("test")("a", {
-      id: "box",
-      hash: "box",
+    const types = type("test")("a", {
       language: undefined,
       data: {},
       isDecoration: false,
       content: ["b"], // has x = 0 as the first member of a box
     });
-    const types = tokens.map((token) => token.type);
     expect(types).toEqual(["a", "b"]);
   });
 });
@@ -68,8 +177,6 @@ describe("In-place modifications", () => {
     const subject = tokenize(
       {
         content: ['"Hello World"'],
-        hash: "root",
-        id: "root",
         isDecoration: false,
         language: "json",
         data: {},
@@ -79,19 +186,15 @@ describe("In-place modifications", () => {
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
-      kind: "BOX",
       x: 0,
       y: 0,
       width: 13,
       height: 1,
-      id: "root",
-      hash: "root",
       data: {},
       language: "json",
       parent: undefined,
       content: [
         {
-          kind: "TEXT",
           x: 0,
           y: 0,
           width: 13,
@@ -100,7 +203,6 @@ describe("In-place modifications", () => {
           next: undefined,
           text: '"Hello World"',
           type: "string",
-          hash: expect.any(String),
           parent: subject,
         },
       ],
@@ -115,16 +217,12 @@ describe("In-place modifications", () => {
           '"Hello',
           {
             content: [" 42 "],
-            hash: "nested",
-            id: "nested",
             isDecoration: false,
             language: undefined,
             data: {},
           },
           'World"',
         ],
-        hash: "root",
-        id: "root",
         isDecoration: false,
         language: "json",
         data: {},
@@ -135,19 +233,15 @@ describe("In-place modifications", () => {
     expect(output).toBe(subject);
     const nested = output.content[1] as Box<any, any>;
     expect(output).toEqual({
-      kind: "BOX",
       x: 0,
       y: 0,
       width: 16,
       height: 1,
-      id: "root",
-      hash: "root",
       data: {},
       language: "json",
       parent: undefined,
       content: [
         {
-          kind: "TEXT",
           x: 0,
           y: 0,
           width: 6,
@@ -156,23 +250,18 @@ describe("In-place modifications", () => {
           next: nested.content[0],
           text: '"Hello',
           type: "string",
-          hash: expect.any(String),
           parent: output,
         },
         {
-          kind: "BOX",
           x: 6,
           y: 0,
           width: 4,
           height: 1,
-          id: "nested",
-          hash: "nested",
           data: {},
           language: "json",
           parent: output,
           content: [
             {
-              kind: "TEXT",
               x: 7,
               y: 0,
               width: 2,
@@ -182,13 +271,11 @@ describe("In-place modifications", () => {
               text: "42",
               parent: nested,
               type: "string",
-              hash: expect.any(String),
             },
           ],
           decorations: [],
         },
         {
-          kind: "TEXT",
           x: 10,
           y: 0,
           width: 6,
@@ -197,7 +284,6 @@ describe("In-place modifications", () => {
           next: undefined,
           text: 'World"',
           type: "string",
-          hash: expect.any(String),
           parent: output,
         },
       ],
@@ -212,16 +298,12 @@ describe("In-place modifications", () => {
           '"Hello',
           {
             content: [" 42 "],
-            hash: "highlight",
-            id: "highlight",
             isDecoration: true,
             language: undefined,
             data: {},
           },
           'World"',
         ],
-        hash: "root",
-        id: "root",
         isDecoration: false,
         language: "json",
         data: {},
@@ -231,19 +313,15 @@ describe("In-place modifications", () => {
     const output = applyLanguage(subject);
     expect(output).toBe(subject);
     expect(output).toEqual({
-      kind: "BOX",
       x: 0,
       y: 0,
       width: 16,
       height: 1,
-      id: "root",
-      hash: "root",
       data: {},
       language: "json",
       parent: undefined,
       content: [
         {
-          kind: "TEXT",
           x: 0,
           y: 0,
           width: 16,
@@ -252,18 +330,15 @@ describe("In-place modifications", () => {
           next: undefined,
           text: '"Hello 42 World"',
           type: "string",
-          hash: expect.any(String),
           parent: output,
         },
       ],
       decorations: [
         {
-          kind: "DECO",
           x: 6,
           y: 0,
           width: 4,
           height: 1,
-          hash: "highlight",
           data: {},
           parent: output,
         },
@@ -275,16 +350,12 @@ describe("In-place modifications", () => {
     const input = {
       content: [
         {
-          id: "level1",
-          hash: "level1",
           language: undefined, // should turn into "json"
           isDecoration: false,
           data: {},
           content: ["null"],
         },
       ],
-      hash: "root",
-      id: "root",
       isDecoration: false,
       language: "json",
       data: {},
@@ -299,16 +370,12 @@ describe("In-place modifications", () => {
     const input = {
       content: [
         {
-          id: "level1",
-          hash: "level1",
           language: "html", // should remain as it is
           isDecoration: false,
           data: {},
           content: ["null"],
         },
       ],
-      hash: "root",
-      id: "root",
       isDecoration: false,
       language: "json",
       data: {},

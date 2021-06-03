@@ -190,10 +190,16 @@ function generateText({ id, text, type }: RenderText): HTMLElement {
   return element;
 }
 
-function generateDecoration({ id, data }: RenderDecoration): HTMLElement {
-  const { tagName = "mark", attributes = [] } = data;
+function generateDecoration(root: RenderDecoration): HTMLElement {
+  let { tagName, attributes } = root.data;
+  if (typeof tagName !== "string") {
+    tagName = "mark";
+  }
+  if (!Array.isArray(attributes)) {
+    attributes = [];
+  }
   const element = document.createElement(tagName);
-  element.className = "dm-decoration dm-" + id;
+  element.className = "dm-decoration dm-" + root.id;
   for (const [attribute, value] of attributes) {
     element.setAttribute(attribute, value);
   }
@@ -207,7 +213,13 @@ function generateDom(
   if (root.language) {
     languages.add(root.language);
   }
-  const { tagName = "span", attributes = [] } = root.data;
+  let { tagName, attributes } = root.data;
+  if (typeof tagName !== "string") {
+    tagName = "mark";
+  }
+  if (!Array.isArray(attributes)) {
+    attributes = [];
+  }
   const element = document.createElement(tagName);
   for (const [attribute, value] of attributes) {
     element.setAttribute(attribute, value);

@@ -3,22 +3,25 @@
 // this - it's just a bunch of heuristics applied in a brute-force manner.
 
 import { mapBy } from "@sirpepe/shed";
-import { Box, Token } from "../types";
+import { DiffTokens, Token } from "../types";
 import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
 import { pickAlternative } from "./heuristics";
 
-export type Optimizable = Token & { parent: Box<any, any> };
+// "next" and "prev" are useful inputs to the optimizer, but they must not be
+// strictly required, otherwise only linked list members can be optimized and
+// stuff like structures or decorations can't.
+export type Optimizable = Token & {
+  hash: any;
+  prev?: Optimizable | undefined;
+  next?: Optimizable | undefined;
+};
 
-export function optimizeDiffs<T extends Optimizable, D extends Optimizable>(
-  diffs: DiffTree<T, D>[]
-): DiffTree<T, D>[] {
+export function optimizeDiffs(diffs: DiffTree[]): DiffTree[] {
   return diffs.map(optimizeDiff);
 }
 
-function optimizeDiff<T extends Optimizable, D extends Optimizable>(
-  diff: DiffTree<T, D>
-): DiffTree<T, D> {
-  const result: DiffTree<T, D> = {
+function optimizeDiff(diff: DiffTree): DiffTree {
+  const result: DiffTree = {
     ...diff,
     content: optimizeOperations(diff.content),
     decorations: optimizeOperations(diff.decorations),
@@ -29,13 +32,13 @@ function optimizeDiff<T extends Optimizable, D extends Optimizable>(
 function optimizeOperations<T extends Optimizable>(
   operations: DiffOp<T>[]
 ): DiffOp<T>[];
-function optimizeOperations<T extends Optimizable, D extends Optimizable>(
-  operations: (DiffTree<T, D> | DiffOp<T>)[]
-): (DiffTree<T, D> | DiffOp<T>)[];
-function optimizeOperations<T extends Optimizable, D extends Optimizable>(
-  operations: (DiffTree<T, D> | DiffOp<T>)[]
-): (DiffTree<T, D> | DiffOp<T>)[] {
-  const trees: DiffTree<T, D>[] = [];
+function optimizeOperations(
+  operations: (DiffTree | DiffOp<DiffTokens>)[]
+): (DiffTree | DiffOp<DiffTokens>)[];
+function optimizeOperations<T extends Optimizable>(
+  operations: (DiffTree | DiffOp<T>)[]
+): (DiffTree | DiffOp<T>)[] {
+  const trees: DiffTree[] = [];
   const byHash: Record<string, [Set<MOV<T>>, Set<ADD<T>>, Set<DEL<T>>]> = {};
   for (const operation of operations) {
     if (operation.kind === "TREE") {
@@ -78,7 +81,7 @@ function resolveOptimizations<T extends Optimizable>(
   const movements: MOV<T>[] = [];
   const additionsByItem = mapBy(additions, "item");
   for (const deletion of deletions) {
-    const alternative = pickAlternative(
+    const [alternative] = pickAlternative(
       deletion.item,
       Array.from(additions, (op) => op.item)
     );

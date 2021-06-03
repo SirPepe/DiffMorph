@@ -3,8 +3,7 @@ const xml = type("xml");
 
 describe("XML features", () => {
   test("XML declaration", () => {
-    const tokens = xml(`<?xml version="1.0" ?>`);
-    const types = tokens.map((token) => token.type);
+    const types = xml(`<?xml version="1.0" ?>`);
     expect(types).toEqual([
       "tag-xml",
       "attribute-xml",
@@ -17,14 +16,12 @@ describe("XML features", () => {
   });
 
   test("Regular tags", () => {
-    const tokens = xml(`<foo>Hello<bar /></foo>`);
-    const types = tokens.map((token) => token.type);
+    const types = xml(`<foo>Hello<bar /></foo>`);
     expect(types).toEqual(["tag", "tag", "token", "tag", "tag", "tag"]);
   });
 
   test("Tag namespace", () => {
-    const tokens = xml(`<ns:foo>Hello</ns:foo>`);
-    const types = tokens.map((token) => token.type);
+    const types = xml(`<ns:foo>Hello</ns:foo>`);
     expect(types).toEqual([
       "tag",
       "operator namespace-tag",
@@ -38,8 +35,7 @@ describe("XML features", () => {
   });
 
   test("Attribute namespace", () => {
-    const tokens = xml(`<foo ns:attr="foo">Hello</foo>`);
-    const types = tokens.map((token) => token.type);
+    const types = xml(`<foo ns:attr="foo">Hello</foo>`);
     expect(types).toEqual([
       "tag",
       "attribute",
@@ -56,8 +52,7 @@ describe("XML features", () => {
   });
 
   test("CDATA sections", () => {
-    const tokens = xml(`<foo>Hello <![CDATA[ World ]]></foo>`);
-    const types = tokens.map((token) => token.type);
+    const types = xml(`<foo>Hello <![CDATA[ World ]]></foo>`);
     expect(types).toEqual([
       "tag",
       "tag",
@@ -76,8 +71,7 @@ describe("XML features", () => {
   });
 
   test("Style attributes are normal attributes", () => {
-    const tokens = xml(`<foo style="test"></foo>`);
-    const types = tokens.map((token) => token.type);
+    const types = xml(`<foo style="test"></foo>`);
     expect(types).toEqual([
       "tag",
       "attribute",
@@ -91,14 +85,12 @@ describe("XML features", () => {
   });
 
   test("Style tags are normal tags", () => {
-    const tokens = xml(`<style>Hello</style>`);
-    const types = tokens.map((token) => token.type);
+    const types = xml(`<style>Hello</style>`);
     expect(types).toEqual(["tag", "tag", "token", "tag"]);
   });
 
   test("Script tags are normal tags", () => {
-    const tokens = xml(`<script>let x</script>`);
-    const types = tokens.map((token) => token.type);
+    const types = xml(`<script>let x</script>`);
     expect(types).toEqual(["tag", "tag", "token", "token", "tag"]);
   });
 });

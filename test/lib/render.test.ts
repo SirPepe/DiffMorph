@@ -7,13 +7,13 @@ describe("rendering", () => {
       process("json")(["{}"], ["  {}"], ["    {\n}"])
     );
     expect(objects).toEqual({
-      id: "root",
+      id: "2mASZD",
       data: {},
       language: "json",
       content: {
         text: new Map([
-          ["q6cs7w0", { id: "q6cs7w0", text: "{", type: expect.any(String) }],
-          ["ij1r2g0", { id: "ij1r2g0", text: "}", type: expect.any(String) }],
+          ["4oyLa8", { id: "4oyLa8", text: "{", type: expect.any(String) }],
+          ["7gBFP", { id: "7gBFP", text: "}", type: expect.any(String) }],
         ]),
         decorations: new Map(),
         boxes: new Map(),
@@ -21,7 +21,7 @@ describe("rendering", () => {
     });
     expect(frames.size).toBe(3);
     expect(frames.get(0)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 2,
@@ -29,9 +29,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 0,
               y: 0,
               width: 1,
@@ -40,9 +40,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 1,
               y: 0,
               width: 1,
@@ -57,7 +57,7 @@ describe("rendering", () => {
       alpha: 1,
     });
     expect(frames.get(1)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 4,
@@ -65,9 +65,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 2,
               y: 0,
               width: 1,
@@ -76,9 +76,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 3,
               y: 0,
               width: 1,
@@ -93,7 +93,7 @@ describe("rendering", () => {
       alpha: 1,
     });
     expect(frames.get(2)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 5,
@@ -101,9 +101,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 4,
               y: 0,
               width: 1,
@@ -112,9 +112,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 0,
               y: 1,
               width: 1,
@@ -137,13 +137,13 @@ describe("rendering", () => {
       process("json")(["{}"], ["{}"], ["  {}"])
     );
     expect(objects).toEqual({
-      id: "root",
+      id: "2mASZD",
       data: {},
       language: "json",
       content: {
         text: new Map([
-          ["q6cs7w0", { id: "q6cs7w0", text: "{", type: expect.any(String) }],
-          ["ij1r2g0", { id: "ij1r2g0", text: "}", type: expect.any(String) }],
+          ["4oyLa8", { id: "4oyLa8", text: "{", type: expect.any(String) }],
+          ["7gBFP", { id: "7gBFP", text: "}", type: expect.any(String) }],
         ]),
         decorations: new Map(),
         boxes: new Map(),
@@ -151,7 +151,7 @@ describe("rendering", () => {
     });
     expect(frames.size).toBe(3);
     expect(frames.get(0)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 2,
@@ -159,9 +159,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 0,
               y: 0,
               width: 1,
@@ -170,9 +170,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 1,
               y: 0,
               width: 1,
@@ -188,7 +188,7 @@ describe("rendering", () => {
     });
     expect(frames.get(0)).toEqual(frames.get(1));
     expect(frames.get(2)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 4,
@@ -196,9 +196,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 2,
               y: 0,
               width: 1,
@@ -207,9 +207,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 3,
               y: 0,
               width: 1,
@@ -234,8 +234,6 @@ describe("rendering", () => {
         [
           "{",
           {
-            id: "box",
-            hash: "asdf",
             language: undefined,
             data: {},
             isDecoration: false,
@@ -247,25 +245,25 @@ describe("rendering", () => {
       )
     );
     expect(objects).toEqual({
-      id: "root",
+      id: "2mASZD",
       data: {},
       language: "json",
       content: {
         text: new Map([
-          ["q6cs7w0", { id: "q6cs7w0", text: "{", type: expect.any(String) }],
-          ["ij1r2g0", { id: "ij1r2g0", text: "}", type: expect.any(String) }],
+          ["4oyLa8", { id: "4oyLa8", text: "{", type: expect.any(String) }],
+          ["7gBFP", { id: "7gBFP", text: "}", type: expect.any(String) }],
         ]),
         decorations: new Map(),
         boxes: new Map([
           [
-            "box",
+            "2mASZD",
             {
-              id: "box",
+              id: "2mASZD",
               data: {},
               language: "json",
               content: {
                 text: new Map([
-                  ["j5gb800", { id: "j5gb800", text: "null", type: "keyword" }],
+                  ["2p3620", { id: "2p3620", text: "null", type: "keyword" }],
                 ]),
                 decorations: new Map(),
                 boxes: new Map(),
@@ -277,7 +275,7 @@ describe("rendering", () => {
     });
     expect(frames.size).toBe(3);
     expect(frames.get(0)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 2,
@@ -285,9 +283,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 0,
               y: 0,
               width: 1,
@@ -296,9 +294,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 1,
               y: 0,
               width: 1,
@@ -309,10 +307,10 @@ describe("rendering", () => {
         ]),
         boxes: new Map([
           [
-            "box",
+            "2mASZD",
             {
               height: 1,
-              id: "box",
+              id: "2mASZD",
               alpha: 0,
               width: 4,
               x: 1,
@@ -322,10 +320,10 @@ describe("rendering", () => {
                 decorations: new Map(),
                 text: new Map([
                   [
-                    "j5gb800",
+                    "2p3620",
                     {
                       height: 1,
-                      id: "j5gb800",
+                      id: "2p3620",
                       alpha: 0,
                       width: 4,
                       x: 1,
@@ -342,7 +340,7 @@ describe("rendering", () => {
       alpha: 1,
     });
     expect(frames.get(1)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 6,
@@ -350,9 +348,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 0,
               y: 0,
               width: 1,
@@ -361,9 +359,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 5,
               y: 0,
               width: 1,
@@ -374,10 +372,10 @@ describe("rendering", () => {
         ]),
         boxes: new Map([
           [
-            "box",
+            "2mASZD",
             {
               height: 1,
-              id: "box",
+              id: "2mASZD",
               alpha: 1,
               width: 4,
               x: 1,
@@ -387,10 +385,10 @@ describe("rendering", () => {
                 decorations: new Map(),
                 text: new Map([
                   [
-                    "j5gb800",
+                    "2p3620",
                     {
                       height: 1,
-                      id: "j5gb800",
+                      id: "2p3620",
                       alpha: 1,
                       width: 4,
                       x: 1,
@@ -407,7 +405,7 @@ describe("rendering", () => {
       alpha: 1,
     });
     expect(frames.get(2)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 2,
@@ -415,9 +413,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 0,
               y: 0,
               width: 1,
@@ -426,9 +424,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 1,
               y: 0,
               width: 1,
@@ -439,10 +437,10 @@ describe("rendering", () => {
         ]),
         boxes: new Map([
           [
-            "box",
+            "2mASZD",
             {
               height: 1,
-              id: "box",
+              id: "2mASZD",
               alpha: 0,
               width: 4,
               x: 1,
@@ -452,10 +450,10 @@ describe("rendering", () => {
                 decorations: new Map(),
                 text: new Map([
                   [
-                    "j5gb800",
+                    "2p3620",
                     {
                       height: 1,
-                      id: "j5gb800",
+                      id: "2p3620",
                       alpha: 0,
                       width: 4,
                       x: 1,
@@ -485,13 +483,13 @@ describe("rendering", () => {
       process("json")(["{}"])
     );
     expect(objects).toEqual({
-      id: "root",
+      id: "2mASZD",
       data: {},
       language: "json",
       content: {
         text: new Map([
-          ["q6cs7w0", { id: "q6cs7w0", text: "{", type: expect.any(String) }],
-          ["ij1r2g0", { id: "ij1r2g0", text: "}", type: expect.any(String) }],
+          ["4oyLa8", { id: "4oyLa8", text: "{", type: expect.any(String) }],
+          ["7gBFP", { id: "7gBFP", text: "}", type: expect.any(String) }],
         ]),
         decorations: new Map(),
         boxes: new Map(),
@@ -499,7 +497,7 @@ describe("rendering", () => {
     });
     expect(frames.size).toBe(1);
     expect(frames.get(0)).toEqual({
-      id: "root",
+      id: "2mASZD",
       x: 0,
       y: 0,
       width: 2,
@@ -507,9 +505,9 @@ describe("rendering", () => {
       frame: {
         text: new Map([
           [
-            "q6cs7w0",
+            "4oyLa8",
             {
-              id: "q6cs7w0",
+              id: "4oyLa8",
               x: 0,
               y: 0,
               width: 1,
@@ -518,9 +516,9 @@ describe("rendering", () => {
             },
           ],
           [
-            "ij1r2g0",
+            "7gBFP",
             {
-              id: "ij1r2g0",
+              id: "7gBFP",
               x: 1,
               y: 0,
               width: 1,
@@ -538,12 +536,12 @@ describe("rendering", () => {
     expect(maxWidth).toBe(2);
   });
 
-  test("deals with a single empty frame frame", () => {
+  test("deals with a single empty frame", () => {
     const { objects, frames, maxWidth, maxHeight } = toRenderData(
       process("json")([""])
     );
     expect(objects).toEqual({
-      id: "root",
+      id: "2mASZD",
       data: {},
       language: "json",
       content: {
@@ -563,7 +561,7 @@ describe("rendering", () => {
               text: new Map(),
             },
             height: 1,
-            id: "root",
+            id: "2mASZD",
             alpha: 1,
             width: 0,
             x: 0,
@@ -581,7 +579,7 @@ describe("rendering", () => {
       process("json")()
     );
     expect(objects).toEqual({
-      id: "",
+      id: expect.any(String),
       data: {},
       language: undefined,
       content: {

@@ -3,8 +3,7 @@ const jsonc = type("jsonc");
 
 describe("JSONC", () => {
   test("Key and string value", () => {
-    const tokens = jsonc(`{ "foo": "bar" }`);
-    const types = tokens.map((token) => token.type);
+    const types = jsonc(`{ "foo": "bar" }`);
     expect(types).toEqual([
       "punctuation object-start-0",
       "string",
@@ -15,8 +14,7 @@ describe("JSONC", () => {
   });
 
   test("Line comment", () => {
-    const tokens = jsonc("// a\n{}");
-    const types = tokens.map((token) => token.type);
+    const types = jsonc("// a\n{}");
     expect(types).toEqual([
       "comment comment-line",
       "comment comment-line",
@@ -26,8 +24,7 @@ describe("JSONC", () => {
   });
 
   test("Single-line block comment", () => {
-    const tokens = jsonc("/* a */\n{}");
-    const types = tokens.map((token) => token.type);
+    const types = jsonc("/* a */\n{}");
     expect(types).toEqual([
       "comment comment-block",
       "comment comment-block",
@@ -38,10 +35,9 @@ describe("JSONC", () => {
   });
 
   test("Multi-line block comment", () => {
-    const tokens = jsonc(`/*
+    const types = jsonc(`/*
   a
 */\n{}`);
-    const types = tokens.map((token) => token.type);
     expect(types).toEqual([
       "comment comment-block",
       "comment comment-block",
@@ -52,8 +48,7 @@ describe("JSONC", () => {
   });
 
   test("Comment tokens in strings", () => {
-    const tokens = jsonc(`{ "//foo": "/*bar*/" }`);
-    const types = tokens.map((token) => token.type);
+    const types = jsonc(`{ "//foo": "/*bar*/" }`);
     expect(types).toEqual([
       "punctuation object-start-0",
       "string",
@@ -64,8 +59,7 @@ describe("JSONC", () => {
   });
 
   test("Line comment directly after something else", () => {
-    const tokens = jsonc("{}// a");
-    const types = tokens.map((token) => token.type);
+    const types = jsonc("{}// a");
     expect(types).toEqual([
       "punctuation object-start-0",
       "punctuation object-end-0",

@@ -8,4 +8,5 @@ export const languageDefinition: LanguageDefinition<Record<string, any>> = {
   theme: {},
   definitionFactory: () => (): LanguageFunctionResult => "token",
   postprocessor: (): boolean => false,
+  patternHints: [],
 };

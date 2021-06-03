@@ -9,10 +9,10 @@ import {
   RenderData,
   RenderDecoration,
   RenderText,
-  TextToken,
+  TextTokens,
 } from "../types";
 import { tokenize } from "../lib/tokenizer";
-import { createIdGenerator, getLanguage, hash, isNot } from "../lib/util";
+import { getLanguage, isNot } from "../lib/util";
 import { toRenderData } from "../lib/render";
 import { optimizeDiffs } from "../lib/optimize";
 import { diff } from "../lib/diff";
@@ -52,28 +52,20 @@ function getAttributes(element: Element): [string, string][] {
   ]);
 }
 
-function hashDOMBox(tagName: string, attributes: [string, string][]): string {
-  return hash(
-    tagName + "|" + attributes.map((pair) => pair.join("=")).join("|")
-  );
-}
-
 function decorationFromData(
   source: HTMLDataElement,
-  parent: Box<TextToken, Decoration<TextToken>>
-): Decoration<TextToken> | null {
+  parent: Box<TextTokens, Decoration<TextTokens>>
+): Decoration<TextTokens> | null {
   if (source.classList.contains("dm-decoration")) {
     const { x, y, width, height, data } = JSON.parse(source.value);
     if ([x, y, width, height, data].some(isNot)) {
       return null;
     }
     return {
-      kind: "DECO",
       parent,
       data,
       x: Number(x),
       y: Number(y),
-      hash: data.hash || "",
       width: Number(width),
       height: Number(height),
     };
@@ -82,7 +74,6 @@ function decorationFromData(
 }
 
 function extractCode(source: Element): CodeContainer {
-  const idGenerator = createIdGenerator();
   const children = Array.from(source.childNodes).filter(isDomContent);
   const content: Code[] = [];
   for (const child of children) {
@@ -98,12 +89,8 @@ function extractCode(source: Element): CodeContainer {
   }
   const tagName = source.tagName.toLowerCase();
   const attributes = getAttributes(source);
-  const hash = hashDOMBox(tagName, attributes);
-  const id = idGenerator(null, hash);
   return {
     content,
-    hash,
-    id,
     data: { tagName, attributes },
     isDecoration: tagName === "mark",
     language: getLanguage(source),
@@ -114,7 +101,7 @@ function extractCode(source: Element): CodeContainer {
 export function processCode(
   source: Element,
   tabSize: number
-): Box<TextToken, Decoration<TextToken>> {
+): Box<TextTokens, Decoration<TextTokens>> {
   const result = tokenize(extractCode(source), tabSize);
   const externalDecorations =
     source.querySelectorAll<HTMLDataElement>("data.dm-decoration");
