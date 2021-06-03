@@ -52,10 +52,66 @@ function consume(
   return { result: [], position: items.length };
 }
 
+function toStructure(
+  items: DiffTokens[],
+  type: string,
+  hints: (string | RegExp)[][]
+): Structure {
+  const { x, y } = items[0];
+  return {
+    x,
+    y,
+    width: findMaxValue(items, (item) => item.x + item.width - x),
+    height: findMaxValue(items, (item) => item.y + item.height - y),
+    type,
+    hash: hashItems(items),
+    items,
+    structures: findStructures(items.slice(1, -1), hints),
+  };
+}
+
 type EndMatcher = {
   type: string;
   match: (item: DiffTokens) => boolean;
 };
+
+// Create a pattern for operators and their LHS and RHS
+function matchOperatorAndOperands(item: DiffTokens): DiffTokens[] {
+  if (item.next && /operator[ -]/.test(item.next.type) && item.next.next) {
+    return [item, item.next, item.next.next];
+  }
+  return [];
+}
+
+function matchHints(
+  item: DiffTokens,
+  hints: (string | RegExp)[][]
+): DiffTokens[] {
+  const operatorMatch = matchOperatorAndOperands(item);
+  if (operatorMatch.length > 0) {
+    return operatorMatch;
+  }
+  for (const hint of hints) {
+    const match = [];
+    for (let i = 0; i < hint.length; i++) {
+      const condition = hint[i];
+      if (
+        (item && typeof condition === "string" && item.type === condition) ||
+        (item && typeof condition === "object" && item.type.match(condition))
+      ) {
+        match.push(item);
+        item = item.next as any;
+      } else {
+        match.length = 0;
+        break;
+      }
+    }
+    if (match.length > 0) {
+      return match;
+    }
+  }
+  return [];
+}
 
 function matchStructureStart(item: DiffTokens): EndMatcher | null {
   const typeMatch = /(.*)-start-(\d)+$/.exec(item.type);
@@ -84,10 +140,19 @@ function matchStructureStart(item: DiffTokens): EndMatcher | null {
 }
 
 // Only exported for unit tests
-export function findStructures(items: DiffTokens[]): Structure[] {
+export function findStructures(
+  items: DiffTokens[],
+  hints: (string | RegExp)[][]
+): Structure[] {
   const structures: Structure[] = [];
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
+    const hintsMatch = matchHints(item, hints);
+    if (hintsMatch.length > 0) {
+      structures.push(toStructure(hintsMatch, "hint", hints));
+      i += hintsMatch.length;
+      continue;
+    }
     const endMatcher = matchStructureStart(item);
     if (endMatcher) {
       const { result, position } = consume(items, i, (next) => {
@@ -100,17 +165,7 @@ export function findStructures(items: DiffTokens[]): Structure[] {
         return false;
       });
       if (result.length > 0) {
-        const { x, y } = result[0];
-        structures.push({
-          x,
-          y,
-          width: findMaxValue(result, (item) => item.x + item.width - x),
-          height: findMaxValue(result, (item) => item.y + item.height - y),
-          type: endMatcher.type,
-          hash: hashItems(result),
-          items: result,
-          structures: findStructures(result.slice(1, -1)),
-        });
+        structures.push(toStructure(result, endMatcher.type, hints));
       }
       i = position;
     }
@@ -212,8 +267,8 @@ export function diffLinesAndStructures(
 ): StructDiff {
   const result: DiffOp<DiffTokens>[] = [];
   // First pass: find and keep unique language structures
-  const fromStructures = findStructures(fromTokens);
-  const toStructures = findStructures(toTokens);
+  const fromStructures = findStructures(fromTokens, hints);
+  const toStructures = findStructures(toTokens, hints);
   // Not every token is part of a structure. The restFrom/restTo arrays returned
   // by diffStructures() only contain the tokens that could not be assigned in
   // the diffing process.
