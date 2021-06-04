@@ -1,4 +1,4 @@
-import { diff } from "../../src/lib/diff";
+import { diff } from "../../src/diff/diff";
 import { optimizeDiffs } from "../../src/diff/optimize";
 import { Box, Decoration } from "../../src/types";
 import { lang } from "../helpers";

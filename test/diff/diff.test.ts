@@ -1,4 +1,4 @@
-import { diff } from "../../src/lib/diff";
+import { diff } from "../../src/diff/diff";
 import { stubBox } from "../helpers";
 
 describe("diffing lines", () => {

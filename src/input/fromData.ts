@@ -16,7 +16,7 @@ import { tokenize } from "./tokenizer";
 import { applyLanguage } from "../language/language";
 import { toRenderData } from "../render/render";
 import { optimizeDiffs } from "../diff/optimize";
-import { diff } from "../lib/diff";
+import { diff } from "../diff/diff";
 import { toLifecycle } from "../render/lifecycle";
 import { InputOptions, withDefaults } from "./options";
 

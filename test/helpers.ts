@@ -1,4 +1,4 @@
-import { diff } from "../src/lib/diff";
+import { diff } from "../src/diff/diff";
 import { applyLanguage } from "../src/language/language";
 import { toLifecycle } from "../src/render/lifecycle";
 import { optimizeDiffs } from "../src/diff/optimize";

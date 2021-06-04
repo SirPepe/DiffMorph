@@ -31,9 +31,9 @@ import {
   TypedToken,
 } from "../types";
 import { dimensionsEql, isBox } from "../util";
-import { assignHashes } from "../diff/assignHashes";
-import { diffLinesAndStructures } from "./struct";
-import { diffDecorations } from "../diff/decorations";
+import { assignHashes } from "./assignHashes";
+import { diffLinesAndStructures } from "./structs";
+import { diffDecorations } from "./decorations";
 
 // Diff individual tokes by their hash and x/y positions
 function diffTokens(
