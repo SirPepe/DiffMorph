@@ -3,15 +3,23 @@
 // post-visibility ops (called "lifecycle extension"). The main render function
 // can then trace every object through its entire lifecycle.
 
-import { DiffBox, DiffDecoration, DiffTokens, Token } from "../types";
-import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "../lib/diff";
+import {
+  DiffBox,
+  DiffDecoration,
+  DiffTokens,
+  Token,
+  NOP,
+  DiffOp,
+  ExtendedDiffOp,
+  DiffRoot,
+} from "../types";
 import { minmax } from "../util";
 
 export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
 
 export type BoxLifecycle = {
   base: DiffBox;
-  self: Map<number, ExtendedDiffOp<DiffBox> | BOX<DiffBox>>;
+  self: Map<number, ExtendedDiffOp<DiffBox> | NOP<DiffBox>>;
   text: Lifecycle<DiffTokens>[];
   decorations: Lifecycle<DiffDecoration>[];
   boxes: BoxLifecycle[];
@@ -26,24 +34,24 @@ function toTokenLifecycles<T extends Token>(
   startIdx: number
 ): [Lifecycle<T>[], never];
 function toTokenLifecycles<T extends Token>(
-  frames: (DiffTree | DiffOp<T>)[][],
+  frames: (DiffRoot | DiffOp<T>)[][],
   startIdx: number
 ): [Lifecycle<T>[], BoxLifecycle[]];
 function toTokenLifecycles<T extends Token>(
-  frames: (DiffTree | DiffOp<T>)[][],
+  frames: (DiffRoot | DiffOp<T>)[][],
   startIdx: number
 ): [Lifecycle<T>[], BoxLifecycle[]] {
   // Last token position -> lifecycle
   const lifecycles = new Map<string, Lifecycle<T>>();
   const finished: Lifecycle<T>[] = [];
   // id -> [first index, trees[]]
-  const trees = new Map<string, [number, DiffTree[]]>();
+  const trees = new Map<string, [number, DiffRoot[]]>();
   for (let i = 0; i < frames.length; i++) {
     const frameIdx = i + startIdx;
     // First pass: free positions and collect trees
     const remaining: [string, Lifecycle<T>][] = [];
     for (const operation of frames[i]) {
-      if (operation.kind === "TREE") {
+      if (operation.kind === "ROOT") {
         const treeData = trees.get(operation.root.item.id);
         if (!treeData) {
           trees.set(operation.root.item.id, [frameIdx, [operation]]);
@@ -106,7 +114,7 @@ function toTokenLifecycles<T extends Token>(
   return [tokenLifecycles, treeLifecycles];
 }
 
-function toBoxLifecycle(diffs: DiffTree[], frameOffset: number): BoxLifecycle {
+function toBoxLifecycle(diffs: DiffRoot[], frameOffset: number): BoxLifecycle {
   const self = new Map(diffs.map((diff, i) => [i + frameOffset, diff.root]));
   const [text, boxes] = toTokenLifecycles(
     diffs.map(({ content }) => content),
@@ -125,7 +133,7 @@ function toBoxLifecycle(diffs: DiffTree[], frameOffset: number): BoxLifecycle {
   };
 }
 
-function isDel(op: ExtendedDiffOp<unknown> | BOX<unknown>): boolean {
+function isDel(op: ExtendedDiffOp<unknown> | NOP<unknown>): boolean {
   return op.kind === "DEL";
 }
 
@@ -178,7 +186,7 @@ function getPrevFrame<T>(
 //     to the ADD's item. This essentially lets the BDE serve as both DEL and
 //     BAD
 function expandLifecycle(
-  lifecycle: Map<number, ExtendedDiffOp<unknown> | BOX<unknown>>,
+  lifecycle: Map<number, ExtendedDiffOp<unknown> | NOP<unknown>>,
   parentMin: number,
   parentMax: number
 ): void {
@@ -231,7 +239,7 @@ function expandLifecycle(
   // jarring visual effect in GIFs and such, so we have to augment these cases
   // with BDE and DEL where appropriate.
   const max = Math.max(...lifecycle.keys());
-  const last = lifecycle.get(max) as ExtendedDiffOp<unknown> | BOX<unknown>;
+  const last = lifecycle.get(max) as ExtendedDiffOp<unknown> | NOP<unknown>;
   // No wrap-around for this token necessary, token not in last frame
   if (last.kind === "DEL") {
     return;
@@ -265,7 +273,7 @@ function expandBoxLifecycles(lifecycle: BoxLifecycle): void {
 }
 
 export function toLifecycle(
-  diffs: DiffTree[],
+  diffs: DiffRoot[],
   expand: boolean
 ): BoxLifecycle | null {
   if (diffs.length === 0) {

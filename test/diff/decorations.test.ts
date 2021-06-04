@@ -5,8 +5,8 @@ describe("diffing decorations", () => {
   test("no decorations", () => {
     const [, actual] = diff([stubBox({}), stubBox({})]);
     expect(actual).toEqual({
-      kind: "TREE",
-      root: { kind: "BOX", item: expect.any(Object) },
+      kind: "ROOT",
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [],
     });
@@ -38,8 +38,8 @@ describe("diffing decorations", () => {
       }),
     ]);
     expect(actual).toEqual({
-      kind: "TREE",
-      root: { kind: "BOX", item: expect.any(Object) },
+      kind: "ROOT",
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [],
     });
@@ -58,8 +58,8 @@ describe("diffing decorations", () => {
       stubBox({ decorations: [added] }),
     ]);
     expect(actual).toEqual({
-      kind: "TREE",
-      root: { kind: "BOX", item: expect.any(Object) },
+      kind: "ROOT",
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [{ kind: "ADD", item: added }],
     });
@@ -78,8 +78,8 @@ describe("diffing decorations", () => {
       stubBox({ decorations: [] }),
     ]);
     expect(actual).toEqual({
-      kind: "TREE",
-      root: { kind: "BOX", item: expect.any(Object) },
+      kind: "ROOT",
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [{ kind: "DEL", item: removed }],
     });
@@ -105,8 +105,8 @@ describe("diffing decorations", () => {
       stubBox({ decorations: [after] }),
     ]);
     expect(actual).toEqual({
-      kind: "TREE",
-      root: { kind: "BOX", item: expect.any(Object) },
+      kind: "ROOT",
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [{ kind: "MOV", item: after, from: before }],
     });
@@ -132,8 +132,8 @@ describe("diffing decorations", () => {
       stubBox({ decorations: [after] }),
     ]);
     expect(actual).toEqual({
-      kind: "TREE",
-      root: { kind: "BOX", item: expect.any(Object) },
+      kind: "ROOT",
+      root: { kind: "NOP", item: expect.any(Object) },
       content: [],
       decorations: [{ kind: "MOV", item: after, from: before }],
     });

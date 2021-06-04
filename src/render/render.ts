@@ -13,8 +13,12 @@ import {
   RenderText,
   TextPosition,
   Token,
+  ADD,
+  BAD,
+  BDE,
+  DEL,
+  MOV,
 } from "../types";
-import { ADD, BAD, BDE, DEL, MOV } from "../lib/diff";
 import { BoxLifecycle, Lifecycle } from "../render/lifecycle";
 import { assertIs, createIdGenerator, toString } from "../util";
 
@@ -150,7 +154,7 @@ function renderFrames(
       decorations: new Map<string, DecorationPosition>(),
       boxes: new Map<string, RenderPositions>(),
     };
-    const isVisible = ["ADD", "MOV", "BOX"].includes(self.kind);
+    const isVisible = ["ADD", "MOV", "NOP"].includes(self.kind);
     frames.set(frameIdx, {
       ...toRenderPosition(self.item, lifecycle.base.id, isVisible),
       frame,

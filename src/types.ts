@@ -116,6 +116,77 @@ export type DiffBox = Box<DiffTokens, DiffDecoration> & {
   id: string;
 };
 
+// The diffing algorithm turns tokens into all sorts of diff ops that can be
+// optimized and then turned into token lifecycles for rendering.
+
+// ADD does not need a "from" field because it is by definition an initial
+// addition. It may get translated to a BAD + MOV pair, but there then BAD is
+// the initial addition and MOV has a "from" field anyway.
+export type ADD<T> = {
+  readonly kind: "ADD";
+  item: T;
+};
+
+// DEL does not need a "from" field because "item" in this case IS the "from"
+export type DEL<T> = {
+  readonly kind: "DEL";
+  item: T;
+};
+
+// MOV is also responsible for changes in box or decoration dimensions. In many
+// cases MOV operations are created in the optimizer by compensating for ADD
+// operations with DEL operations for equivalent tokens.
+export type MOV<T> = {
+  readonly kind: "MOV";
+  item: T;
+  from: T; // reference to the item on it's previous position
+};
+
+// All regular operations that the diff and optimizer module deal with
+export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
+
+// BAD = "before add", essentially an invisible "add". Inserted into diff trees
+// by the lifecycle extension mechanism. Does not need a "from" field because it
+// is always an initial addition.
+export type BAD<T> = {
+  readonly kind: "BAD";
+  item: T;
+};
+
+// BDE = "before del", essentially an invisible "mov". Inserted into diff trees
+// by the lifecycle extension mechanism.
+export type BDE<T> = {
+  readonly kind: "BDE";
+  item: T; // position when fading out ends
+  from: T; // reference to the item when fading out starts
+};
+
+// Regular plus extra ops that only become relevant once (extended) lifecycles
+// come into play
+export type ExtendedDiffOp<T> = ADD<T> | DEL<T> | MOV<T> | BAD<T> | BDE<T>;
+
+// This no-op is only useful for boxes that did not change themselves, but that
+// may have changed contents or decorations. Tokens or decorations without
+// changes simply don't get an op at all.
+export type NOP<T> = {
+  readonly kind: "NOP";
+  item: T; // reference to the previous box
+};
+
+// Models a box in the diff result. A box can have changes to itself ("root")
+// and/or to its content ("content" and "decorations")
+export type DiffRoot = {
+  readonly kind: "ROOT";
+  root: DiffOp<DiffBox> | NOP<DiffBox>;
+  content: (DiffOp<DiffTokens> | DiffRoot)[];
+  decorations: DiffOp<DiffDecoration>[];
+};
+
+// The rendering steps takes diff ops and turns them first into lifecycles (an
+// internal type of the rendering module) and then into object graphs that can
+// be transformed into frames, DOM nodes or any other form of animated end
+// result.
+
 // Describes how to render the token with the given id.
 type BasePosition = {
   id: string;

@@ -256,7 +256,7 @@ describe("Expanded lifecycles", () => {
     expect(Array.from(res.self.values(), ({ kind }) => kind)).toEqual([
       "ADD",
       "MOV",
-      "BOX",
+      "NOP",
     ]);
     expect(res.boxes[0].self).toEqual(
       new Map([
@@ -297,10 +297,10 @@ describe("Expanded lifecycles", () => {
     }
     expect(Array.from(res.self.values(), ({ kind }) => kind)).toEqual([
       "ADD",
-      "BOX",
+      "NOP",
       "MOV",
       "MOV",
-      "BOX",
+      "NOP",
     ]);
     expect(res.boxes[0].self).toEqual(
       new Map([
@@ -344,12 +344,12 @@ describe("Expanded lifecycles", () => {
     }
     expect(Array.from(res.self.values(), ({ kind }) => kind)).toEqual([
       "ADD",
-      "BOX",
-      "BOX",
+      "NOP",
+      "NOP",
       "MOV",
       "MOV",
-      "BOX",
-      "BOX",
+      "NOP",
+      "NOP",
     ]);
     expect(res.boxes[0].self).toEqual(
       new Map([

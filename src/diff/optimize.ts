@@ -3,8 +3,7 @@
 // this - it's just a bunch of heuristics applied in a brute-force manner.
 
 import { mapBy } from "@sirpepe/shed";
-import { DiffTokens, Token } from "../types";
-import { DiffTree, MOV, ADD, DEL, DiffOp } from "../lib/diff";
+import { DiffTokens, Token, DiffRoot, MOV, ADD, DEL, DiffOp } from "../types";
 import { pickAlternative } from "./heuristics";
 
 // "next" and "prev" are useful inputs to the optimizer, but they must not be
@@ -16,12 +15,12 @@ export type Optimizable = Token & {
   next?: Optimizable | undefined;
 };
 
-export function optimizeDiffs(diffs: DiffTree[]): DiffTree[] {
+export function optimizeDiffs(diffs: DiffRoot[]): DiffRoot[] {
   return diffs.map(optimizeDiff);
 }
 
-function optimizeDiff(diff: DiffTree): DiffTree {
-  const result: DiffTree = {
+function optimizeDiff(diff: DiffRoot): DiffRoot {
+  const result: DiffRoot = {
     ...diff,
     content: optimizeOperations(diff.content),
     decorations: optimizeOperations(diff.decorations),
@@ -33,15 +32,15 @@ function optimizeOperations<T extends Optimizable>(
   operations: DiffOp<T>[]
 ): DiffOp<T>[];
 function optimizeOperations(
-  operations: (DiffTree | DiffOp<DiffTokens>)[]
-): (DiffTree | DiffOp<DiffTokens>)[];
+  operations: (DiffRoot | DiffOp<DiffTokens>)[]
+): (DiffRoot | DiffOp<DiffTokens>)[];
 function optimizeOperations<T extends Optimizable>(
-  operations: (DiffTree | DiffOp<T>)[]
-): (DiffTree | DiffOp<T>)[] {
-  const trees: DiffTree[] = [];
+  operations: (DiffRoot | DiffOp<T>)[]
+): (DiffRoot | DiffOp<T>)[] {
+  const trees: DiffRoot[] = [];
   const byHash: Record<string, [Set<MOV<T>>, Set<ADD<T>>, Set<DEL<T>>]> = {};
   for (const operation of operations) {
-    if (operation.kind === "TREE") {
+    if (operation.kind === "ROOT") {
       trees.push(optimizeDiff(operation));
     } else {
       if (!byHash[operation.item.hash]) {

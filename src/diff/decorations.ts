@@ -1,7 +1,6 @@
 import { groupBy } from "@sirpepe/shed";
 import { diffArrays } from "diff";
-import { DiffOp } from "../lib/diff";
-import { DiffDecoration } from "../types";
+import { DiffDecoration, DiffOp } from "../types";
 import { dimensionsEql } from "../util";
 
 // "Diff" hash-equivalent decorations by essentially keeping them in their

@@ -30,7 +30,7 @@ export function naiveHashChain(items: { hash: number | string }[]): number {
 // hash - two structs containing the same characters the same distances apart on
 // either axis get the same hash, no matter the absolute offsets.
 export function offsetHashChain(
-  items: { x: number, y: number, hash: number | string }[]
+  items: { x: number; y: number; hash: number | string }[]
 ): number {
   const hashes = items.flatMap((item, idx) => {
     const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;

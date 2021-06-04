@@ -24,74 +24,16 @@ import {
   Decoration,
   DiffBox,
   DiffDecoration,
+  DiffOp,
+  DiffRoot,
   DiffTokens,
+  NOP,
   TypedToken,
 } from "../types";
 import { dimensionsEql, isBox } from "../util";
 import { assignHashes } from "../diff/assignHashes";
 import { diffLinesAndStructures } from "./struct";
 import { diffDecorations } from "../diff/decorations";
-
-// ADD does not need a "from" field because it is by definition an initial
-// addition. It may get translated to a BAD + MOV pair, but there then BAD is
-// the initial addition and MOV has a "from" field anyway.
-export type ADD<T> = {
-  readonly kind: "ADD";
-  item: T;
-};
-
-// DEL does not need a "from" field because "item" in this case IS the "from"
-export type DEL<T> = {
-  readonly kind: "DEL";
-  item: T;
-};
-
-// MOV is also responsible for changes in box or decoration dimensions. In many
-// cases MOV operations are created in the optimizer by compensating for ADD
-// operations with DEL operations for equivalent tokens.
-export type MOV<T> = {
-  readonly kind: "MOV";
-  item: T;
-  from: T; // reference to the item on it's previous position
-};
-
-// All regular operations that the diff and optimizer module deal with
-export type DiffOp<T> = ADD<T> | DEL<T> | MOV<T>;
-
-// BAD = "before add", essentially an invisible "add". Inserted into diff trees
-// by the lifecycle extension mechanism. Does not need a "from" field because it
-// is always an initial addition.
-export type BAD<T> = {
-  readonly kind: "BAD";
-  item: T;
-};
-
-// BDE = "before del", essentially an invisible "mov". Inserted into diff trees
-// by the lifecycle extension mechanism.
-export type BDE<T> = {
-  readonly kind: "BDE";
-  item: T; // position when fading out ends
-  from: T; // reference to the item when fading out starts
-};
-
-// Regular plus extra ops that only become relevant once (extended) lifecycles
-// come into play
-export type ExtendedDiffOp<T> = ADD<T> | DEL<T> | MOV<T> | BAD<T> | BDE<T>;
-
-// Represents boxes that did not change themselves, but that may have changed
-// contents or decorations.
-export type BOX<T> = {
-  readonly kind: "BOX";
-  item: T; // reference to the previous box
-};
-
-// Models a box in the diff result
-export type DiffTree = {
-  readonly kind: "TREE";
-  root: DiffOp<DiffBox> | BOX<DiffBox>;
-  content: (DiffOp<DiffTokens> | DiffTree)[];
-  decorations: DiffOp<DiffDecoration>[];
-};
 
 // Diff individual tokes by their hash and x/y positions
 function diffTokens(
@@ -118,7 +60,7 @@ function diffTokens(
 function diffBox(
   from: DiffBox | undefined,
   to: DiffBox | undefined
-): DiffOp<DiffBox> | BOX<DiffBox> {
+): DiffOp<DiffBox> | NOP<DiffBox> {
   if (from && !to) {
     return {
       kind: "DEL",
@@ -134,7 +76,7 @@ function diffBox(
   if (from && to) {
     if (dimensionsEql(from, to)) {
       return {
-        kind: "BOX",
+        kind: "NOP",
         item: to,
       };
     } else {
@@ -169,14 +111,14 @@ function partitionTokens(
 function diffBoxes(
   from: DiffBox | undefined,
   to: DiffBox | undefined
-): DiffTree {
+): DiffRoot {
   if (!from && !to) {
     throw new Error("Refusing to diff two undefined frames!");
   }
   const root = diffBox(from, to);
   const textOps: DiffOp<DiffTokens>[] = [];
   const decoOps: DiffOp<DiffDecoration>[] = [];
-  const boxOps: DiffTree[] = [];
+  const boxOps: DiffRoot[] = [];
   const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
   const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
   // First pass: diff mayor structures (language constructs and lines of code)
@@ -194,7 +136,7 @@ function diffBoxes(
     boxOps.push(diffBoxes(fromBox, toBox));
   }
   return {
-    kind: "TREE",
+    kind: "ROOT",
     root,
     content: [...textOps, ...boxOps],
     decorations: decoOps,
@@ -203,12 +145,12 @@ function diffBoxes(
 
 export function diff(
   roots: Box<TypedToken, Decoration<TypedToken>>[]
-): DiffTree[] {
+): DiffRoot[] {
   if (roots.length === 0) {
     return [];
   }
   const hashedRoots = assignHashes(roots);
-  const diffs: DiffTree[] = [diffBoxes(undefined, hashedRoots[0])];
+  const diffs: DiffRoot[] = [diffBoxes(undefined, hashedRoots[0])];
   for (let i = 0; i < hashedRoots.length - 1; i++) {
     diffs.push(diffBoxes(hashedRoots[i], hashedRoots[i + 1]));
   }

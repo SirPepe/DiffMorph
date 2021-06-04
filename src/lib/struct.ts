@@ -5,8 +5,7 @@ import { groupBy } from "@sirpepe/shed";
 import { diffArrays } from "diff";
 import { offsetHashChain } from "../diff/hash";
 import { findStructs, Struct } from "../diff/structs";
-import { DiffTokens } from "../types";
-import { DiffOp, MOV } from "./diff";
+import { DiffTokens, DiffOp, MOV } from "../types";
 import { pickAlternative } from "../diff/heuristics";
 
 // Organize tokens into lines, which are just a special case of structure
