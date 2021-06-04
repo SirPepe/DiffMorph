@@ -25,12 +25,12 @@ import {
   DiffBox,
   DiffDecoration,
   DiffTokens,
-  Token,
   TypedToken,
 } from "../types";
-import { isBox } from "../util";
+import { dimensionsEql, isBox } from "../util";
 import { assignHashes } from "../diff/assignHashes";
 import { diffLinesAndStructures } from "./struct";
+import { diffDecorations } from "../diff/decorations";
 
 // ADD does not need a "from" field because it is by definition an initial
 // addition. It may get translated to a BAD + MOV pair, but there then BAD is
@@ -113,40 +113,6 @@ function diffTokens(
     }
   }
   return result;
-}
-
-// Diff decorations by their hashes, positions and dimensions
-function diffDecorations(
-  from: DiffDecoration[],
-  to: DiffDecoration[]
-): DiffOp<DiffDecoration>[] {
-  const result: DiffOp<DiffDecoration>[] = [];
-  const changes = diffArrays(from, to, {
-    comparator: (a, b) => a.hash === b.hash && dimensionsEql(a, b),
-    ignoreCase: false,
-  });
-  for (const change of changes) {
-    for (const value of change.value) {
-      if (change.added) {
-        result.push({ kind: "ADD", item: value });
-      } else if (change.removed) {
-        result.push({ kind: "DEL", item: value });
-      }
-    }
-  }
-  return result;
-}
-
-function dimensionsEql(a: Token, b: Token): boolean {
-  if (
-    a.x !== b.x ||
-    a.y !== b.y ||
-    a.width !== b.width ||
-    a.height !== b.height
-  ) {
-    return false;
-  }
-  return true;
 }
 
 function diffBox(

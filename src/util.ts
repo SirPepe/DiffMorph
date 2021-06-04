@@ -1,4 +1,4 @@
-import { Box, Decoration } from "./types";
+import { Box, Decoration, Token } from "./types";
 
 const CHARSET =
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -214,6 +214,18 @@ export function isNewLine(token: {
   prev: { y: number } | undefined;
 }): boolean {
   return Boolean(token.prev && token.y > token.prev.y);
+}
+
+export function dimensionsEql(a: Token, b: Token): boolean {
+  if (
+    a.x !== b.x ||
+    a.y !== b.y ||
+    a.width !== b.width ||
+    a.height !== b.height
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export function minmax(numbers: Iterable<number>): [number, number] {
