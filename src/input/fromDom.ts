@@ -13,11 +13,11 @@ import {
 } from "../types";
 import { tokenize } from "./tokenizer";
 import { getLanguage, isNot } from "../util";
-import { toRenderData } from "../lib/render";
+import { toRenderData } from "../render/render";
 import { optimizeDiffs } from "../diff/optimize";
 import { diff } from "../lib/diff";
-import { applyLanguage } from "../lib/language";
-import { toLifecycle } from "../lib/lifecycle";
+import { applyLanguage } from "../language/language";
+import { toLifecycle } from "../render/lifecycle";
 import { InputOptions, withDefaults } from "./options";
 
 function isHTMLElement(arg: any): arg is HTMLElement {

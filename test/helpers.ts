@@ -1,6 +1,6 @@
 import { diff } from "../src/lib/diff";
-import { applyLanguage } from "../src/lib/language";
-import { toLifecycle } from "../src/lib/lifecycle";
+import { applyLanguage } from "../src/language/language";
+import { toLifecycle } from "../src/render/lifecycle";
 import { optimizeDiffs } from "../src/diff/optimize";
 import { tokenize } from "../src/input/tokenizer";
 import { flattenTokens, getFirstTextToken } from "../src/util";

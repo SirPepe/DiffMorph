@@ -1,5 +1,5 @@
 // Essentially an enum for language theme colors. Not real enum because we need
-// to perform a few operations on the resulting type
+// to derive a few extra types from this object's type.
 export const themeColors = {
   foreground: "foreground",
   background: "background",
@@ -31,7 +31,7 @@ export type LanguageTheme = Record<string, LanguageThemeProperties>;
 export type ColorPalette = { [K in keyof typeof themeColors]: string };
 
 // These should be six-character hexadecimal values for compatibility with
-// color input elements
+// color input elements, in case anyone wants to build a web UI for any of this.
 export const DEFAULT_COLOR_PALETTE = {
   foreground: "#000000",
   background: "#ffffff",

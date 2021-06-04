@@ -1,4 +1,4 @@
-// Assigns concrete render tokens based on lifecycles. The outcome of this
+// Assigns concrete render objects based on lifecycles. The outcome of this
 // module could be probably be improved by prioritizing MOV ops over all other
 // operations across all lifecycles.
 
@@ -14,8 +14,8 @@ import {
   TextPosition,
   Token,
 } from "../types";
-import { ADD, BAD, BDE, DEL, MOV } from "./diff";
-import { BoxLifecycle, Lifecycle } from "./lifecycle";
+import { ADD, BAD, BDE, DEL, MOV } from "../lib/diff";
+import { BoxLifecycle, Lifecycle } from "../render/lifecycle";
 import { assertIs, createIdGenerator, toString } from "../util";
 
 type InputToken = Token & { hash: number };

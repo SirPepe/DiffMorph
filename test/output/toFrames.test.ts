@@ -1,4 +1,4 @@
-import { toRenderData } from "../../src/lib/render";
+import { toRenderData } from "../../src/render/render";
 import { tweenFrames } from "../../src/output/toFrames";
 import { process } from "../helpers";
 

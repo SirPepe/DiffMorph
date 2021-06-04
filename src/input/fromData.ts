@@ -13,11 +13,11 @@ import {
   TextTokens,
 } from "../types";
 import { tokenize } from "./tokenizer";
-import { applyLanguage } from "../lib/language";
-import { toRenderData } from "../lib/render";
+import { applyLanguage } from "../language/language";
+import { toRenderData } from "../render/render";
 import { optimizeDiffs } from "../diff/optimize";
 import { diff } from "../lib/diff";
-import { toLifecycle } from "../lib/lifecycle";
+import { toLifecycle } from "../render/lifecycle";
 import { InputOptions, withDefaults } from "./options";
 
 type Input = string | InputContainer;

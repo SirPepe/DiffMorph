@@ -13,7 +13,7 @@ import {
   TextTokens,
   TypedTokens,
 } from "../types";
-import { LanguageTheme, themeColors } from "../lib/theme";
+import { LanguageTheme, themeColors } from "../language/theme";
 
 type Flags = {
   xml: boolean;

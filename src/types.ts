@@ -7,7 +7,7 @@
 // do not; decorations are intended to be rendered in the final output to create
 // squiggly lines, highlights or other text decorations.
 
-import { LanguageTheme } from "./lib/theme";
+import { LanguageTheme } from "./language/theme";
 
 // Represents a bit of code as defined above
 export type Code = string | CodeContainer;

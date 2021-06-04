@@ -8,7 +8,7 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { createIdGenerator } from "../util";
-import { DEFAULT_COLOR_PALETTE, LanguageTheme } from "../lib/theme";
+import { DEFAULT_COLOR_PALETTE, LanguageTheme } from "../language/theme";
 
 const nextId = createIdGenerator();
 

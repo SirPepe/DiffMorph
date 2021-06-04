@@ -2,7 +2,7 @@
 // only) can be enabled by a flag, which the JSONC definition binds to true.
 
 import { isAdjacent, isNewLine } from "../util";
-import { LanguageTheme, themeColors } from "../lib/theme";
+import { LanguageTheme, themeColors } from "../language/theme";
 import {
   LanguageDefinition,
   LanguageFunction,

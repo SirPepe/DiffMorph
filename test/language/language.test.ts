@@ -1,5 +1,5 @@
 import { registerLanguage } from "../../src/languages";
-import { applyLanguage } from "../../src/lib/language";
+import { applyLanguage } from "../../src/language/language";
 import { tokenize } from "../../src/input/tokenizer";
 import { Box } from "../../src/types";
 import { lang, type } from "../helpers";

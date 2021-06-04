@@ -2,7 +2,7 @@
 // TS features are controlled by a flag, which the TypeScript language
 // definition binds to true.
 
-import { LanguageTheme, themeColors } from "../lib/theme";
+import { LanguageTheme, themeColors } from "../language/theme";
 import { isAdjacent, isNewLine, lookbehindType } from "../util";
 import {
   LanguageDefinition,

@@ -16,7 +16,7 @@ import {
   LanguageTheme,
   LanguageThemeProperties,
   themeColors,
-} from "../lib/theme";
+} from "../language/theme";
 
 // Translate language theme into canvas styles
 function setStyles(

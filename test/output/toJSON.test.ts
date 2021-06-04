@@ -1,4 +1,4 @@
-import { toRenderData } from "../../src/lib/render";
+import { toRenderData } from "../../src/render/render";
 import { toJSON } from "../../src/output/toJSON";
 import { process } from "../helpers";
 

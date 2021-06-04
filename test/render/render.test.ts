@@ -1,4 +1,4 @@
-import { toRenderData } from "../../src/lib/render";
+import { toRenderData } from "../../src/render/render";
 import { process } from "../helpers";
 
 describe("rendering", () => {

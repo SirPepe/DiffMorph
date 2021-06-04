@@ -1,5 +1,10 @@
+// This module turns diff ops into lifecycle maps. These serve to connect diff
+// ops across potentially many frames and also inserts pre-visibility and
+// post-visibility ops (called "lifecycle extension"). The main render function
+// can then trace every object through its entire lifecycle.
+
 import { DiffBox, DiffDecoration, DiffTokens, Token } from "../types";
-import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "./diff";
+import { BOX, DiffOp, ExtendedDiffOp, DiffTree } from "../lib/diff";
 import { minmax } from "../util";
 
 export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
