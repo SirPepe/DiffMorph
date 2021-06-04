@@ -16,7 +16,7 @@ import {
 } from "../types";
 import { ADD, BAD, BDE, DEL, MOV } from "./diff";
 import { BoxLifecycle, Lifecycle } from "./lifecycle";
-import { assertIs, createIdGenerator, toString } from "./util";
+import { assertIs, createIdGenerator, toString } from "../util";
 
 type InputToken = Token & { hash: number };
 type OutputToken = { id: string };

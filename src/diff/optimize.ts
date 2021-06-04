@@ -4,7 +4,7 @@
 
 import { mapBy } from "@sirpepe/shed";
 import { DiffTokens, Token } from "../types";
-import { DiffTree, MOV, ADD, DEL, DiffOp } from "./diff";
+import { DiffTree, MOV, ADD, DEL, DiffOp } from "../lib/diff";
 import { pickAlternative } from "./heuristics";
 
 // "next" and "prev" are useful inputs to the optimizer, but they must not be

@@ -1,9 +1,9 @@
 import { diff } from "../src/lib/diff";
 import { applyLanguage } from "../src/lib/language";
 import { toLifecycle } from "../src/lib/lifecycle";
-import { optimizeDiffs } from "../src/lib/optimize";
-import { tokenize } from "../src/lib/tokenizer";
-import { flattenTokens, getFirstTextToken } from "../src/lib/util";
+import { optimizeDiffs } from "../src/diff/optimize";
+import { tokenize } from "../src/input/tokenizer";
+import { flattenTokens, getFirstTextToken } from "../src/util";
 import { Box, Code, Decoration, LinkedListOf, TypedTokens } from "../src/types";
 
 type DecorationArgs = Omit<Decoration<any>, "parent">;

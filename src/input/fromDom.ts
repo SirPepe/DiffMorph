@@ -1,5 +1,5 @@
 // This module is a DOM frontend for the tokenizer. Its fromDom() function takes
-// elements as input and turns their text content into optimized keyframes.
+// elements as input and turns their text content into ready-to-use render data.
 
 import {
   Box,
@@ -11,10 +11,10 @@ import {
   RenderText,
   TextTokens,
 } from "../types";
-import { tokenize } from "../lib/tokenizer";
-import { getLanguage, isNot } from "../lib/util";
+import { tokenize } from "./tokenizer";
+import { getLanguage, isNot } from "../util";
 import { toRenderData } from "../lib/render";
-import { optimizeDiffs } from "../lib/optimize";
+import { optimizeDiffs } from "../diff/optimize";
 import { diff } from "../lib/diff";
 import { applyLanguage } from "../lib/language";
 import { toLifecycle } from "../lib/lifecycle";

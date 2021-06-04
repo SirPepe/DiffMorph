@@ -5,7 +5,7 @@
 // the "any" in the following lines. Beware of applyLanguage() in particular as
 // it WILL modify its input with extreme prejudice.
 
-import { getFirstTextToken, spliceBoxContent } from "./util";
+import { getFirstTextToken, spliceBoxContent } from "../util";
 import {
   Box,
   Decoration,

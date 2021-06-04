@@ -1,26 +1,14 @@
-// Find larger structures in arrays of diff tokens
+// Find larger structures to recycle in arrays of diff tokens.
 
-import { consume, findMaxValue, hash } from "../lib/util";
+import { consume, findMaxValue } from "../util";
 import { DiffTokens, Token } from "../types";
+import { offsetHashChain } from "./hash";
 
 export type Struct = Token & {
   readonly type: string;
   readonly hash: number;
   readonly items: DiffTokens[];
 };
-
-// Create a hash of a list of tokens by concatenating the token's hashes and
-// their *relative* offsets. The absolute coordinates are not reflected in the
-// hash - two structs containing the same characters the same distances apart on
-// either axis get the same hash, no matter the absolute offsets.
-function hashItems(items: DiffTokens[]): number {
-  const hashes = items.flatMap((item, idx) => {
-    const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
-    const yDelta = idx > 0 ? item.y - items[idx - 1].y : 0;
-    return [item.hash, xDelta, yDelta];
-  });
-  return hash(hashes);
-}
 
 function toStructure(items: DiffTokens[], type: string): Struct {
   const { x, y } = items[0];
@@ -30,7 +18,7 @@ function toStructure(items: DiffTokens[], type: string): Struct {
     width: findMaxValue(items, (item) => item.x + item.width) - x,
     height: findMaxValue(items, (item) => item.y + item.height) - y,
     type,
-    hash: hashItems(items),
+    hash: offsetHashChain(items),
     items,
   };
 }

@@ -9,7 +9,7 @@ import {
   TextPosition,
 } from "../types";
 import { languages } from "../languages";
-import { assertIs } from "../lib/util";
+import { assertIs } from "../util";
 import {
   ColorPalette,
   DEFAULT_COLOR_PALETTE,

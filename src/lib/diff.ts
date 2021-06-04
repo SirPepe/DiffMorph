@@ -28,8 +28,8 @@ import {
   Token,
   TypedToken,
 } from "../types";
-import { isBox } from "./util";
-import { assignHashes } from "./hash";
+import { isBox } from "../util";
+import { assignHashes } from "../diff/assignHashes";
 import { diffLinesAndStructures } from "./struct";
 
 // ADD does not need a "from" field because it is by definition an initial

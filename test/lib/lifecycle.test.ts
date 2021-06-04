@@ -1,6 +1,6 @@
 import { diff } from "../../src/lib/diff";
 import { toLifecycle } from "../../src/lib/lifecycle";
-import { optimizeDiffs } from "../../src/lib/optimize";
+import { optimizeDiffs } from "../../src/diff/optimize";
 import { lang } from "../helpers";
 const tokenize = lang("none");
 

@@ -1,7 +1,7 @@
 // Implements support for both JSON and JSONC. Comments (a feature of JSONC
 // only) can be enabled by a flag, which the JSONC definition binds to true.
 
-import { isAdjacent, isNewLine } from "../lib/util";
+import { isAdjacent, isNewLine } from "../util";
 import { LanguageTheme, themeColors } from "../lib/theme";
 import {
   LanguageDefinition,

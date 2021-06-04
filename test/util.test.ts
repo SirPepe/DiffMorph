@@ -1,10 +1,9 @@
 import {
   createIdGenerator,
-  createUniqueHashGenerator,
   isAdjacent,
   spliceBoxContent,
-} from "../../src/lib/util";
-import { Box } from "../../src/types";
+} from "../src/util";
+import { Box } from "../src/types";
 
 describe("createIdGenerator()", () => {
   test("unique id generation", () => {
@@ -12,28 +11,6 @@ describe("createIdGenerator()", () => {
     const a = generator(null, "a");
     const b = generator(null, "a");
     const c = generator(null, "a");
-    expect(a).not.toBe(b);
-    expect(a).not.toBe(c);
-    expect(b).not.toBe(c);
-  });
-});
-
-describe("createUniqueHashGenerator()", () => {
-  test("unique hash generation", () => {
-    const generator = createUniqueHashGenerator();
-    const a = generator(["a"]);
-    const b = generator(["a"]);
-    const c = generator(["a"]);
-    expect(a).not.toBe(b);
-    expect(a).not.toBe(c);
-    expect(b).not.toBe(c);
-  });
-
-  test("unique hash generation can't be guessed", () => {
-    const generator = createUniqueHashGenerator();
-    const a = generator(["a"]);
-    const b = generator(["a", 0]);
-    const c = generator(["a", 1]);
     expect(a).not.toBe(b);
     expect(a).not.toBe(c);
     expect(b).not.toBe(c);

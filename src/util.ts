@@ -1,4 +1,4 @@
-import { Box, Decoration } from "../types";
+import { Box, Decoration } from "./types";
 
 const CHARSET =
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -10,42 +10,6 @@ export function toString(number: number): string {
     number = Math.floor(number / 62);
   }
   return res;
-}
-
-export function hash(inputs: (string | number)[]): number {
-  let input = inputs.join("Ͼ");
-  let hash = 2166136261;
-  let nonAscii = false;
-  for (let i = 0; i < input.length; i++) {
-    let characterCode = input.charCodeAt(i);
-    if (characterCode > 0x7f && !nonAscii) {
-      input = unescape(encodeURIComponent(input));
-      characterCode = input.charCodeAt(i);
-      nonAscii = true;
-    }
-    hash ^= characterCode;
-    hash +=
-      (hash << 1) + (hash << 4) + (hash << 7) + (hash << 8) + (hash << 24);
-  }
-  return hash >>> 0;
-}
-
-// Returns functions that generate unique hashes
-export function createUniqueHashGenerator(): (
-  inputs: (string | number)[]
-) => number {
-  const counter = new Map<number, number>();
-  return function uniqueHash(inputs: (string | number)[]): number {
-    const h = hash(inputs);
-    const count = counter.get(h);
-    if (typeof count === "undefined") {
-      counter.set(h, 0);
-      return h;
-    } else {
-      counter.set(h, count + 1);
-      return uniqueHash([...inputs, count]);
-    }
-  };
 }
 
 export function is<T>(x: T | undefined | null): x is T {

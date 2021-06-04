@@ -3,8 +3,9 @@
 // decorations. This all happens in-place which is why there's a lot of "any"
 // annotations and type assertions.
 
+import { createUniqueHashGenerator, hash } from "./hash";
 import { Box, Decoration, DiffBox, TypedToken } from "../types";
-import { createUniqueHashGenerator, hash, toString, isBox } from "./util";
+import { toString, isBox } from "../util";
 
 function hashToken(target: TypedToken): void {
   (target as any).hash = hash([target.type, target.text]);

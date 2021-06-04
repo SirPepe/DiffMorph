@@ -1,6 +1,6 @@
 // This module is a JS frontend for the tokenizer. Its fromData() function takes
 // code in the form of strings and objects (the latter representing boxes) and
-// returns optimized keyframes.
+// returns ready-to-use render data.
 
 import {
   Box,
@@ -12,10 +12,10 @@ import {
   RenderText,
   TextTokens,
 } from "../types";
-import { tokenize } from "../lib/tokenizer";
+import { tokenize } from "./tokenizer";
 import { applyLanguage } from "../lib/language";
 import { toRenderData } from "../lib/render";
-import { optimizeDiffs } from "../lib/optimize";
+import { optimizeDiffs } from "../diff/optimize";
 import { diff } from "../lib/diff";
 import { toLifecycle } from "../lib/lifecycle";
 import { InputOptions, withDefaults } from "./options";

@@ -1,5 +1,5 @@
 import { diff } from "../../src/lib/diff";
-import { optimizeDiffs } from "../../src/lib/optimize";
+import { optimizeDiffs } from "../../src/diff/optimize";
 import { Box, Decoration } from "../../src/types";
 import { lang } from "../helpers";
 const tokenize = lang("none");

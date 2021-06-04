@@ -3,30 +3,17 @@
 
 import { groupBy } from "@sirpepe/shed";
 import { diffArrays } from "diff";
+import { offsetHashChain } from "../diff/hash";
 import { findStructs, Struct } from "../diff/structs";
 import { DiffTokens } from "../types";
 import { DiffOp, MOV } from "./diff";
-import { pickAlternative } from "./heuristics";
-import { hash } from "./util";
-
-// Create a hash of a list of tokens by concatenating the token's hashes and
-// their *relative* offsets. The absolute coordinates are not reflected in the
-// hash - two structs containing the same characters the same distances apart on
-// either axis get the same hash, no matter the absolute offsets.
-function hashItems(items: DiffTokens[]): number {
-  const hashes = items.flatMap((item, idx) => {
-    const xDelta = idx > 0 ? item.x - items[idx - 1].x : 0;
-    const yDelta = idx > 0 ? item.y - items[idx - 1].y : 0;
-    return [item.hash, xDelta, yDelta];
-  });
-  return hash(hashes);
-}
+import { pickAlternative } from "../diff/heuristics";
 
 // Organize tokens into lines, which are just a special case of structure
 function asLines(tokens: DiffTokens[]): Struct[] {
   const byLine = groupBy(tokens, "y");
   return Array.from(byLine, ([y, items]) => {
-    const hash = hashItems(items);
+    const hash = offsetHashChain(items);
     const x = items.length > 0 ? items[0].x : 0;
     const width = items[items.length - 1].x + items[items.length - 1].width - x;
     return {

@@ -7,7 +7,7 @@ import {
   RenderText,
 } from "../types";
 import { languages } from "../languages";
-import { createIdGenerator } from "../lib/util";
+import { createIdGenerator } from "../util";
 import { DEFAULT_COLOR_PALETTE, LanguageTheme } from "../lib/theme";
 
 const nextId = createIdGenerator();
