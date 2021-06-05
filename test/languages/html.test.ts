@@ -153,6 +153,51 @@ describe("embedded languages", () => {
     ]);
   });
 
+  test("embedded CSS embedding a url string '</style>'", () => {
+    const types = html(`<style>.foo { background: url("</style>") }</style>`);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "selector",
+      "punctuation rule-start",
+      "property",
+      "punctuation",
+      "keyword",
+      "punctuation url",
+      "string url",
+      "string url",
+      "string url",
+      "string url",
+      "string url",
+      "string url",
+      "punctuation url",
+      "punctuation rule-end",
+      "tag",
+    ]);
+  });
+
+  test("embedded CSS embedding an attribute string '</style>'", () => {
+    const types = html(`<style>.foo[bar="</style>"] {}</style>`);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "selector",
+      "punctuation-selector",
+      "selector",
+      "selector",
+      "string",
+      "string",
+      "string",
+      "string",
+      "string",
+      "string",
+      "punctuation-selector",
+      "punctuation rule-start",
+      "punctuation rule-end",
+      "tag",
+    ]);
+  });
+
   test("embedded CSS with attributes on the style tag", () => {
     const types = html(`<style class="a" disabled>.foo { color: red }</style>`);
     expect(types).toEqual([
@@ -202,6 +247,25 @@ describe("embedded languages", () => {
       "token",
       "operator",
       "number",
+      "punctuation",
+      "tag",
+    ]);
+  });
+
+  test("embedded JS with </script> in a string", () => {
+    const types = html(`<script>let x = "</script>";</script>`);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "keyword",
+      "token",
+      "operator",
+      "string",
+      "string",
+      "string",
+      "string",
+      "string",
+      "string",
       "punctuation",
       "tag",
     ]);

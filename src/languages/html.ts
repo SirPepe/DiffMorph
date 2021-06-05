@@ -67,11 +67,17 @@ function processEmbeddedCss(
   const types = [];
   let current: any = start;
   while (current) {
-    if (current.text === "<" && lookaheadText(current, ["/", "style", ">"])) {
-      return { language: "css", types };
-    }
     const results = language(current);
     const resultTypes = Array.isArray(results) ? results : [results];
+    if (current.text === "<" && lookaheadText(current, ["/", "style", ">"])) {
+      // Don't return when "</style>" is part of a string in the embedded CSS
+      if (
+        typeof resultTypes[0] !== "string" ||
+        !resultTypes[0].startsWith("string")
+      ) {
+        return { language: "css", types };
+      }
+    }
     for (const type of resultTypes) {
       types.push(type);
       current = current.next;
@@ -87,11 +93,17 @@ function processEmbeddedJavaScript(
   const types = [];
   let current: any = start;
   while (current) {
-    if (current.text === "<" && lookaheadText(current, ["/", "script", ">"])) {
-      return { language: "javascript", types };
-    }
     const results = language(current);
     const resultTypes = Array.isArray(results) ? results : [results];
+    if (current.text === "<" && lookaheadText(current, ["/", "script", ">"])) {
+      // Don't return when "</script>" is part of a string in the embedded JS
+      if (
+        typeof resultTypes[0] !== "string" ||
+        !resultTypes[0].startsWith("string")
+      ) {
+        return { language: "javascript", types };
+      }
+    }
     for (const type of resultTypes) {
       types.push(type);
       current = current.next;
