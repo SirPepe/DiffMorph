@@ -4,6 +4,7 @@ const javascript = type("javascript");
 describe("Basic statements", () => {
   test("Variable declaration", () => {
     expect(javascript(`var foo;`)).toEqual(["keyword", "token", "punctuation"]);
+    expect(javascript(`var of;`)).toEqual(["keyword", "token", "punctuation"]);
     expect(javascript(`var _;`)).toEqual(["keyword", "token", "punctuation"]);
     expect(javascript(`var $;`)).toEqual(["keyword", "token", "punctuation"]);
     expect(javascript(`var foo_var;`)).toEqual([
@@ -684,13 +685,115 @@ describe("Numbers", () => {
 describe("Comments", () => {
   test("Line comment", () => {
     const types = javascript(`// foo foo-bar bar it's foo`);
+    expect(types).toEqual(["comment line"]);
+  });
+  test("Block comment", () => {
+    const types = javascript(`/* foo foo-bar bar it's foo */`);
+    expect(types).toEqual(["comment block"]);
+  });
+});
+
+describe("If/else", () => {
+  test("if", () => {
+    const types = javascript(`if(true){}`);
     expect(types).toEqual([
-      "comment line", // "//"
-      "comment line", // "foo"
-      "comment line", // "foo-bar"
-      "comment line", // "bar"
-      "comment line", // "it's"
-      "comment line", // "foo"
+      "keyword",
+      "punctuation condition-start-0",
+      "literal",
+      "punctuation condition-end-0",
+      "punctuation block-start-0",
+      "punctuation block-end-0"
+    ]);
+  });
+
+  test("if-else", () => {
+    const types = javascript(`if(true){}else{}`);
+    expect(types).toEqual([
+      "keyword",
+      "punctuation condition-start-0",
+      "literal",
+      "punctuation condition-end-0",
+      "punctuation block-start-0",
+      "punctuation block-end-0",
+      "keyword",
+      "punctuation block-start-0",
+      "punctuation block-end-0"
+    ]);
+  });
+
+  test("if-else-if", () => {
+    const types = javascript(`if(true){}else if(false){}`);
+    expect(types).toEqual([
+      "keyword",
+      "punctuation condition-start-0",
+      "literal",
+      "punctuation condition-end-0",
+      "punctuation block-start-0",
+      "punctuation block-end-0",
+      "keyword",
+      "keyword",
+      "punctuation condition-start-0",
+      "literal",
+      "punctuation condition-end-0",
+      "punctuation block-start-0",
+      "punctuation block-end-0"
+    ]);
+  });
+});
+
+describe("Loops", () => {
+  test("do-while", () => {
+    const types = javascript(`do {} while(true);`);
+    expect(types).toEqual([
+      "keyword",
+      "punctuation block-start-0",
+      "punctuation block-end-0",
+      "keyword",
+      "punctuation condition-start-0",
+      "literal",
+      "punctuation condition-end-0",
+      "punctuation",
+    ]);
+  });
+
+  test("while", () => {
+    const types = javascript(`while(true){}`);
+    expect(types).toEqual([
+      "keyword",
+      "punctuation condition-start-0",
+      "literal",
+      "punctuation condition-end-0",
+      "punctuation block-start-0",
+      "punctuation block-end-0"
+    ]);
+  });
+
+  test("for-of", () => {
+    const types = javascript(`for(let item of collection){}`);
+    expect(types).toEqual([
+      "keyword",
+      "punctuation condition-start-0",
+      "keyword",
+      "token",
+      "keyword",
+      "token",
+      "punctuation condition-end-0",
+      "punctuation block-start-0",
+      "punctuation block-end-0"
+    ]);
+  });
+
+  test("trollish for-of", () => {
+    const types = javascript(`for(of of of){}`);
+    expect(types).toEqual([
+      "keyword",
+      "punctuation condition-start-0",
+      "token",
+      "keyword",
+      "token",
+      "punctuation condition-end-0",
+      "punctuation block-start-0",
+      "punctuation block-end-0"
     ]);
   });
 });

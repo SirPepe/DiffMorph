@@ -35,7 +35,6 @@ type ParenType =
   | "arguments"
   | "type"
   | "call"
-  | "switch-condition"
   | "condition";
 
 type JSXTagType = "tag" | "component" | "fragment" | "none";
@@ -308,7 +307,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       state.blockCommentState === true &&
       !inStringMode(state) &&
       token.text === "/" &&
-      token?.prev?.text === "*"
+      token.prev?.text === "*"
     ) {
       state.blockCommentState = false;
       return "comment block";
@@ -425,11 +424,18 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return `punctuation call-start-${before}`;
       }
       if (
-        token?.prev?.type === "declaration function" ||
-        token?.prev?.type === "keyword function"
+        token.prev?.type === "declaration function" ||
+        token.prev?.type === "keyword function"
       ) {
         const { before } = state.parenStack.push("arguments");
         return `punctuation arguments-start-${before}`;
+      }
+      if (
+        token.prev?.type === "keyword" &&
+        ["for", "while", "if", "switch", "catch"].includes(token.prev?.text)
+      ) {
+        const { before } = state.parenStack.push("condition");
+        return `punctuation condition-start-${before}`;
       }
       // This is not how proper JS engines do it, but it's easy to build
       if (token.next && searchAheadForArrow(token.next)) {
@@ -451,7 +457,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         const { before } = state.bracketStack.push("destruct");
         return `punctuation destruct-start-${before}`;
       }
-      if (token?.prev?.type === "operator" || token.prev?.text === ":") {
+      if (token.prev?.type === "operator" || token.prev?.text === ":") {
         const { before } = state.bracketStack.push("array");
         return `punctuation array-start-${before}`;
       }
@@ -471,14 +477,24 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return `punctuation destruct-start-${before}`;
       }
       if (
-        token?.prev?.type?.match(/arguments-end/) ||
-        token?.prev?.type === "operator arrow"
+        (
+          token.prev?.type === "keyword" &&
+          ["else", "do", "try", "finally"].includes(token.prev?.text)
+        ) ||
+        token.prev?.type?.match(/condition-end-[\d]+$/)
+      ) {
+        const { before } = state.curlyStack.push("block");
+        return `punctuation block-start-${before}`;
+      }
+      if (
+        token.prev?.type?.match(/arguments-end/) ||
+        token.prev?.type === "operator arrow"
       ) {
         const { before } = state.curlyStack.push("function");
         return `punctuation function-start-${before}`;
       }
       // Must be before nested destruct
-      if (token?.prev?.type === "operator") {
+      if (token.prev?.type === "operator") {
         const { before } = state.curlyStack.push("object");
         state.objectState = "lhs";
         return `punctuation object-start-${before}`;
@@ -490,7 +506,7 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return `punctuation destruct-start-${before}`;
       }
       // Must be after nested destruct
-      if (token?.prev?.text === ":") {
+      if (token.prev?.text === ":") {
         const { before } = state.curlyStack.push("object");
         state.objectState = "lhs";
         return `punctuation object-start-${before}`;
@@ -596,7 +612,10 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
       if (token.prev?.type === "keyword" && token.prev.text === "new") {
         return "call constructor";
       }
-      if (token.next?.text === "(") {
+      if (
+        (!OTHER_KEYWORDS.has(token.text) || token.prev?.text === ".") &&
+        token.next?.text === "("
+      ) {
         return "call";
       }
       // Identifier in a list
@@ -613,6 +632,16 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
     // that keywords like "new" are indeed keywords when following a spread
     // operator
     if (OTHER_KEYWORDS.has(token.text) && state.objectState !== "lhs") {
+      return "keyword";
+    }
+
+    // Contextual keyword "of"
+    if (
+      state.parenStack.peek().value === "condition" &&
+      token.text === "of" &&
+      token.prev?.type === "token" &&
+      !isAdjacent(token, token.prev)
+    ) {
       return "keyword";
     }
 
@@ -662,19 +691,22 @@ const theme: LanguageTheme = {
 };
 
 function postprocessECMAScript(token: TypedTokens): boolean {
+  // Join regular expressions, operators, numbers
+  if (
+    token.type === "regex" ||
+    token.type === "number" ||
+    token.type.startsWith("operator")
+  ) {
+    return isAdjacent(token, token.prev);
+  }
+  // Join comments
+  if (token.type.startsWith("comment")) {
+    return true;
+  }
   // Join rest/spread
   if (
     token.text === "." &&
     (token.prev?.text === "." || token.prev?.text === "..")
-  ) {
-    return isAdjacent(token, token.prev);
-  }
-  // Join regular expressions, operators, numbers and comments
-  if (
-    token.type === "regex" ||
-    token.type === "number" ||
-    token.type.startsWith("comment") ||
-    token.type.startsWith("operator")
   ) {
     return isAdjacent(token, token.prev);
   }
