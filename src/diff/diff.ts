@@ -18,7 +18,6 @@
 // 3. diff decorations by hash, position and dimensions, returning only ADD and
 //    DEL operations. The optimizer stage can again turn ADD and DEL into MOV.
 
-import { diffArrays } from "diff";
 import {
   Box,
   Decoration,
@@ -27,70 +26,16 @@ import {
   DiffOp,
   DiffRoot,
   DiffTokens,
-  NOP,
   TypedToken,
 } from "../types";
-import { dimensionsEql, isBox } from "../util";
+import { isBox } from "../util";
 import { assignHashes } from "./assignHashes";
 import { diffLinesAndStructures } from "./structs";
 import { diffDecorations } from "./decorations";
+import { diffBox } from "./boxes";
+import { diffTokens } from "./tokens";
 
-// Diff individual tokes by their hash and x/y positions
-function diffTokens(
-  from: DiffTokens[],
-  to: DiffTokens[]
-): DiffOp<DiffTokens>[] {
-  const result: DiffOp<DiffTokens>[] = [];
-  const changes = diffArrays(from, to, {
-    comparator: (a, b) => a.hash === b.hash && a.x === b.x && a.y === b.y,
-    ignoreCase: false,
-  });
-  for (const change of changes) {
-    for (const value of change.value) {
-      if (change.added) {
-        result.push({ kind: "ADD", item: value });
-      } else if (change.removed) {
-        result.push({ kind: "DEL", item: value });
-      }
-    }
-  }
-  return result;
-}
-
-function diffBox(
-  from: DiffBox | undefined,
-  to: DiffBox | undefined
-): DiffOp<DiffBox> | NOP<DiffBox> {
-  if (from && !to) {
-    return {
-      kind: "DEL",
-      item: from,
-    };
-  }
-  if (to && !from) {
-    return {
-      kind: "ADD",
-      item: to,
-    };
-  }
-  if (from && to) {
-    if (dimensionsEql(from, to)) {
-      return {
-        kind: "NOP",
-        item: to,
-      };
-    } else {
-      return {
-        kind: "MOV",
-        item: to,
-        from,
-      };
-    }
-  }
-  throw new Error("This can never happen");
-}
-
-function partitionTokens(
+function partitionContent(
   source: DiffBox | undefined
 ): [Map<string, DiffBox>, DiffTokens[], DiffDecoration[]] {
   const boxes = new Map();
@@ -119,8 +64,8 @@ function diffBoxes(
   const textOps: DiffOp<DiffTokens>[] = [];
   const decoOps: DiffOp<DiffDecoration>[] = [];
   const boxOps: DiffRoot[] = [];
-  const [fromBoxesById, fromTokens, fromDecorations] = partitionTokens(from);
-  const [toBoxesById, toTokens, toDecorations] = partitionTokens(to);
+  const [fromBoxesById, fromTokens, fromDecorations] = partitionContent(from);
+  const [toBoxesById, toTokens, toDecorations] = partitionContent(to);
   // First pass: diff mayor structures (language constructs and lines of code)
   const structureDiff = diffLinesAndStructures(fromTokens, toTokens);
   textOps.push(...structureDiff.result);
