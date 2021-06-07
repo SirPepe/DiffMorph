@@ -1,8 +1,4 @@
-import {
-  createIdGenerator,
-  isAdjacent,
-  spliceBoxContent,
-} from "../src/util";
+import { createIdGenerator, isAdjacent, spliceBoxContent } from "../src/util";
 import { Box } from "../src/types";
 
 describe("createIdGenerator()", () => {
@@ -46,6 +42,29 @@ describe("spliceBoxContent", () => {
       c,
       d,
     ]);
+  });
+
+  test("nothing to splice", () => {
+    const box: Box<SpliceTest, any> = {
+      x: 0,
+      y: 0,
+      width: 0,
+      height: 0,
+      data: {},
+      language: "css",
+      content: [],
+      decorations: [],
+      parent: undefined,
+    };
+    const d = { value: "d", parent: box, next: undefined };
+    const c = { value: "c", parent: box, next: d };
+    const b = { value: "b", parent: box, next: c };
+    const a = { value: "a", parent: box, next: b };
+    box.content = [a, b, c, d];
+    spliceBoxContent<SpliceTest, any>(undefined as any, 0, (parent) => ({
+      ...parent,
+    }));
+    expect(box.content).toEqual([a, b, c, d]);
   });
 
   test("splice across boxes", () => {

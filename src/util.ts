@@ -56,6 +56,9 @@ export function spliceBoxContent<
   numItems: number,
   boxFactory: (parent: Box<T, D>) => Box<T, D>
 ): void {
+  if (numItems === 0) {
+    return;
+  }
   const batches = [];
   let lastParent = firstItem.parent;
   let currentItem = firstItem;
