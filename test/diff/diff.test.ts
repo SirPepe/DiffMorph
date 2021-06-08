@@ -466,6 +466,120 @@ describe("diff with boxes", () => {
     });
   });
 
+  test("adding a box", () => {
+    const aTokens: any[] = [];
+    const bNestedTokens = [
+      { x: 0, y: 1, width: 1, height: 1, text: "a0", type: "" },
+      { x: 2, y: 1, width: 1, height: 1, text: "a1", type: "" },
+    ];
+    const bTokens = [{ content: bNestedTokens }];
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
+    const [first, second] = diff([a, b]);
+    expect(first).toEqual({
+      kind: "ROOT",
+      root: { kind: "ADD", item: a },
+      content: [],
+      decorations: [],
+    });
+    expect(second).toEqual({
+      kind: "ROOT",
+      root: {
+        kind: "NOP",
+        item: b,
+      },
+      content: [
+        {
+          kind: "ROOT",
+          root: {
+            kind: "ADD",
+            item: b.content[0],
+          },
+          content: [
+            { kind: "ADD", item: bNestedTokens[0] },
+            { kind: "ADD", item: bNestedTokens[1] },
+          ],
+          decorations: [],
+        },
+      ],
+      decorations: [],
+    });
+  });
+
+  test("adding a box after adding a box", () => {
+    const aTokens: any[] = [];
+    const bNestedTokens = [
+      { x: 0, y: 1, width: 1, height: 1, text: "a0", type: "" },
+      { x: 2, y: 1, width: 1, height: 1, text: "a1", type: "" },
+    ];
+    const bTokens = [{ content: bNestedTokens, data: { name: "bNested" } }];
+    const cNestedTokens = [
+      { x: 0, y: 1, width: 1, height: 1, text: "a0", type: "" },
+      { x: 2, y: 1, width: 1, height: 1, text: "a1", type: "" },
+    ];
+    const cTokens = [{ content: cNestedTokens, data: { name: "cNested" } }];
+    const a = stubBox({ content: aTokens });
+    const b = stubBox({ content: bTokens });
+    const c = stubBox({ content: [...bTokens, ...cTokens] });
+    const [first, second, third] = diff([a, b, c]);
+    expect(first).toEqual({
+      kind: "ROOT",
+      root: { kind: "ADD", item: a },
+      content: [],
+      decorations: [],
+    });
+    expect(second).toEqual({
+      kind: "ROOT",
+      root: {
+        kind: "NOP",
+        item: b,
+      },
+      content: [
+        {
+          kind: "ROOT",
+          root: {
+            kind: "ADD",
+            item: b.content[0],
+          },
+          content: [
+            { kind: "ADD", item: bNestedTokens[0] },
+            { kind: "ADD", item: bNestedTokens[1] },
+          ],
+          decorations: [],
+        },
+      ],
+      decorations: [],
+    });
+    expect(third).toEqual({
+      kind: "ROOT",
+      root: {
+        kind: "NOP",
+        item: c,
+      },
+      content: [
+        {
+          kind: "ROOT",
+          root: {
+            kind: "NOP",
+            item: c.content[0],
+          },
+          content: expect.any(Array),
+          decorations: [],
+        },
+        {
+          kind: "ROOT",
+          root: {
+            kind: "ADD",
+            item: c.content[1],
+          },
+          content: expect.any(Array),
+          decorations: [],
+        },
+      ],
+      decorations: [],
+    });
+  });
+
   test("diffing tokens nested in boxes", () => {
     const aNestedTokens = [
       { x: 0, y: 1, width: 1, height: 1, text: "a0", type: "" },
