@@ -118,6 +118,54 @@ describe("Basic input", () => {
     ]);
   });
 
+  test("Empty JSON box", () => {
+    const parent = lang("json")(
+      "[",
+      {
+        data: {},
+        content: [],
+        isDecoration: false,
+        language: undefined,
+      },
+      "]"
+    );
+    expect(parent.content).toEqual([
+      {
+        x: 0,
+        y: 0,
+        width: 1,
+        height: 1,
+        text: "[",
+        type: "punctuation array-start-0",
+        parent,
+        next: parent.content[2],
+        prev: undefined,
+      },
+      {
+        x: 1,
+        y: 0,
+        height: 1,
+        width: 0,
+        language: "json",
+        data: {},
+        content: [],
+        decorations: [],
+        parent,
+      },
+      {
+        x: 1,
+        y: 0,
+        width: 1,
+        height: 1,
+        text: "]",
+        type: "punctuation array-end-0",
+        parent,
+        next: undefined,
+        prev: parent.content[0],
+      },
+    ]);
+  });
+
   test("JSON box between theoretically joinable tokens", () => {
     const types = type("json")(
       '{"foo',

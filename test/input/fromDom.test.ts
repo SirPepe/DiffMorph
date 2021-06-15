@@ -204,6 +204,56 @@ describe("processing code from a DOM source", () => {
     ]);
   });
 
+  test("empty boxes", () => {
+    container.innerHTML = "a<span foo='bar'></span>;";
+    const root = processCode(container, 2);
+    expect(root).toMatchObject({
+      x: 0,
+      y: 0,
+      width: 2,
+      height: 1,
+    });
+    const [txt1, box, txt2] = root.content as [
+      TextToken,
+      Box<TextToken, never>,
+      TextToken,
+    ];
+    expect(txt1).toEqual({
+      x: 0,
+      y: 0,
+      text: "a",
+      width: 1,
+      height: 1,
+      prev: undefined,
+      next: txt2,
+      parent: root,
+    });
+    expect(box).toEqual({
+      x: 1,
+      y: 0,
+      width: 0,
+      height: 1,
+      language: root.language,
+      data: {
+        tagName: "span",
+        attributes: [["foo", "bar"]],
+      },
+      content: [],
+      decorations: [],
+      parent: root,
+    });
+    expect(txt2).toEqual({
+      x: 1,
+      y: 0,
+      text: ";",
+      width: 1,
+      height: 1,
+      prev: txt1,
+      next: undefined,
+      parent: root,
+    });
+  });
+
   test("it handles multi-line boxes", () => {
     container.innerHTML = `const a = () => <span class="a">{
   return 42;

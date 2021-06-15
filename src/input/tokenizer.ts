@@ -231,7 +231,10 @@ function tokenizeCodes(
       if (prev) {
         prev.next = getFirstTextToken(result.content);
       }
-      prev = getLastTextToken(result.content);
+      const last = getLastTextToken(result.content);
+      if (last) {
+        prev = last;
+      }
       content.push(...result.content);
       decorations.push(...result.decorations);
       if (result.maxX > maxX) {

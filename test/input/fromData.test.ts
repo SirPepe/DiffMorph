@@ -206,6 +206,69 @@ describe("processing code from a data source", () => {
     ]);
   });
 
+  test("empty boxes", () => {
+    const rootContainer = {
+      content: [
+        "a",
+        {
+          content: [],
+          isDecoration: false,
+          language: undefined,
+        },
+        ";",
+      ],
+      isDecoration: false,
+      language: "javascript",
+    };
+    const root = processCode(rootContainer, [], 2);
+    expect(root).toEqual({
+      data: {},
+      language: "javascript",
+      x: 0,
+      y: 0,
+      width: 2,
+      height: 1,
+      content: expect.any(Array),
+      decorations: [],
+      parent: undefined,
+    });
+    const content = root.content;
+    const txt1 = content[0] as TextToken;
+    const box = content[1] as Box<TextToken, never>;
+    const txt2 = content[2] as TextToken;
+    expect(txt1).toEqual({
+      x: 0,
+      y: 0,
+      text: "a",
+      width: 1,
+      height: 1,
+      prev: undefined,
+      next: txt2,
+      parent: root,
+    });
+    expect(box).toEqual({
+      data: {},
+      language: "javascript",
+      x: 1,
+      y: 0,
+      width: 0,
+      height: 1,
+      content: [],
+      decorations: [],
+      parent: root,
+    });
+    expect(txt2).toEqual({
+      x: 1,
+      y: 0,
+      text: ";",
+      width: 1,
+      height: 1,
+      prev: txt1,
+      next: undefined,
+      parent: root,
+    });
+  });
+
   test("tiny boxes that do not introduce a new maxX value", () => {
     const rootContainer = {
       content: [
