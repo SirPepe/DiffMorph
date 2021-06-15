@@ -1,6 +1,6 @@
 import { ADD, BAD, BDE, DEL, MOV, TextPosition, Token } from "../types";
 import { createIdGenerator, toString } from "../util";
-import { Lifecycle } from "./lifecycle";
+import { TokenLifecycle } from "./lifecycle";
 
 export type InputToken = Token & { hash: number };
 export type OutputToken = { id: string };
@@ -20,13 +20,13 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
   private available = new Map<number, Output[]>();
 
   // holder -> [output, last position]
-  private inUse = new Map<Lifecycle<Input>, [Output, TextPosition]>();
+  private inUse = new Map<TokenLifecycle<Input>, [Output, TextPosition]>();
 
   // Customize how an input token turns into an output token
   constructor(private toOutput: (item: Input, newId: string) => Output) {}
 
   private require(
-    holder: Lifecycle<Input>,
+    holder: TokenLifecycle<Input>,
     { kind, item }: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
   ): [Output, TextPosition] {
     const isVisible = kind === "ADD" || kind === "MOV";
@@ -54,7 +54,7 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
   // attempt to continue with the lifecycle without changes (as that's probably
   // a case of a unchanged token between frames)
   public use(
-    holder: Lifecycle<Input>,
+    holder: TokenLifecycle<Input>,
     operation?: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
   ): [Output, TextPosition] | undefined {
     const previousOutput = this.inUse.get(holder);
@@ -80,7 +80,7 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
   }
 
   // For DEL: free used token
-  public free(holder: Lifecycle<Input>, operation: DEL<Input>): undefined {
+  public free(holder: TokenLifecycle<Input>, operation: DEL<Input>): undefined {
     const freed = this.inUse.get(holder);
     if (!freed) {
       // This can happen for DEL ops in the first frame, which in turn may be
@@ -97,7 +97,7 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
 }
 
 export function renderToken<Input extends InputToken, Output extends OutputToken>(
-  lifecycle: Lifecycle<Input>,
+  lifecycle: TokenLifecycle<Input>,
   frame: number,
   pool: TokenPool<Input, Output>
 ): [Output, TextPosition] | undefined {

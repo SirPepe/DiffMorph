@@ -22,7 +22,7 @@ describe("Lifecycles", () => {
         ]),
       ],
       decorations: [],
-      boxes: [],
+      roots: [],
     });
   });
 
@@ -59,7 +59,7 @@ describe("Lifecycles", () => {
         [2, diffs[2].content[0]],
       ]),
     ]);
-    expect(res?.boxes[0]).toEqual({
+    expect(res?.roots[0]).toEqual({
       base: (diffs[1].content[1] as any).root.item,
       self: new Map([
         [1, (diffs[1].content[1] as any).root],
@@ -72,7 +72,7 @@ describe("Lifecycles", () => {
         ]),
       ],
       decorations: [],
-      boxes: [],
+      roots: [],
     });
     expect(res?.decorations).toEqual([]);
   });
@@ -84,7 +84,7 @@ describe("Lifecycles", () => {
       self: new Map([[0, { kind: "ADD", item: res?.base }]]),
       text: [new Map([[0, expect.any(Object)]])],
       decorations: [],
-      boxes: [],
+      roots: [],
     });
   });
 
@@ -219,7 +219,7 @@ describe("Expanded lifecycles", () => {
       "ADD",
       "MOV",
     ]);
-    expect(res.boxes[0].self).toEqual(
+    expect(res.roots[0].self).toEqual(
       new Map([
         [0, (diffs[0].content[0] as any).root], // ADD
         [
@@ -258,7 +258,7 @@ describe("Expanded lifecycles", () => {
       "MOV",
       "NOP",
     ]);
-    expect(res.boxes[0].self).toEqual(
+    expect(res.roots[0].self).toEqual(
       new Map([
         [0, (diffs[0].content[0] as any).root], // ADD
         [
@@ -302,7 +302,7 @@ describe("Expanded lifecycles", () => {
       "MOV",
       "NOP",
     ]);
-    expect(res.boxes[0].self).toEqual(
+    expect(res.roots[0].self).toEqual(
       new Map([
         [1, { kind: "BAD", item: (diffs[2].content[0] as any).root.item }],
         [2, (diffs[2].content[0] as any).root], // ADD
@@ -351,7 +351,7 @@ describe("Expanded lifecycles", () => {
       "NOP",
       "NOP",
     ]);
-    expect(res.boxes[0].self).toEqual(
+    expect(res.roots[0].self).toEqual(
       new Map([
         [3, (diffs[3].content[0] as any).root], // ADD
         [

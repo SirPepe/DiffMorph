@@ -15,41 +15,47 @@ import {
 } from "../types";
 import { minmax } from "../util";
 
-export type Lifecycle<T> = Map<number, ExtendedDiffOp<T>>;
-
-export type BoxLifecycle = {
+// A lifecycle root hosts other lifecycles. It represents a box's lifecycle
+// (field "self") as well as it's content's lifecycles ("text", "decorations").
+// Each lifecycle root is generated from an ADD operation on a box and continues
+// until a DEL is encountered or until the last frame.
+export type RootLifecycle = {
   base: DiffBox;
   self: Map<number, ExtendedDiffOp<DiffBox> | NOP<DiffBox>>;
-  text: Lifecycle<DiffTokens>[];
-  decorations: Lifecycle<DiffDecoration>[];
-  boxes: BoxLifecycle[];
+  text: TokenLifecycle<DiffTokens>[];
+  decorations: TokenLifecycle<DiffDecoration>[];
+  roots: RootLifecycle[];
 };
 
-function toPosition({ x, y, width, height }: Token): string {
-  return `${x}/${y}/${width}/${height}`;
+// frame index -> op for text tokens and decorations
+export type TokenLifecycle<T> = Map<number, ExtendedDiffOp<T>>;
+
+// Serves as a basic hash function to make element's positions comparable
+function toPosition({ x, y }: Token): string {
+  return `${x}/${y}`;
 }
 
 function toTokenLifecycles<T extends Token>(
   frames: DiffOp<T>[][],
   startIdx: number
-): [Lifecycle<T>[], never];
+): [TokenLifecycle<T>[], never];
 function toTokenLifecycles<T extends Token>(
   frames: (DiffRoot | DiffOp<T>)[][],
   startIdx: number
-): [Lifecycle<T>[], BoxLifecycle[]];
+): [TokenLifecycle<T>[], RootLifecycle[]];
 function toTokenLifecycles<T extends Token>(
   frames: (DiffRoot | DiffOp<T>)[][],
   startIdx: number
-): [Lifecycle<T>[], BoxLifecycle[]] {
+): [TokenLifecycle<T>[], RootLifecycle[]] {
   // Last token position -> lifecycle
-  const lifecycles = new Map<string, Lifecycle<T>>();
-  const finished: Lifecycle<T>[] = [];
+  const lifecycles = new Map<string, TokenLifecycle<T>>();
+  const finished: TokenLifecycle<T>[] = [];
   // id -> [first index, trees[]]
   const trees = new Map<string, [number, DiffRoot[]]>();
   for (let i = 0; i < frames.length; i++) {
     const frameIdx = i + startIdx;
     // First pass: free positions and collect trees
-    const remaining: [string, Lifecycle<T>][] = [];
+    const remaining: [string, TokenLifecycle<T>][] = [];
     for (const operation of frames[i]) {
       if (operation.kind === "ROOT") {
         const treeData = trees.get(operation.root.item.id);
@@ -104,32 +110,32 @@ function toTokenLifecycles<T extends Token>(
     }
   }
   const tokenLifecycles = [...finished, ...lifecycles.values()];
-  const treeLifecycles = Array.from(trees.values()).flatMap(([index, list]) => {
-    const lifecycle = toBoxLifecycle(list, index);
+  const boxLifecycles = Array.from(trees.values()).flatMap(([index, list]) => {
+    const lifecycle = toLifecycleRoot(list, index);
     if (lifecycle) {
       return [lifecycle];
     }
     return [];
   });
-  return [tokenLifecycles, treeLifecycles];
+  return [tokenLifecycles, boxLifecycles];
 }
 
-function toBoxLifecycle(diffs: DiffRoot[], frameOffset: number): BoxLifecycle {
-  const self = new Map(diffs.map((diff, i) => [i + frameOffset, diff.root]));
-  const [text, boxes] = toTokenLifecycles(
+function toLifecycleRoot(diffs: DiffRoot[], frame: number): RootLifecycle {
+  const self = new Map(diffs.map((diff, i) => [i + frame, diff.root]));
+  const [text, roots] = toTokenLifecycles(
     diffs.map(({ content }) => content),
-    frameOffset
+    frame
   );
   const [decorations] = toTokenLifecycles(
     diffs.map(({ decorations }) => decorations),
-    frameOffset
+    frame
   );
   return {
     base: diffs[0].root.item,
     self,
     text,
     decorations,
-    boxes,
+    roots,
   };
 }
 
@@ -258,11 +264,11 @@ function expandLifecycle(
   }
 }
 
-function expandBoxLifecycles(lifecycle: BoxLifecycle): void {
+function expandLifecycleRoots(lifecycle: RootLifecycle): void {
   const [minFrame, maxFrame] = minmax(lifecycle.self.keys());
-  for (const box of lifecycle.boxes) {
-    expandLifecycle(box.self, minFrame, maxFrame);
-    expandBoxLifecycles(box);
+  for (const root of lifecycle.roots) {
+    expandLifecycle(root.self, minFrame, maxFrame);
+    expandLifecycleRoots(root);
   }
   for (const text of lifecycle.text) {
     expandLifecycle(text, minFrame, maxFrame);
@@ -274,14 +280,14 @@ function expandBoxLifecycles(lifecycle: BoxLifecycle): void {
 
 export function toLifecycle(
   diffs: DiffRoot[],
-  expand: boolean
-): BoxLifecycle | null {
+  expand: boolean // only used in unit tests to simplify some assertions
+): RootLifecycle | null {
   if (diffs.length === 0) {
     return null;
   }
-  const root = toBoxLifecycle(diffs, 0);
+  const root = toLifecycleRoot(diffs, 0);
   if (expand) {
-    expandBoxLifecycles(root);
+    expandLifecycleRoots(root);
   }
   return root;
 }

@@ -11,7 +11,7 @@ import {
   RenderText,
   TextPosition,
 } from "../types";
-import { BoxLifecycle } from "../render/lifecycle";
+import { RootLifecycle } from "../render/lifecycle";
 import { assertIs } from "../util";
 import { renderToken, TokenPool, toRenderPosition } from "./TokenPool";
 
@@ -27,7 +27,7 @@ function toRenderDecoration(
 }
 
 function renderFrames(
-  lifecycle: BoxLifecycle
+  lifecycle: RootLifecycle
 ): [RenderRoot<RenderText, RenderDecoration>, Map<number, RenderPositions>] {
   const frames = new Map<number, RenderPositions>();
   const textTokens = new Map<string, RenderText>();
@@ -63,7 +63,7 @@ function renderFrames(
       }
     }
   }
-  for (const boxLifecycle of lifecycle.boxes) {
+  for (const boxLifecycle of lifecycle.roots) {
     const [boxToken, boxFrames] = renderFrames(boxLifecycle);
     boxTokens.set(boxToken.id, boxToken);
     for (const [boxFrame, boxPositions] of boxFrames) {
@@ -88,7 +88,7 @@ function renderFrames(
 }
 
 export function toRenderData(
-  rootLifecycle: BoxLifecycle | null
+  rootLifecycle: RootLifecycle | null
 ): RenderData<RenderText, RenderDecoration> {
   if (rootLifecycle === null) {
     return {
