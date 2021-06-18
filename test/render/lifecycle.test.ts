@@ -26,6 +26,32 @@ describe("Lifecycles", () => {
     });
   });
 
+  test("it works with additions and deletions", () => {
+    const diffs = optimizeDiffs(diff([
+      tokenize("."),
+      tokenize(". ."),
+      tokenize("  .")
+    ]));
+    const res = toLifecycle(diffs, false);
+    expect(res).toEqual({
+      base: diffs[0].root.item,
+      self: new Map([
+        [0, diffs[0].root],
+        [1, diffs[1].root],
+        [2, diffs[2].root],
+      ]),
+      text: [
+        new Map([
+          [0, diffs[0].content[0]],
+          [2, diffs[2].content[0]],
+        ]),
+        new Map([[1, diffs[1].content[0]]]),
+      ],
+      decorations: [],
+      roots: [],
+    });
+  });
+
   test("it works with boxes", () => {
     const diffs = optimizeDiffs(
       diff([

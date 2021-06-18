@@ -1,7 +1,10 @@
 // This module turns diff ops into lifecycle maps. These serve to connect diff
 // ops across potentially many frames and also inserts pre-visibility and
 // post-visibility ops (called "lifecycle extension"). The main render function
-// can then trace every object through its entire lifecycle.
+// can then trace every object through its entire lifecycle. This is by far the
+// most convoluted module in the entire project, but provides a nice (nice from
+// the outside) bridge between input and diffing on one hand and the rendering
+// graph and actual rendering on the other hand.
 
 import {
   DiffBox,
@@ -21,54 +24,39 @@ import { minmax } from "../util";
 // until a DEL is encountered or until the last frame.
 export type RootLifecycle = {
   base: DiffBox;
-  self: Map<number, ExtendedDiffOp<DiffBox> | NOP<DiffBox>>;
+  self: BoxLifecycle;
   text: TokenLifecycle<DiffTokens>[];
   decorations: TokenLifecycle<DiffDecoration>[];
   roots: RootLifecycle[];
 };
 
-// frame index -> op for text tokens and decorations
+// frame index -> op for text tokens, boxes and decorations
 export type TokenLifecycle<T> = Map<number, ExtendedDiffOp<T>>;
+export type BoxLifecycle = Map<number, ExtendedDiffOp<DiffBox> | NOP<DiffBox>>;
 
 // Serves as a basic hash function to make element's positions comparable
 function toPosition({ x, y }: Token): string {
   return `${x}/${y}`;
 }
 
+// Lifecycles for text tokens and decorations
 function toTokenLifecycles<T extends Token>(
   frames: DiffOp<T>[][],
   startIdx: number
-): [TokenLifecycle<T>[], never];
-function toTokenLifecycles<T extends Token>(
-  frames: (DiffRoot | DiffOp<T>)[][],
-  startIdx: number
-): [TokenLifecycle<T>[], RootLifecycle[]];
-function toTokenLifecycles<T extends Token>(
-  frames: (DiffRoot | DiffOp<T>)[][],
-  startIdx: number
-): [TokenLifecycle<T>[], RootLifecycle[]] {
+): TokenLifecycle<T>[] {
   // Last token position -> lifecycle
   const lifecycles = new Map<string, TokenLifecycle<T>>();
   const finished: TokenLifecycle<T>[] = [];
-  // id -> [first index, trees[]]
-  const trees = new Map<string, [number, DiffRoot[]]>();
   for (let i = 0; i < frames.length; i++) {
     const frameIdx = i + startIdx;
-    // First pass: free positions and collect trees
-    const remaining: [string, TokenLifecycle<T>][] = [];
+    // First pass: free positions
+    const deferred: [string, TokenLifecycle<T>][] = [];
     for (const operation of frames[i]) {
-      if (operation.kind === "ROOT") {
-        const treeData = trees.get(operation.root.item.id);
-        if (!treeData) {
-          trees.set(operation.root.item.id, [frameIdx, [operation]]);
-        } else {
-          treeData[1].push(operation);
-        }
-      } else if (operation.kind === "DEL") {
+      if (operation.kind === "DEL") {
         const oldPosition = toPosition(operation.item);
         const currentLifecycle = lifecycles.get(oldPosition);
         if (!currentLifecycle) {
-          throw new Error(`DEL @ ${i}: no lifecycle at ${oldPosition}!`);
+          throw new Error(`DEL @ ${frameIdx}: no lifecycle at ${oldPosition}!`);
         }
         currentLifecycle.set(frameIdx, operation);
         finished.push(currentLifecycle);
@@ -77,14 +65,14 @@ function toTokenLifecycles<T extends Token>(
         const oldPosition = toPosition(operation.from);
         const currentLifecycle = lifecycles.get(oldPosition);
         if (!currentLifecycle) {
-          throw new Error(`MOV @ ${i}: no lifecycle at ${oldPosition}!`);
+          throw new Error(`MOV @ ${frameIdx}: no lifecycle at ${oldPosition}!`);
         }
         currentLifecycle.set(frameIdx, operation);
         lifecycles.delete(oldPosition);
         const newPosition = toPosition(operation.item);
         if (lifecycles.has(newPosition)) {
           // position currently occupied, defer placing at the new position
-          remaining.push([newPosition, currentLifecycle]);
+          deferred.push([newPosition, currentLifecycle]);
         } else {
           lifecycles.set(newPosition, currentLifecycle);
         }
@@ -100,8 +88,8 @@ function toTokenLifecycles<T extends Token>(
         lifecycles.set(key, new Map([[i + startIdx, operation]]));
       }
     }
-    // Third pass: place remaining items
-    for (const [newPosition, lifecycle] of remaining) {
+    // Third pass: place deferred items
+    for (const [newPosition, lifecycle] of deferred) {
       if (lifecycles.has(newPosition)) {
         throw new Error();
       } else {
@@ -109,34 +97,107 @@ function toTokenLifecycles<T extends Token>(
       }
     }
   }
-  const tokenLifecycles = [...finished, ...lifecycles.values()];
-  const boxLifecycles = Array.from(trees.values()).flatMap(([index, list]) => {
-    const lifecycle = toLifecycleRoot(list, index);
-    if (lifecycle) {
-      return [lifecycle];
-    }
-    return [];
-  });
-  return [tokenLifecycles, boxLifecycles];
+  return [...finished, ...lifecycles.values()];
 }
 
-function toLifecycleRoot(diffs: DiffRoot[], frame: number): RootLifecycle {
-  const self = new Map(diffs.map((diff, i) => [i + frame, diff.root]));
-  const [text, roots] = toTokenLifecycles(
-    diffs.map(({ content }) => content),
-    frame
-  );
-  const [decorations] = toTokenLifecycles(
-    diffs.map(({ decorations }) => decorations),
-    frame
-  );
-  return {
-    base: diffs[0].root.item,
-    self,
-    text,
-    decorations,
-    roots,
-  };
+// Root lifecycles generated from diff roots. A worthwhile shortcut would be to
+// skip the whole sorting and assignment process when every array in `frames`
+// contains only one diff root (which should be the case for the VAST majority
+// of cases), but that's not implemented right now.
+function toRootLifecycles(
+  frames: DiffRoot[][],
+  startIdx: number
+): RootLifecycle[] {
+  // Organizes diff roots as follows: last position -> frame -> DiffRoot
+  // From this, content, decoration and nested root lifecycles can be built.
+  const lifecycles = new Map<string, Map<number, DiffRoot>>();
+  const finished: Map<number, DiffRoot>[] = [];
+  for (let i = 0; i < frames.length; i++) {
+    const frameIdx = i + startIdx;
+    // First pass: free positions
+    const deferred: [string, Map<number, DiffRoot>][] = [];
+    for (const diff of frames[i]) {
+      if (diff.root.kind === "DEL") {
+        const oldPosition = toPosition(diff.root.item);
+        const currentLifecycle = lifecycles.get(oldPosition);
+        if (!currentLifecycle) {
+          throw new Error(`DEL @ ${frameIdx}: no lifecycle at ${oldPosition}!`);
+        }
+        currentLifecycle.set(frameIdx, diff);
+        finished.push(currentLifecycle);
+        lifecycles.delete(oldPosition);
+      } else if (diff.root.kind === "MOV" || diff.root.kind === "NOP") {
+        const oldItem =
+          diff.root.kind === "MOV" ? diff.root.from : diff.root.item;
+        const oldPosition = toPosition(oldItem);
+        const currentLifecycle = lifecycles.get(oldPosition);
+        if (!currentLifecycle) {
+          throw new Error(`MOV @ ${frameIdx}: no lifecycle at ${oldPosition}!`);
+        }
+        currentLifecycle.set(frameIdx, diff);
+        lifecycles.delete(oldPosition);
+        const newPosition = toPosition(diff.root.item);
+        if (lifecycles.has(newPosition)) {
+          // position currently occupied, defer placing at the new position
+          deferred.push([newPosition, currentLifecycle]);
+        } else {
+          lifecycles.set(newPosition, currentLifecycle);
+        }
+      }
+    }
+    // Second pass: place additions
+    for (const diff of frames[i]) {
+      if (diff.root.kind === "ADD") {
+        const key = toPosition(diff.root.item);
+        if (lifecycles.has(key)) {
+          throw new Error();
+        }
+        lifecycles.set(key, new Map([[i + startIdx, diff]]));
+      }
+    }
+    // Third pass: place deferred items
+    for (const [newPosition, lifecycle] of deferred) {
+      if (lifecycles.has(newPosition)) {
+        throw new Error();
+      } else {
+        lifecycles.set(newPosition, lifecycle);
+      }
+    }
+  }
+  // Format the collected and organized DiffRoot objects into proper root
+  // lifecycles
+  const roots: RootLifecycle[] = [];
+  const diffLifecycles = [...finished, ...lifecycles.values()];
+  for (let i = 0; i < diffLifecycles.length; i++) {
+    const self: BoxLifecycle = new Map();
+    const textOps = [];
+    const decoOps = [];
+    const rootOps = [];
+    for (const [frameIdx, diff] of diffLifecycles[i]) {
+      self.set(frameIdx, diff.root);
+      decoOps.push(diff.decorations);
+      const texts = [];
+      const roots = [];
+      for (const item of diff.content) {
+        if (item.kind === "ROOT") {
+          roots.push(item);
+        } else {
+          texts.push(item);
+        }
+      }
+      textOps.push(texts);
+      rootOps.push(roots);
+    }
+    const startAt = Math.min(...self.keys());
+    roots.push({
+      self,
+      base: diffLifecycles[i].values().next().value.root.item,
+      text: toTokenLifecycles(textOps, startAt),
+      decorations: toTokenLifecycles(decoOps, startAt),
+      roots: toRootLifecycles(rootOps, startAt),
+    });
+  }
+  return roots;
 }
 
 function isDel(op: ExtendedDiffOp<unknown> | NOP<unknown>): boolean {
@@ -279,13 +340,16 @@ function expandLifecycleRoots(lifecycle: RootLifecycle): void {
 }
 
 export function toLifecycle(
-  diffs: DiffRoot[],
+  frames: DiffRoot[],
   expand: boolean // only used in unit tests to simplify some assertions
 ): RootLifecycle | null {
-  if (diffs.length === 0) {
+  if (frames.length === 0) {
     return null;
   }
-  const root = toLifecycleRoot(diffs, 0);
+  const [root] = toRootLifecycles(
+    frames.map((frame) => [frame]),
+    0
+  );
   if (expand) {
     expandLifecycleRoots(root);
   }
