@@ -96,7 +96,10 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
   }
 }
 
-export function renderToken<Input extends InputToken, Output extends OutputToken>(
+export function renderToken<
+  Input extends InputToken,
+  Output extends OutputToken
+>(
   lifecycle: TokenLifecycle<Input>,
   frame: number,
   pool: TokenPool<Input, Output>

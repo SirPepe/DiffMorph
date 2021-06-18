@@ -30,12 +30,7 @@ type CurlyType =
 
 type BracketType = "array" | "type" | "destruct" | "bracket";
 
-type ParenType =
-  | "parens"
-  | "arguments"
-  | "type"
-  | "call"
-  | "condition";
+type ParenType = "parens" | "arguments" | "type" | "call" | "condition";
 
 type JSXTagType = "tag" | "component" | "fragment" | "none";
 
@@ -477,10 +472,8 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
         return `punctuation destruct-start-${before}`;
       }
       if (
-        (
-          token.prev?.type === "keyword" &&
-          ["else", "do", "try", "finally"].includes(token.prev?.text)
-        ) ||
+        (token.prev?.type === "keyword" &&
+          ["else", "do", "try", "finally"].includes(token.prev?.text)) ||
         token.prev?.type?.match(/condition-end-[\d]+$/)
       ) {
         const { before } = state.curlyStack.push("block");
