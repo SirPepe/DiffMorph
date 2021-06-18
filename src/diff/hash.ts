@@ -21,10 +21,6 @@ export function hash(inputs: (string | number)[]): number {
   return hash >>> 0;
 }
 
-export function naiveHashChain(items: { hash: number | string }[]): number {
-  return hash(items.map(({ hash }) => hash));
-}
-
 // Create a hash of a list of tokens by concatenating the token's hashes and
 // their *relative* offsets. The absolute coordinates are not reflected in the
 // hash - two structs containing the same characters the same distances apart on
@@ -38,24 +34,4 @@ export function offsetHashChain(
     return [item.hash, xDelta, yDelta];
   });
   return hash(hashes);
-}
-
-// Each function returned from this function is guaranteed to only generate each
-// hash once, thus making the hashes a hash over the input and what amounts to a
-// serial number.
-export function createUniqueHashGenerator(): (
-  inputs: (string | number)[]
-) => number {
-  const counter = new Map<number, number>();
-  return function uniqueHash(inputs: (string | number)[]): number {
-    const h = hash(inputs);
-    const count = counter.get(h);
-    if (typeof count === "undefined") {
-      counter.set(h, 0);
-      return h;
-    } else {
-      counter.set(h, count + 1);
-      return uniqueHash([...inputs, count]);
-    }
-  };
 }

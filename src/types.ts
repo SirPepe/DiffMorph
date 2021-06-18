@@ -107,14 +107,9 @@ export type DiffTokens = LinkedListOf<TypedToken & { hash: number }>;
 // Decoration's hashes at the diff stage are built from their data field.
 export type DiffDecoration = Decoration<DiffTokens> & { hash: number };
 
-// Boxes' hashes at the diff stage are built from their data field, but they
-// also have an id that marks them as unique in their respective parent boxes:
-// If two boxes with the same data yield the same "real" hash, that second hash
-// is amended to be unique, turned into a string and gets used as the id.
-export type DiffBox = Box<DiffTokens, DiffDecoration> & {
-  hash: number;
-  id: string;
-};
+// Boxes' hashes at the diff stage are built from their data field and that
+// "external" information is what definitely identifies a box.
+export type DiffBox = Box<DiffTokens, DiffDecoration> & { hash: number };
 
 // The diffing algorithm turns tokens into all sorts of diff ops that can be
 // optimized and then turned into token lifecycles for rendering.
