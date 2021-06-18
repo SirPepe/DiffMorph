@@ -18,6 +18,7 @@
 // 3. diff decorations by hash, position and dimensions, returning only ADD and
 //    DEL operations. The optimizer stage can again turn ADD and DEL into MOV.
 
+import { groupBy } from "@sirpepe/shed";
 import {
   Box,
   Decoration,
@@ -32,25 +33,25 @@ import { isBox } from "../util";
 import { assignHashes } from "./assignHashes";
 import { diffLinesAndStructures } from "./structs";
 import { diffDecorations } from "./decorations";
-import { diffBox } from "./boxes";
+import { diffBox, matchBoxes } from "./boxes";
 import { diffTokens } from "./tokens";
 
 function partitionContent(
   source: DiffBox | undefined
-): [Map<string, DiffBox>, DiffTokens[], DiffDecoration[]] {
-  const boxes = new Map();
-  const textTokens: DiffTokens[] = [];
+): [Map<number, DiffBox[]>, DiffTokens[], DiffDecoration[]] {
   if (!source) {
     return [new Map(), [], []];
   }
+  const boxes: DiffBox[] = [];
+  const texts: DiffTokens[] = [];
   for (const item of source.content) {
     if (isBox<DiffBox>(item)) {
-      boxes.set(item.id, item);
+      boxes.push(item);
     } else if (!isBox(item)) {
-      textTokens.push(item);
+      texts.push(item);
     }
   }
-  return [boxes, textTokens, source.decorations];
+  return [groupBy(boxes, "hash"), texts, source.decorations];
 }
 
 function diffBoxes(
@@ -64,8 +65,8 @@ function diffBoxes(
   const textOps: DiffOp<DiffTokens>[] = [];
   const decoOps: DiffOp<DiffDecoration>[] = [];
   const boxOps: DiffRoot[] = [];
-  const [fromBoxesById, fromTokens, fromDecorations] = partitionContent(from);
-  const [toBoxesById, toTokens, toDecorations] = partitionContent(to);
+  const [fromBoxesByHash, fromTokens, fromDecorations] = partitionContent(from);
+  const [toBoxesByHash, toTokens, toDecorations] = partitionContent(to);
   // First pass: diff mayor structures (language constructs and lines of code)
   const structureDiff = diffLinesAndStructures(fromTokens, toTokens);
   textOps.push(...structureDiff.result);
@@ -74,11 +75,19 @@ function diffBoxes(
   // Decorations are less numerous than text token and thus can probably do with
   // just a single pass.
   decoOps.push(...diffDecorations(fromDecorations, toDecorations));
-  const boxIds = new Set([...fromBoxesById.keys(), ...toBoxesById.keys()]);
-  for (const id of boxIds) {
-    const fromBox = fromBoxesById.get(id);
-    const toBox = toBoxesById.get(id);
-    boxOps.push(diffBoxes(fromBox, toBox));
+  // Match up boxes, the recurse
+  const boxHashes = new Set([
+    ...fromBoxesByHash.keys(),
+    ...toBoxesByHash.keys(),
+  ]);
+  for (const hash of boxHashes) {
+    const pairs = matchBoxes(
+      fromBoxesByHash.get(hash) ?? [],
+      toBoxesByHash.get(hash) ?? []
+    );
+    for (const pair of pairs) {
+      boxOps.push(diffBoxes(...pair));
+    }
   }
   return {
     kind: "ROOT",
