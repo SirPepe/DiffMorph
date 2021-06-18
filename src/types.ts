@@ -188,7 +188,7 @@ export type DiffRoot = {
 // result.
 
 // Describes how to render the token with the given id.
-type BasePosition = {
+export type BasePosition = {
   id: string;
   x: number;
   y: number;
@@ -203,6 +203,7 @@ export type DecorationPosition = BasePosition;
 // Box render positions have their own frame to render as well
 export type RenderPositions = BasePosition & { frame: Frame };
 
+export type RenderBox = { id: string };
 export type RenderText = { id: string; text: string; type: string };
 export type RenderDecoration = { id: string; data: ContainerData };
 export type RenderRoot<T, D> = {

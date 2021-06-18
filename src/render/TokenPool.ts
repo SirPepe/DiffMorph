@@ -1,39 +1,86 @@
-import { ADD, BAD, BDE, DEL, MOV, TextPosition, Token } from "../types";
+// This class manages render tokens. In its internal state, lifecycles hold onto
+// render tokens (positions associated with an ID) until a lifecycle is over.
+// Render tokens are created on demand and reused where possible. The intent is
+// to re-use as many render tokens as possible while making sure that every
+// ongoing lifecycle has a render token for itself as long as required. Having
+// this class work for text, declarations and boxes alike costs DX, but the
+// three static factories and the helper functions hide much of the complexity.
+
+import {
+  ADD,
+  BAD,
+  BasePosition,
+  BDE,
+  DEL,
+  DiffBox,
+  DiffDecoration,
+  DiffTokens,
+  ExtendedDiffOp,
+  MOV,
+  NOP,
+  RenderBox,
+  RenderDecoration,
+  RenderText,
+  TextPosition,
+  Token,
+} from "../types";
 import { createIdGenerator, toString } from "../util";
-import { TokenLifecycle } from "./lifecycle";
+import { BoxLifecycle, TokenLifecycle } from "./lifecycle";
 
-export type InputToken = Token & { hash: number };
-export type OutputToken = { id: string };
+export type PoolInput = Token & { hash: number };
+export type PoolOutput = { id: string };
 
-export function toRenderPosition<Input extends Token>(
-  { x, y, width, height }: Input,
+/* eslint-disable */
+type BoxTokenPool = TokenPool<BoxLifecycle, DiffBox, RenderBox>;
+type TextTokenPool = TokenPool<
+  TokenLifecycle<DiffTokens>,
+  DiffTokens,
+  RenderText
+>;
+type DecoTokenPool = TokenPool<
+  TokenLifecycle<DiffDecoration>,
+  DiffDecoration,
+  RenderDecoration
+>;
+/* eslint-enable */
+
+function isVisible(operation: ExtendedDiffOp<any> | NOP<any>): boolean {
+  return ["MOV", "ADD", "NOP"].includes(operation.kind);
+}
+
+function toRenderPosition(
+  { x, y, width, height }: Token,
   id: string,
   isVisible: boolean
-): TextPosition {
+): BasePosition {
   return { id, x, y, width, height, alpha: Number(isVisible) };
 }
 
-export class TokenPool<Input extends InputToken, Output extends OutputToken> {
+export class TokenPool<
+  Holder,
+  Input extends PoolInput,
+  Output extends PoolOutput
+> {
   private nextId = createIdGenerator();
 
   // hash -> list of currently not used output token
   private available = new Map<number, Output[]>();
 
   // holder -> [output, last position]
-  private inUse = new Map<TokenLifecycle<Input>, [Output, TextPosition]>();
+  private inUse = new Map<Holder, [Output, TextPosition]>();
 
   // Customize how an input token turns into an output token
   constructor(private toOutput: (item: Input, newId: string) => Output) {}
 
   private require(
-    holder: TokenLifecycle<Input>,
-    { kind, item }: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
+    holder: Holder,
+    operation: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input> | NOP<Input>
   ): [Output, TextPosition] {
-    const isVisible = kind === "ADD" || kind === "MOV";
+    const { item } = operation;
     const available = this.available.get(item.hash);
     if (available && available.length > 0) {
       const output = available.shift() as Output;
-      const position = toRenderPosition(item, output.id, isVisible);
+      const position = toRenderPosition(item, output.id, isVisible(operation));
       this.inUse.set(holder, [output, position]);
       return [output, position];
     } else {
@@ -43,7 +90,7 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
       }
       const nextId = this.nextId(null, toString(item.hash));
       const output = this.toOutput(item, nextId);
-      const position = toRenderPosition(item, output.id, isVisible);
+      const position = toRenderPosition(item, output.id, isVisible(operation));
       this.inUse.set(holder, [output, position]);
       return [output, position];
     }
@@ -54,8 +101,8 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
   // attempt to continue with the lifecycle without changes (as that's probably
   // a case of a unchanged token between frames)
   public use(
-    holder: TokenLifecycle<Input>,
-    operation?: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input>
+    holder: Holder,
+    operation?: ADD<Input> | BAD<Input> | MOV<Input> | BDE<Input> | NOP<Input>
   ): [Output, TextPosition] | undefined {
     const previousOutput = this.inUse.get(holder);
     // In case there is no current operation, see if the holder holds onto
@@ -68,19 +115,18 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
     if (!previousOutput) {
       return this.require(holder, operation);
     }
-    // Otherwise perform an update to tha last position
-    const isVisible = operation.kind === "MOV" || operation.kind === "ADD";
+    // Otherwise perform an update to the last position
     const newPosition = toRenderPosition(
       operation.item,
       previousOutput[0].id,
-      isVisible
+      isVisible(operation)
     );
     previousOutput[1] = newPosition; // update the last position
     return [previousOutput[0], newPosition];
   }
 
   // For DEL: free used token
-  public free(holder: TokenLifecycle<Input>, operation: DEL<Input>): undefined {
+  public free(holder: Holder, operation: DEL<Input>): undefined {
     const freed = this.inUse.get(holder);
     if (!freed) {
       // This can happen for DEL ops in the first frame, which in turn may be
@@ -94,19 +140,26 @@ export class TokenPool<Input extends InputToken, Output extends OutputToken> {
     list.push(freed[0]);
     this.inUse.delete(holder);
   }
-}
 
-export function renderToken<
-  Input extends InputToken,
-  Output extends OutputToken
->(
-  lifecycle: TokenLifecycle<Input>,
-  frame: number,
-  pool: TokenPool<Input, Output>
-): [Output, TextPosition] | undefined {
-  const operation = lifecycle.get(frame);
-  if (operation && operation.kind === "DEL") {
-    return pool.free(lifecycle, operation);
+  // Factory function for text-specific token pools
+  static forText(): TextTokenPool {
+    return new TokenPool(({ type, text }: DiffTokens, id: string) => ({
+      type,
+      text,
+      id,
+    }));
   }
-  return pool.use(lifecycle, operation);
+
+  // Factory function for decoration-specific token pools
+  static forDeco(): DecoTokenPool {
+    return new TokenPool(({ data }: DiffDecoration, id: string) => ({
+      data,
+      id,
+    }));
+  }
+
+  // Factory function for box-specific token pools
+  static forBoxes(): BoxTokenPool {
+    return new TokenPool((_, id) => ({ id }));
+  }
 }

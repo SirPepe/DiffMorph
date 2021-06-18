@@ -2,8 +2,8 @@
 
 import {
   DecorationPosition,
-  DiffDecoration,
-  DiffTokens,
+  DiffBox,
+  RenderBox,
   RenderData,
   RenderDecoration,
   RenderPositions,
@@ -11,19 +11,31 @@ import {
   RenderText,
   TextPosition,
 } from "../types";
-import { RootLifecycle } from "../render/lifecycle";
+import { BoxLifecycle, RootLifecycle, TokenLifecycle } from "./lifecycle";
+import { PoolInput, PoolOutput, TokenPool } from "./TokenPool";
 import { assertIs } from "../util";
-import { renderToken, TokenPool, toRenderPosition } from "./TokenPool";
 
-function toRenderText({ type, text }: DiffTokens, id: string): RenderText {
-  return { type, text, id };
-}
-
-function toRenderDecoration(
-  { data }: DiffDecoration,
-  id: string
-): RenderDecoration {
-  return { data, id };
+// Renders a box, token or decoration for a given frame, using the pool.
+function renderObject<Input extends PoolInput, Output extends PoolOutput>(
+  lifecycle: TokenLifecycle<Input>,
+  frame: number,
+  pool: TokenPool<TokenLifecycle<Input>, Input, Output>
+): [Output, TextPosition] | undefined;
+function renderObject(
+  lifecycle: BoxLifecycle,
+  frame: number,
+  pool: TokenPool<BoxLifecycle, DiffBox, RenderBox>
+): [RenderBox, TextPosition] | undefined;
+function renderObject<Output extends PoolOutput>(
+  lifecycle: TokenLifecycle<any> | BoxLifecycle,
+  frame: number,
+  pool: TokenPool<TokenLifecycle<any> | BoxLifecycle, any, any>
+): [Output, TextPosition] | undefined {
+  const operation = lifecycle.get(frame);
+  if (operation && operation.kind === "DEL") {
+    return pool.free(lifecycle, operation);
+  }
+  return pool.use(lifecycle, operation);
 }
 
 function renderFrames(
@@ -33,22 +45,23 @@ function renderFrames(
   const textTokens = new Map<string, RenderText>();
   const decoTokens = new Map<string, RenderDecoration>();
   const boxTokens = new Map<string, RenderRoot<RenderText, RenderDecoration>>();
-  const textPool = new TokenPool(toRenderText);
-  const decoPool = new TokenPool(toRenderDecoration);
-  for (const [frameIdx, self] of lifecycle.self) {
+  const boxPool = TokenPool.forBoxes();
+  const textPool = TokenPool.forText();
+  const decoPool = TokenPool.forDeco();
+  for (const frameIdx of lifecycle.self.keys()) {
     const frame = {
       text: new Map<string, TextPosition>(),
       decorations: new Map<string, DecorationPosition>(),
       boxes: new Map<string, RenderPositions>(),
     };
-    const isVisible = ["ADD", "MOV", "NOP"].includes(self.kind);
-    frames.set(frameIdx, {
-      ...toRenderPosition(self.item, lifecycle.base.id, isVisible),
-      frame,
-    });
+    const boxResult = renderObject(lifecycle.self, frameIdx, boxPool);
+    if (!boxResult) {
+      throw new Error("renderBox() returned undefined");
+    }
+    frames.set(frameIdx, { ...boxResult[1], frame });
     // Render and free text tokens on a per-frame basis
     for (const textLifecycle of lifecycle.text) {
-      const result = renderToken(textLifecycle, frameIdx, textPool);
+      const result = renderObject(textLifecycle, frameIdx, textPool);
       if (result) {
         textTokens.set(result[0].id, result[0]);
         frame.text.set(result[1].id, result[1]);
@@ -56,7 +69,7 @@ function renderFrames(
     }
     // Render and free decoration tokens on a per-frame basis
     for (const decorationLifecycle of lifecycle.decorations) {
-      const result = renderToken(decorationLifecycle, frameIdx, decoPool);
+      const result = renderObject(decorationLifecycle, frameIdx, decoPool);
       if (result) {
         decoTokens.set(result[0].id, result[0]);
         frame.decorations.set(result[1].id, result[1]);
@@ -72,9 +85,10 @@ function renderFrames(
       root.frame.boxes.set(boxToken.id, boxPositions);
     }
   }
+  const id = frames.values().next().value.id ?? fail("No id");
   return [
     {
-      id: lifecycle.base.id,
+      id,
       data: lifecycle.base.data,
       language: lifecycle.base.language,
       content: {
