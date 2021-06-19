@@ -120,7 +120,7 @@ describe("Basic HTML", () => {
   });
 });
 
-describe("embedded languages", () => {
+describe("embedded CSS", () => {
   test("inline CSS", () => {
     const types = html(`<div style="color: red;"></div>`);
     expect(types).toEqual([
@@ -138,6 +138,42 @@ describe("embedded languages", () => {
     ]);
   });
 
+  test("empty inline CSS", () => {
+    const types = html(`<div style=""></div>`);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test("style attribute without value", () => {
+    const types = html(`<div style></div>`);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test("non-terminated inline CSS", () => {
+    const types = html(`<div style="color: red`);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "property",
+      "punctuation",
+      "value color",
+    ]);
+  });
+
   test("embedded CSS", () => {
     const types = html(`<style>.foo { color: red }</style>`);
     expect(types).toEqual([
@@ -150,6 +186,29 @@ describe("embedded languages", () => {
       "value color",
       "punctuation rule-end",
       "tag",
+    ]);
+  });
+
+  test("empty embedded CSS", () => {
+    const types = html(`<style></style>`);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test("non-terminated embedded CSS", () => {
+    const types = html(`<style>.foo { color: red }`);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "selector",
+      "punctuation rule-start",
+      "property",
+      "punctuation",
+      "value color",
+      "punctuation rule-end",
     ]);
   });
 
@@ -218,7 +277,9 @@ describe("embedded languages", () => {
       "tag",
     ]);
   });
+});
 
+describe("embedded JavaScript", () => {
   test("embedded JS", () => {
     const types = html(`<script>let x = 42;</script>`);
     expect(types).toEqual([
@@ -230,6 +291,28 @@ describe("embedded languages", () => {
       "number",
       "punctuation",
       "tag",
+    ]);
+  });
+
+  test("empty embedded JS", () => {
+    const types = html(`<script></script>`);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test("non-terminated embedded JS", () => {
+    const types = html(`<script>let x = 42;`);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "keyword",
+      "token",
+      "operator",
+      "number",
+      "punctuation",
     ]);
   });
 
