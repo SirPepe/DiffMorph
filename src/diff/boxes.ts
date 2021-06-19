@@ -1,9 +1,39 @@
-import { DiffBox, DiffOp, NOP } from "../types";
-import { dimensionsEql } from "../util";
+import { groupBy } from "@sirpepe/shed";
+import {
+  DiffBox,
+  DiffDecoration,
+  DiffOp,
+  DiffRoot,
+  DiffTokens,
+  NOP,
+} from "../types";
+import { dimensionsEql, isBox } from "../util";
+import { diffDecorations } from "./decorations";
 import { pickAlternative } from "./heuristics";
+import { diffLinesAndStructures } from "./structs";
+import { diffTokens } from "./tokens";
 
-// Pick alternatives from boxes with the same hash
-export function matchBoxes(
+function partitionContent(
+  source: DiffBox | undefined
+): [Map<number, DiffBox[]>, DiffTokens[], DiffDecoration[]] {
+  if (!source) {
+    return [new Map(), [], []];
+  }
+  const boxes: DiffBox[] = [];
+  const texts: DiffTokens[] = [];
+  for (const item of source.content) {
+    if (isBox<DiffBox>(item)) {
+      boxes.push(item);
+    } else if (!isBox(item)) {
+      texts.push(item);
+    }
+  }
+  return [groupBy(boxes, "hash"), texts, source.decorations];
+}
+
+// Pick alternatives from boxes with the same hash. All inputs must have the
+// same hash
+function matchBoxes(
   fromBoxes: DiffBox[],
   toBoxes: DiffBox[]
 ): [From: DiffBox | undefined, To: DiffBox | undefined][] {
@@ -24,7 +54,9 @@ export function matchBoxes(
   return matched.concat(fromBoxes.map((from) => [from, undefined]));
 }
 
-export function diffBox(
+// Diff boxes by their outer characteristics. The two inputs, if not undefined,
+// must have the same hash.
+export function diffOuterBox(
   from: DiffBox | undefined,
   to: DiffBox | undefined
 ): DiffOp<DiffBox> | NOP<DiffBox> {
@@ -55,4 +87,47 @@ export function diffBox(
     }
   }
   throw new Error("This can never happen");
+}
+
+type ContentsDiff = {
+  content: (DiffOp<DiffTokens> | DiffRoot)[];
+  decorations: DiffOp<DiffDecoration>[];
+};
+
+function diffBoxContents(
+  from: DiffBox | undefined,
+  to: DiffBox | undefined
+): ContentsDiff {
+  const content: (DiffOp<DiffTokens> | DiffRoot)[] = [];
+  const decorations: DiffOp<DiffDecoration>[] = [];
+  const [fromBoxes, fromTokens, fromDecorations] = partitionContent(from);
+  const [toBoxes, toTokens, toDecorations] = partitionContent(to);
+  const structureDiff = diffLinesAndStructures(fromTokens, toTokens);
+  content.push(...structureDiff.result);
+  content.push(...diffTokens(structureDiff.restFrom, structureDiff.restTo));
+  decorations.push(...diffDecorations(fromDecorations, toDecorations));
+  // Match up and diff nested boxes
+  const boxHashes = new Set([...fromBoxes.keys(), ...toBoxes.keys()]);
+  for (const hash of boxHashes) {
+    const pairs = matchBoxes(
+      fromBoxes.get(hash) ?? [],
+      toBoxes.get(hash) ?? []
+    );
+    for (const pair of pairs) {
+      content.push(diffBox(...pair));
+    }
+  }
+  return { content, decorations };
+}
+
+export function diffBox(
+  from: DiffBox | undefined,
+  to: DiffBox | undefined
+): DiffRoot {
+  if (!from && !to) {
+    throw new Error("Refusing to diff two undefined frames!");
+  }
+  const root = diffOuterBox(from, to);
+  const { content, decorations } = diffBoxContents(from, to);
+  return { kind: "ROOT", root, content, decorations };
 }

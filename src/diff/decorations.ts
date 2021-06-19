@@ -1,10 +1,11 @@
+// "Diff" hash-equivalent decorations by essentially keeping them in their
+// original order as far as possible.
+
 import { groupBy } from "@sirpepe/shed";
 import { diffArrays } from "diff";
 import { DiffDecoration, DiffOp } from "../types";
 import { dimensionsEql } from "../util";
 
-// "Diff" hash-equivalent decorations by essentially keeping them in their
-// original order as far as possible.
 function diffDecorationGroups(
   from: DiffDecoration[],
   to: DiffDecoration[]

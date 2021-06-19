@@ -1,9 +1,10 @@
 // This module's main diff() function turns frames of tokens and decorations
 // into diffing operations. It roughly works as follows:
-// 1. diff boxes with equivalent IDs, returning ADD, DEL, MOV or BOX operations.
-//    MOV also covers boxes resizing without moving, BOX handles cases where the
-//    boxes positions and dimensions stay the same, but contents may have
-//    changed.
+// 1. diff boxes with equivalent hashes, by using the diff heuristics returning
+//    ADD, DEL, MOV or NOP operations. MOV also covers boxes resizing without
+//    moving, NOP handles cases where the boxes positions and dimensions stay
+//    the same, but contents may have changed. Whether the content actually DID
+//    change is another matter.
 // 2. diff typed tokens by
 //    a. organizing them into structures and diffing them by a hash chain. All
 //       structures that moved without any other changes translated into MOV
@@ -18,83 +19,34 @@
 // 3. diff decorations by hash, position and dimensions, returning only ADD and
 //    DEL operations. The optimizer stage can again turn ADD and DEL into MOV.
 
-import { groupBy } from "@sirpepe/shed";
-import {
-  Box,
-  Decoration,
-  DiffBox,
-  DiffDecoration,
-  DiffOp,
-  DiffRoot,
-  DiffTokens,
-  TypedToken,
-} from "../types";
+import { Box, Decoration, DiffBox, DiffRoot, TypedToken } from "../types";
 import { isBox } from "../util";
-import { assignHashes } from "./assignHashes";
-import { diffLinesAndStructures } from "./structs";
-import { diffDecorations } from "./decorations";
-import { diffBox, matchBoxes } from "./boxes";
-import { diffTokens } from "./tokens";
+import { diffBox } from "./boxes";
+import { hash } from "./hash";
 
-function partitionContent(
-  source: DiffBox | undefined
-): [Map<number, DiffBox[]>, DiffTokens[], DiffDecoration[]] {
-  if (!source) {
-    return [new Map(), [], []];
-  }
-  const boxes: DiffBox[] = [];
-  const texts: DiffTokens[] = [];
-  for (const item of source.content) {
-    if (isBox<DiffBox>(item)) {
-      boxes.push(item);
-    } else if (!isBox(item)) {
-      texts.push(item);
+function hashBox(box: Box<TypedToken, Decoration<TypedToken>>): void {
+  const input = Object.entries(box.data ?? {}).flat(3);
+  (box as any).hash = hash(input);
+  box.content.forEach((item) => {
+    if (isBox(item)) {
+      hashBox(item);
+    } else {
+      (item as any).hash = hash([item.type, item.text]);
     }
-  }
-  return [groupBy(boxes, "hash"), texts, source.decorations];
+  });
+  box.decorations.forEach((decoration) => {
+    const input = Object.entries(decoration.data ?? {}).flat(3);
+    (decoration as any).hash = hash(input);
+  });
 }
 
-function diffBoxes(
-  from: DiffBox | undefined,
-  to: DiffBox | undefined
-): DiffRoot {
-  if (!from && !to) {
-    throw new Error("Refusing to diff two undefined frames!");
-  }
-  const root = diffBox(from, to);
-  const textOps: DiffOp<DiffTokens>[] = [];
-  const decoOps: DiffOp<DiffDecoration>[] = [];
-  const boxOps: DiffRoot[] = [];
-  const [fromBoxesByHash, fromTokens, fromDecorations] = partitionContent(from);
-  const [toBoxesByHash, toTokens, toDecorations] = partitionContent(to);
-  // First pass: diff mayor structures (language constructs and lines of code)
-  const structureDiff = diffLinesAndStructures(fromTokens, toTokens);
-  textOps.push(...structureDiff.result);
-  // Second pass: diff the remaining tokens on an individual basis
-  textOps.push(...diffTokens(structureDiff.restFrom, structureDiff.restTo));
-  // Decorations are less numerous than text token and thus can probably do with
-  // just a single pass.
-  decoOps.push(...diffDecorations(fromDecorations, toDecorations));
-  // Match up boxes, the recurse
-  const boxHashes = new Set([
-    ...fromBoxesByHash.keys(),
-    ...toBoxesByHash.keys(),
-  ]);
-  for (const hash of boxHashes) {
-    const pairs = matchBoxes(
-      fromBoxesByHash.get(hash) ?? [],
-      toBoxesByHash.get(hash) ?? []
-    );
-    for (const pair of pairs) {
-      boxOps.push(diffBoxes(...pair));
-    }
-  }
-  return {
-    kind: "ROOT",
-    root,
-    content: [...textOps, ...boxOps],
-    decorations: decoOps,
-  };
+// Assigning hashes happens in-place which is why there's a lot of "any"
+// annotations and type assertions in this function and in hashBox()
+function hashBoxes(
+  boxes: Box<TypedToken, Decoration<TypedToken>>[]
+): DiffBox[] {
+  boxes.forEach((box) => hashBox(box));
+  return boxes as DiffBox[]; // ¯\_(ツ)_/¯
 }
 
 export function diff(
@@ -103,10 +55,10 @@ export function diff(
   if (roots.length === 0) {
     return [];
   }
-  const hashedRoots = assignHashes(roots);
-  const diffs: DiffRoot[] = [diffBoxes(undefined, hashedRoots[0])];
+  const hashedRoots = hashBoxes(roots);
+  const diffs: DiffRoot[] = [diffBox(undefined, hashedRoots[0])];
   for (let i = 0; i < hashedRoots.length - 1; i++) {
-    diffs.push(diffBoxes(hashedRoots[i], hashedRoots[i + 1]));
+    diffs.push(diffBox(hashedRoots[i], hashedRoots[i + 1]));
   }
   return diffs;
 }
