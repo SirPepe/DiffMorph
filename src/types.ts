@@ -236,16 +236,16 @@ export type TokenReplacementResult = {
   replacements: { text: string; type: string }[];
 };
 
-export type EmbeddedLanguageFunctionResult = {
-  language: string;
-  types: (string | EmbeddedLanguageFunctionResult | TokenReplacementResult)[];
+export type EmbeddedLanguageProcessor = {
+  languageDefinition: LanguageDefinition<Record<string, never>>;
+  abortPredicate: (next: LanguageTokens) => boolean;
 };
 
 export type LanguageFunctionResult =
   | string
-  | EmbeddedLanguageFunctionResult
+  | EmbeddedLanguageProcessor
   | TokenReplacementResult
-  | (string | EmbeddedLanguageFunctionResult | TokenReplacementResult)[];
+  | (string | EmbeddedLanguageProcessor | TokenReplacementResult)[];
 
 type LanguageFunctionFactory<Flags extends Record<string, any>> = (
   flags?: Flags

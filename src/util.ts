@@ -163,6 +163,22 @@ export const createIdGenerator = (): ((realm: any, hash: string) => string) => {
   };
 };
 
+export function advance<T extends { next: T | undefined }>(
+  item: T,
+  steps: number
+): T | undefined {
+  let current: T | undefined = item;
+  let stepsTaken = 0;
+  while (steps > stepsTaken) {
+    current = current?.next;
+    if (!current) {
+      return undefined;
+    }
+    stepsTaken++;
+  }
+  return current;
+}
+
 // Take items from "items", starting at index "from" until "done" returns either
 // true or null (the latter signalling an abort)
 export function consume<T extends { next: T | undefined }>(

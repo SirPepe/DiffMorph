@@ -5,20 +5,22 @@
 // the "any" in the following lines. Beware of applyLanguage() in particular as
 // it WILL modify its input with extreme prejudice.
 
-import { getFirstTextToken, spliceBoxContent } from "../util";
+import { advance, getFirstTextToken, spliceBoxContent } from "../util";
 import {
   Box,
   Decoration,
-  EmbeddedLanguageFunctionResult,
+  EmbeddedLanguageProcessor,
+  LanguageDefinition,
   LanguagePostprocessor,
+  LanguageTokens,
   TextTokens,
   TokenReplacementResult,
   TypedTokens,
 } from "../types";
 import { languages } from "../languages";
 
-function isEmbeddedLanguageResult(x: any): x is EmbeddedLanguageFunctionResult {
-  if (x && "language" in x) {
+function isEmbeddedLanguageProcessor(x: any): x is EmbeddedLanguageProcessor {
+  if (x && "languageDefinition" in x && "abortPredicate" in x) {
     return true;
   }
   return false;
@@ -53,13 +55,13 @@ function embeddedLanguageBoxFactory(
 // Joins the token in-place so that the glue function can benefit from working
 // with already-glued previous tokens. The input token may be undefined when
 // dealing with an empty string as input.
-function applyPostprocessor(token: TypedTokens | undefined): void {
+function applyPostprocessors(token: TypedTokens | undefined): void {
   if (!token) {
     return;
   }
   while (true) {
-    // The postprocessor can potentially be different on a per-token basis
-    // because embedded languages are a thing.
+    // The postprocessor function can potentially be different on a per-token
+    // basis because embedded languages are a thing.
     const postprocessor: LanguagePostprocessor =
       token.parent.language && languages[token.parent.language]
         ? languages[token.parent.language].postprocessor
@@ -94,35 +96,46 @@ function applyPostprocessor(token: TypedTokens | undefined): void {
 }
 
 // Performs all of its actions in-place, essentially upgrading the TextTokens to
-// TypedTokens.
-export function applyLanguage(
-  root: Box<TextTokens, Decoration<TextTokens>>
-): Box<TypedTokens, Decoration<TypedTokens>> {
-  const languageDefinition =
-    root.language && languages[root.language]
-      ? languages[root.language]
-      : languages.none;
+// TypedTokens. Stops processing tokens when the abort predicate returns true
+// and returns the number of tokens that have been processed until the abort
+// predicate returns true. The abort predicate gets called for each token
+// *after* the token has been processed into a TypedToken. This function is used
+// by the main language application function and languages that embed other
+// languages.
+export function applyLanguageDefinition(
+  token: TextTokens | undefined,
+  languageDefinition: LanguageDefinition<any>,
+  abortPredicate: (next: LanguageTokens) => boolean
+): number {
+  let total = 0;
   const language = languageDefinition.definitionFactory({});
-  const first: any = getFirstTextToken([root]);
-  let current: any = first;
+  let current: any = token; // must be any to allow in-place operations
   while (current) {
+    if (abortPredicate(current)) {
+      return total;
+    }
+    const root = current.parent;
     const results = language(current);
     const types = Array.isArray(results) ? results : [results];
     for (let i = 0; i < types.length; i++) {
       const type = types[i];
       if (typeof type === "string") {
         current.type = type;
+        total++;
         current = current.next;
-      } else if (isEmbeddedLanguageResult(type)) {
-        // Move embedded languages items into their own box(es) before
-        // processing their actual types
-        spliceBoxContent(current, type.types.length, (parent) =>
-          embeddedLanguageBoxFactory(parent, type.language)
+      } else if (isEmbeddedLanguageProcessor(type)) {
+        const count = applyLanguageDefinition(
+          current,
+          type.languageDefinition,
+          type.abortPredicate
         );
-        // Insert new types into the current type array and re-process the
-        // current token with the then-current type
-        types.splice(i, 1, ...type.types);
-        i--;
+        // Move embedded languages items into their own box(es)
+        spliceBoxContent(current, count, (parent) =>
+          embeddedLanguageBoxFactory(parent, type.languageDefinition.name)
+        );
+        i++;
+        total += count;
+        current = advance(current, count);
       } else if (isTokenReplacementResult(type)) {
         const newTokens = [];
         let x = current.x;
@@ -152,6 +165,7 @@ export function applyLanguage(
           ...(newTokens as any) //
         );
         i += newTokens.length;
+        total += newTokens.length;
         current = current.next;
       } else {
         throw new Error(
@@ -160,6 +174,19 @@ export function applyLanguage(
       }
     }
   }
-  applyPostprocessor(first);
+  return total;
+}
+
+// Entry point for applying a language to a box of text tokens
+export function applyLanguage(
+  root: Box<TextTokens, Decoration<TextTokens>>
+): Box<TypedTokens, Decoration<TypedTokens>> {
+  const languageDefinition =
+    root.language && languages[root.language]
+      ? languages[root.language]
+      : languages.none;
+  const first = getFirstTextToken([root]);
+  applyLanguageDefinition(first, languageDefinition, () => false);
+  applyPostprocessors(first as TypedTokens);
   return root as Box<TypedTokens, Decoration<TypedTokens>>; // ¯\_(ツ)_/¯
 }

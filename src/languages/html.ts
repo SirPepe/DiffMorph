@@ -5,7 +5,7 @@ import { isAdjacent, lookaheadText } from "../util";
 import { languageDefinition as css } from "./css";
 import { languageDefinition as js } from "./javascript";
 import {
-  EmbeddedLanguageFunctionResult,
+  EmbeddedLanguageProcessor,
   LanguageDefinition,
   LanguageFunction,
   LanguageFunctionResult,
@@ -42,74 +42,59 @@ function defaultState(): State {
   };
 }
 
-function processInlineCss(
-  start: TextTokens,
-  attributeEnd: string
-): EmbeddedLanguageFunctionResult {
-  const language = css.definitionFactory({ inline: true });
-  const types = [];
-  let current: any = start;
-  while (current && current.text !== attributeEnd) {
-    const results = language(current);
-    const resultTypes = Array.isArray(results) ? results : [results];
-    for (const type of resultTypes) {
-      types.push(type);
-      current = current.next;
-    }
-  }
-  return { language: "css", types };
+function processInlineCss(attributeEnd: string): EmbeddedLanguageProcessor {
+  return {
+    languageDefinition: {
+      ...css,
+      definitionFactory: () => css.definitionFactory({ inline: true }),
+    },
+    abortPredicate: (next: LanguageTokens) => {
+      if (next.text === attributeEnd && next.prev?.text !== "\\") {
+        return true;
+      }
+      return false;
+    },
+  };
 }
 
-function processEmbeddedCss(
-  start: TextTokens | undefined
-): EmbeddedLanguageFunctionResult {
-  const language = css.definitionFactory({ inline: false });
-  const types = [];
-  let current: any = start;
-  while (current) {
-    const results = language(current);
-    const resultTypes = Array.isArray(results) ? results : [results];
-    if (current.text === "<" && lookaheadText(current, ["/", "style", ">"])) {
-      // Don't return when "</style>" is part of a string in the embedded CSS
-      if (
-        typeof resultTypes[0] !== "string" ||
-        !resultTypes[0].startsWith("string")
-      ) {
-        return { language: "css", types };
+function processEmbeddedCss(): EmbeddedLanguageProcessor {
+  return {
+    languageDefinition: {
+      ...css,
+      definitionFactory: () => css.definitionFactory({ inline: false }),
+    },
+    abortPredicate: (next: LanguageTokens) => {
+      if (next.text === "<" && lookaheadText<any>(next, ["/", "style", ">"])) {
+        // Don't abort when "</style>" is part of a string in the embedded CSS
+        if (next.prev?.type?.startsWith("string")) {
+          return false;
+        } else {
+          return true;
+        }
       }
-    }
-    for (const type of resultTypes) {
-      types.push(type);
-      current = current.next;
-    }
-  }
-  return { language: "css", types };
+      return false;
+    },
+  };
 }
 
-function processEmbeddedJavaScript(
-  start: TextTokens | undefined
-): EmbeddedLanguageFunctionResult {
-  const language = js.definitionFactory({ inline: false });
-  const types = [];
-  let current: any = start;
-  while (current) {
-    const results = language(current);
-    const resultTypes = Array.isArray(results) ? results : [results];
-    if (current.text === "<" && lookaheadText(current, ["/", "script", ">"])) {
-      // Don't return when "</script>" is part of a string in the embedded JS
-      if (
-        typeof resultTypes[0] !== "string" ||
-        !resultTypes[0].startsWith("string")
-      ) {
-        return { language: "javascript", types };
+function processEmbeddedJavaScript(): EmbeddedLanguageProcessor {
+  return {
+    languageDefinition: {
+      ...js,
+      definitionFactory: () => js.definitionFactory(),
+    },
+    abortPredicate: (next: LanguageTokens) => {
+      if (next.text === "<" && lookaheadText<any>(next, ["/", "script", ">"])) {
+        // Don't abort when "</script>" is part of a string in the embedded JS
+        if (next.prev?.type.startsWith("string")) {
+          return false;
+        } else {
+          return true;
+        }
       }
-    }
-    for (const type of resultTypes) {
-      types.push(type);
-      current = current.next;
-    }
-  }
-  return { language: "javascript", types };
+      return false;
+    },
+  };
 }
 
 function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
@@ -203,7 +188,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         token?.prev?.prev?.text !== "/" // don't switch to CSS after </style>
       ) {
         state.tagName = false;
-        return ["tag", processEmbeddedCss(token.next)];
+        return ["tag", processEmbeddedCss()];
       }
       // Handle embedded JS
       if (
@@ -212,7 +197,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
         token?.prev?.prev?.text !== "/" // don't switch to JS after </script>
       ) {
         state.tagName = false;
-        return ["tag", processEmbeddedJavaScript(token.next)];
+        return ["tag", processEmbeddedJavaScript()];
       }
       state.tagName = false;
       return "tag";
@@ -247,7 +232,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
           token?.prev?.prev?.type === "attribute" &&
           token?.prev?.prev?.text === "style"
         ) {
-          return ["value", processInlineCss(token.next, token.text)];
+          return ["value", processInlineCss(token.text)];
         }
         if (state.tagState === "xml") {
           return "value-xml";

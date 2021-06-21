@@ -120,7 +120,7 @@ describe("Basic HTML", () => {
   });
 });
 
-describe("embedded CSS", () => {
+describe("inline CSS", () => {
   test("inline CSS", () => {
     const types = html(`<div style="color: red;"></div>`);
     expect(types).toEqual([
@@ -132,6 +132,28 @@ describe("embedded CSS", () => {
       "punctuation",
       "value color",
       "punctuation",
+      "value",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test("inline CSS with escaped quotes inside a string", () => {
+    const types = html(`<div style="background:url('\\"')"></div>`);
+    expect(types).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "property",
+      "punctuation",
+      "keyword",
+      "punctuation url",
+      "string url",
+      "string url",
+      "string url",
+      "string url",
+      "punctuation url",
       "value",
       "tag",
       "tag",
@@ -173,7 +195,9 @@ describe("embedded CSS", () => {
       "value color",
     ]);
   });
+});
 
+describe("embedded CSS", () => {
   test("embedded CSS", () => {
     const types = html(`<style>.foo { color: red }</style>`);
     expect(types).toEqual([
@@ -289,6 +313,19 @@ describe("embedded JavaScript", () => {
       "token",
       "operator",
       "number",
+      "punctuation",
+      "tag",
+    ]);
+  });
+
+  test("embedded JS calling a function (regression)", () => {
+    const types = html(`<script>foo();</script>`);
+    expect(types).toEqual([
+      "tag",
+      "tag",
+      "call",
+      "punctuation call-start-0",
+      "punctuation call-end-0",
       "punctuation",
       "tag",
     ]);
