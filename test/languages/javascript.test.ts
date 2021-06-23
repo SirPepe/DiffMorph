@@ -702,7 +702,7 @@ describe("If/else", () => {
       "literal",
       "punctuation condition-end-0",
       "punctuation block-start-0",
-      "punctuation block-end-0"
+      "punctuation block-end-0",
     ]);
   });
 
@@ -717,7 +717,7 @@ describe("If/else", () => {
       "punctuation block-end-0",
       "keyword",
       "punctuation block-start-0",
-      "punctuation block-end-0"
+      "punctuation block-end-0",
     ]);
   });
 
@@ -736,7 +736,7 @@ describe("If/else", () => {
       "literal",
       "punctuation condition-end-0",
       "punctuation block-start-0",
-      "punctuation block-end-0"
+      "punctuation block-end-0",
     ]);
   });
 });
@@ -764,7 +764,7 @@ describe("Loops", () => {
       "literal",
       "punctuation condition-end-0",
       "punctuation block-start-0",
-      "punctuation block-end-0"
+      "punctuation block-end-0",
     ]);
   });
 
@@ -779,7 +779,7 @@ describe("Loops", () => {
       "token",
       "punctuation condition-end-0",
       "punctuation block-start-0",
-      "punctuation block-end-0"
+      "punctuation block-end-0",
     ]);
   });
 
@@ -793,7 +793,7 @@ describe("Loops", () => {
       "token",
       "punctuation condition-end-0",
       "punctuation block-start-0",
-      "punctuation block-end-0"
+      "punctuation block-end-0",
     ]);
   });
 });
