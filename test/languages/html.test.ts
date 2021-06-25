@@ -2,12 +2,43 @@ import { type } from "../helpers";
 const html = type("html");
 
 describe("Basic HTML", () => {
+  test("HTML5 doctype", () => {
+    const types = html(`<!doctype html>`);
+    expect(types).toEqual([
+      "doctype",
+      "doctype",
+      "doctype",
+      "doctype",
+      "doctype",
+    ]);
+  });
+
+  test("Legacy doctype", () => {
+    const types = html(
+      `<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">`
+    );
+    expect(types.every((t) => t === "doctype")).toBe(true);
+  });
+
   test("Simple element", () => {
     const types = html(`<p></p>`);
     expect(types).toEqual(["tag", "tag", "tag"]);
   });
 
   test("Simple self-closing element", () => {
+    const types = html(`<!doctype html><br />`);
+    expect(types).toEqual([
+      "doctype",
+      "doctype",
+      "doctype",
+      "doctype",
+      "doctype",
+      "tag",
+      "tag",
+    ]);
+  });
+
+  test("Doctype followed by a self-closing element", () => {
     const types = html(`<br />`);
     expect(types).toEqual(["tag", "tag"]);
   });
@@ -117,6 +148,29 @@ describe("Basic HTML", () => {
   test("More traps in comments", () => {
     const types = html(`<!-- -> -->`);
     expect(types).toEqual(["comment", "comment", "comment"]);
+  });
+
+  test("Non-comments", () => {
+    expect(html(`< ! Hello World`)).toEqual([
+      "token",
+      "token",
+      "token",
+      "token",
+    ]);
+    expect(html(`<! Hello World`)).toEqual([
+      "token",
+      "token",
+      "token",
+      "token",
+    ]);
+    expect(html(`<! -- Hello World`)).toEqual([
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+      "token",
+    ]);
   });
 });
 

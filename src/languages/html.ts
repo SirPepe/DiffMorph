@@ -106,17 +106,23 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     if (
       state.commentState === false &&
       token.text === "<" &&
-      token?.next?.text === "!"
+      token?.next?.text === "!" &&
+      isAdjacent(token, token.next)
     ) {
       if (token?.next?.next?.text.toLowerCase() === "doctype") {
         state.doctypeState = true;
-        return "doctype";
+        return ["doctype", "doctype"];
       } else if (xml && token?.next?.next?.text === "[") {
         state.commentState = "cdata";
         return "comment cdata";
-      } else {
+      } else if (
+        token.next.next &&
+        lookaheadText(token.next, ["-", "-"]) &&
+        isAdjacent(token.next, token.next.next) &&
+        isAdjacent(token.next.next, token.next.next.next)
+      ) {
         state.commentState = "comment";
-        return "comment";
+        return ["comment", "comment", "comment", "comment"];
       }
     }
     // exit doctype state
@@ -156,7 +162,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
     }
 
     // handle tag state entry
-    if (state.tagState === false && token.text === "<") {
+    if (
+      state.tagState === false &&
+      token.text === "<" &&
+      isAdjacent(token, token.next)
+    ) {
       if (
         xml &&
         token?.next?.text === "?" &&
@@ -164,10 +174,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       ) {
         state.tagState = "xml";
         return ["tag-xml", "tag-xml", "tag-xml"];
+      } else if (token.next && token.next.text[0].match(/[a-z/]/i)) {
+        state.tagName = "";
+        state.tagState = "tag";
+        return "tag";
       }
-      state.tagName = "";
-      state.tagState = "tag";
-      return "tag";
     }
     // exit XML declarations
     if (
