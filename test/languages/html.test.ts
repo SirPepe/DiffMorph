@@ -229,12 +229,7 @@ describe("inline CSS", () => {
 
   test("style attribute without value", () => {
     const types = html(`<div style></div>`);
-    expect(types).toEqual([
-      "tag",
-      "attribute",
-      "tag",
-      "tag",
-    ]);
+    expect(types).toEqual(["tag", "attribute", "tag", "tag"]);
   });
 
   test("non-terminated inline CSS", () => {
@@ -269,11 +264,7 @@ describe("embedded CSS", () => {
 
   test("empty embedded CSS", () => {
     const types = html(`<style></style>`);
-    expect(types).toEqual([
-      "tag",
-      "tag",
-      "tag",
-    ]);
+    expect(types).toEqual(["tag", "tag", "tag"]);
   });
 
   test("non-terminated embedded CSS", () => {
@@ -387,11 +378,7 @@ describe("embedded JavaScript", () => {
 
   test("empty embedded JS", () => {
     const types = html(`<script></script>`);
-    expect(types).toEqual([
-      "tag",
-      "tag",
-      "tag",
-    ]);
+    expect(types).toEqual(["tag", "tag", "tag"]);
   });
 
   test("non-terminated embedded JS", () => {
