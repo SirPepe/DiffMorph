@@ -83,7 +83,9 @@ function toTokenLifecycles<T extends Token>(
       if (operation.kind === "ADD") {
         const key = toPosition(operation.item);
         if (lifecycles.has(key)) {
-          throw new Error();
+          throw new Error(
+            `ADD at ${frameIdx}: position ${key} already occupied`
+          );
         }
         lifecycles.set(key, new Map([[i + startIdx, operation]]));
       }
@@ -91,7 +93,9 @@ function toTokenLifecycles<T extends Token>(
     // Third pass: place deferred items
     for (const [newPosition, lifecycle] of deferred) {
       if (lifecycles.has(newPosition)) {
-        throw new Error();
+        throw new Error(
+          `Deferred at ${frameIdx}: position ${newPosition} already occupied`
+        );
       } else {
         lifecycles.set(newPosition, lifecycle);
       }
@@ -150,7 +154,9 @@ function toRootLifecycles(
       if (diff.root.kind === "ADD") {
         const key = toPosition(diff.root.item);
         if (lifecycles.has(key)) {
-          throw new Error();
+          throw new Error(
+            `ADD at ${frameIdx}: position ${key} already occupied`
+          );
         }
         lifecycles.set(key, new Map([[i + startIdx, diff]]));
       }
@@ -158,7 +164,9 @@ function toRootLifecycles(
     // Third pass: place deferred items
     for (const [newPosition, lifecycle] of deferred) {
       if (lifecycles.has(newPosition)) {
-        throw new Error();
+        throw new Error(
+          `Deferred at ${frameIdx}: position ${newPosition} already occupied`
+        );
       } else {
         lifecycles.set(newPosition, lifecycle);
       }
