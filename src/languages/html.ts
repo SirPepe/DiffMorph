@@ -104,6 +104,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
   return (token: LanguageTokens): LanguageFunctionResult => {
     // handle comments and doctypes
     if (
+      state.attrValueState === false &&
       state.commentState === false &&
       token.text === "<" &&
       token?.next?.text === "!" &&
@@ -163,6 +164,7 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
 
     // handle tag state entry
     if (
+      state.attrValueState === false &&
       state.tagState === false &&
       token.text === "<" &&
       isAdjacent(token, token.next)
@@ -190,7 +192,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       return ["tag-xml", "tag-xml"];
     }
     // exit tag state
-    if (state.tagState && token.text === ">") {
+    if (
+      state.attrValueState === false &&
+      state.tagState &&
+      token.text === ">"
+    ) {
       state.tagState = false;
       // Handle embedded CSS
       if (

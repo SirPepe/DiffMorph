@@ -171,6 +171,15 @@ describe("Basic HTML", () => {
       "token",
       "token",
     ]);
+    expect(html(`<meta content="<!--Hihi-->">`)).toEqual([
+      "tag",
+      "attribute",
+      "operator",
+      "value",
+      "value",
+      "value",
+      "tag",
+    ]);
   });
 });
 
