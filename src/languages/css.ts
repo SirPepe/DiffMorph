@@ -9,6 +9,7 @@ import {
   TokenReplacementResult,
   TypedTokens,
 } from "../types";
+import { cStyleBlockComment } from "./microsyntax/cStyleBlockComment";
 import { CSS_COLOR_KEYWORDS } from "./constants";
 
 const STRINGS = ["'", '"', "`"];
@@ -63,7 +64,6 @@ const NUMERIC_RE = new RegExp(
 
 type State = {
   stringState: boolean | string; // string indicates the quote used
-  commentState: boolean;
   urlState: boolean;
   atHeaderState: boolean;
   ruleContext: "left" | "right" | "none";
@@ -113,7 +113,6 @@ function parseNumeric(
 function defaultState(): State {
   return {
     stringState: false,
-    commentState: false,
     urlState: false,
     atHeaderState: false,
     ruleContext: "none",
@@ -132,29 +131,9 @@ function defineCss(flags: Flags = { inline: false }): LanguageFunction {
   }
 
   return function css(token: LanguageTokens): LanguageFunctionResult {
-    // exit comment state
-    if (
-      state.commentState === true &&
-      state.stringState === false &&
-      token.text === "/" &&
-      token.prev?.text === "*"
-    ) {
-      state.commentState = false;
-      return "comment";
-    }
-    // enter comment state
-    if (
-      state.commentState === false &&
-      state.stringState === false &&
-      token.text === "/" &&
-      token?.next?.text === "*"
-    ) {
-      state.commentState = true;
-      return "comment";
-    }
-    // are we in comment state?
-    if (state.commentState) {
-      return "comment";
+    // handle comments
+    if (state.stringState === false && cStyleBlockComment.start(token)) {
+      return cStyleBlockComment.process();
     }
 
     // exit string state
@@ -351,12 +330,11 @@ function postprocessCss(token: TypedTokens): boolean {
   ) {
     return true;
   }
-  // Join property names, hex colors, floating point numbers and comments
+  // Join property names, hex colors, floating point numbers
   if (
     token.type === "property" ||
     token.type === "value color" ||
-    token.type === "number" ||
-    token.type.startsWith("comment")
+    token.type === "number"
   ) {
     return isAdjacent(token, token.prev);
   }

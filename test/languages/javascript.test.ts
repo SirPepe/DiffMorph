@@ -684,12 +684,12 @@ describe("Numbers", () => {
 
 describe("Comments", () => {
   test("Line comment", () => {
-    const types = javascript(`// foo foo-bar bar it's foo`);
-    expect(types).toEqual(["comment line"]);
+    const types = javascript(`// foo foo`);
+    expect(types).toEqual(["comment", "comment", "comment"]);
   });
   test("Block comment", () => {
-    const types = javascript(`/* foo foo-bar bar it's foo */`);
-    expect(types).toEqual(["comment block"]);
+    const types = javascript(`/* foo foo */`);
+    expect(types).toEqual(["comment", "comment", "comment", "comment"]);
   });
 });
 

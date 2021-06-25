@@ -179,6 +179,34 @@ export function advance<T extends { next: T | undefined }>(
   return current;
 }
 
+export function seekForwards<T extends { next: T | undefined }>(
+  item: T,
+  condition: (item: T) => boolean
+): T | undefined {
+  let current: T | undefined = item;
+  while (current && condition(current) === false) {
+    current = current?.next;
+    if (!current) {
+      return undefined;
+    }
+  }
+  return current;
+}
+
+export function seekBackwards<T extends { prev: T | undefined }>(
+  item: T,
+  condition: (item: T) => boolean
+): T | undefined {
+  let current: T | undefined = item;
+  while (current && condition(current) === false) {
+    current = current?.prev;
+    if (!current) {
+      return undefined;
+    }
+  }
+  return current;
+}
+
 // Take items from "items", starting at index "from" until "done" returns either
 // true or null (the latter signalling an abort)
 export function consume<T extends { next: T | undefined }>(
