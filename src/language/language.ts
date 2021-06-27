@@ -67,6 +67,7 @@ function isTokenReplacementResult(x: any): x is TokenReplacementResult {
   return false;
 }
 
+// Box coords and sizes must be updated when items get added
 function embeddedLanguageBoxFactory(
   parent: Box<any, any>,
   language: string

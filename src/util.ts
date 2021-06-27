@@ -44,12 +44,12 @@ export function assertIsNot<T>(
   }
 }
 
-// Modifies a source box in-place by re-organizing a number of tokens into
-// sub-boxes. As there may be several box borders between the first and last
-// item, the items are organized into batches (one per parent) and then each
-// parent's content gets modified accordingly.
+// Modifies a source boxes content in-place by re-organizing a number of tokens
+// into sub-boxes. As there may be several box borders between the first and
+// last item, the items are organized into batches (one per parent) and then
+// each parent's content gets modified accordingly.
 export function spliceBoxContent<
-  T extends { parent: any; next: T | undefined },
+  T extends Token & { parent: any; next: T | undefined },
   D
 >(
   firstItem: T,
@@ -65,7 +65,9 @@ export function spliceBoxContent<
   let currentBatch = [];
   while (numItems > 0) {
     if (currentItem.parent != lastParent) {
-      batches.push(currentBatch);
+      if (currentBatch.length > 0) {
+        batches.push(currentBatch);
+      }
       currentBatch = [];
       lastParent = currentItem.parent;
     }
@@ -77,11 +79,29 @@ export function spliceBoxContent<
   }
   batches.push(currentBatch);
   for (const batch of batches) {
-    const parent = batch[0].parent;
+    const { parent } = batch[0];
     const firstIdx = parent.content.indexOf(batch[0]);
     const newBox = boxFactory(parent);
+    newBox.x = batch[0].x;
+    newBox.y = batch[0].y;
     newBox.content = parent.content.splice(firstIdx, batch.length, newBox);
-    newBox.content.forEach((item) => (item.parent = newBox));
+    let width = 0;
+    let height = 0;
+    for (let item of newBox.content) {
+      item.x = item.x - newBox.x;
+      item.y = item.y - newBox.y;
+      item.parent = newBox;
+      let maxX = item.x + item.width;
+      let maxY = item.y + item.height;
+      if (maxX > width) {
+        width = maxX;
+      }
+      if (maxY > height) {
+        height = maxY;
+      }
+    }
+    newBox.width = width;
+    newBox.height = height;
   }
 }
 

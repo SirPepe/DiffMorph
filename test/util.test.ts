@@ -1,5 +1,5 @@
 import { createIdGenerator, isAdjacent, spliceBoxContent } from "../src/util";
-import { Box } from "../src/types";
+import { Box, Token } from "../src/types";
 
 describe("createIdGenerator()", () => {
   test("unique id generation", () => {
@@ -13,32 +13,73 @@ describe("createIdGenerator()", () => {
   });
 });
 
-type SpliceTest = {
+type SpliceTest = Token & {
   parent: Box<SpliceTest, any>;
   next: SpliceTest | undefined;
 };
 
 describe("spliceBoxContent", () => {
-  test("splice inside of a box", () => {
+  test("splice inside of a box at the start", () => {
     const box: Box<SpliceTest, any> = {
       x: 0,
       y: 0,
       width: 0,
-      height: 0,
+      height: 1,
       data: {},
-      language: "css",
+      language: "test",
       content: [],
       decorations: [],
       parent: undefined,
     };
-    const d = { value: "d", parent: box, next: undefined };
-    const c = { value: "c", parent: box, next: d };
-    const b = { value: "b", parent: box, next: c };
-    const a = { value: "a", parent: box, next: b };
+    const d = {
+      value: "d",
+      x: 3,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: undefined,
+    };
+    const c = {
+      value: "c",
+      x: 2,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: d,
+    };
+    const b = {
+      value: "b",
+      x: 1,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: c,
+    };
+    const a = {
+      value: "a",
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: b,
+    };
     box.content = [a, b, c, d];
     spliceBoxContent<SpliceTest, any>(a, 2, (parent) => ({ ...parent }));
     expect(box.content).toEqual([
-      expect.objectContaining({ content: [a, b] }),
+      expect.objectContaining({
+        x: 0,
+        y: 0,
+        width: 2,
+        height: 1,
+        content: [
+          { ...a, x: 0, y: 0 },
+          { ...b, x: 1, y: 0 },
+        ],
+      }),
       c,
       d,
     ]);
@@ -49,17 +90,49 @@ describe("spliceBoxContent", () => {
       x: 0,
       y: 0,
       width: 0,
-      height: 0,
+      height: 1,
       data: {},
       language: "css",
       content: [],
       decorations: [],
       parent: undefined,
     };
-    const d = { value: "d", parent: box, next: undefined };
-    const c = { value: "c", parent: box, next: d };
-    const b = { value: "b", parent: box, next: c };
-    const a = { value: "a", parent: box, next: b };
+    const d = {
+      value: "d",
+      x: 3,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: undefined,
+    };
+    const c = {
+      value: "c",
+      x: 2,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: d,
+    };
+    const b = {
+      value: "b",
+      x: 1,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: c,
+    };
+    const a = {
+      value: "a",
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: b,
+    };
     box.content = [a, b, c, d];
     spliceBoxContent<SpliceTest, any>(undefined as any, 0, (parent) => ({
       ...parent,
@@ -72,7 +145,7 @@ describe("spliceBoxContent", () => {
       x: 0,
       y: 0,
       width: 0,
-      height: 0,
+      height: 1,
       data: {},
       language: "css",
       content: [],
@@ -83,7 +156,7 @@ describe("spliceBoxContent", () => {
       x: 0,
       y: 0,
       width: 0,
-      height: 0,
+      height: 1,
       data: {},
       language: "css",
       content: [],
@@ -94,20 +167,20 @@ describe("spliceBoxContent", () => {
       x: 0,
       y: 0,
       width: 0,
-      height: 0,
+      height: 1,
       data: {},
       language: "css",
       content: [],
       decorations: [],
       parent: undefined,
     };
-    const g = { value: "g", parent: box2, next: undefined };
-    const f = { value: "f", parent: box2, next: g };
-    const e = { value: "e", parent: box2, next: f };
-    const d = { value: "d", parent: box1, next: e };
-    const c = { value: "c", parent: box1, next: d };
-    const b = { value: "b", parent: box1, next: c };
-    const a = { value: "a", parent: box1, next: b };
+    const g = { value: "g", x: 6, y: 0, width: 1, height: 1, parent: box2, next: undefined };
+    const f = { value: "f", x: 5, y: 0, width: 1, height: 1, parent: box2, next: g };
+    const e = { value: "e", x: 4, y: 0, width: 1, height: 1, parent: box2, next: f };
+    const d = { value: "d", x: 3, y: 0, width: 1, height: 1, parent: box1, next: e };
+    const c = { value: "c", x: 2, y: 0, width: 1, height: 1, parent: box1, next: d };
+    const b = { value: "b", x: 1, y: 0, width: 1, height: 1, parent: box1, next: c };
+    const a = { value: "a", x: 0, y: 0, width: 1, height: 1, parent: box1, next: b };
     box1.content = [a, b, c, d];
     box2.content = [e, f, g];
     parent.content = [box1, box2];
@@ -118,10 +191,28 @@ describe("spliceBoxContent", () => {
     expect(box1.content).toEqual([
       a,
       b,
-      expect.objectContaining({ content: [c, d] }),
+      expect.objectContaining({
+        x: 2,
+        y: 0,
+        width: 2,
+        height: 1,
+        content: [
+          { ...c, x: 0, y: 0 },
+          { ...d, x: 1, y: 0 },
+        ]
+      }),
     ]);
     expect(box2.content).toEqual([
-      expect.objectContaining({ content: [e, f] }),
+      expect.objectContaining({
+        x: 4,
+        y: 0,
+        width: 2,
+        height: 1,
+        content: [
+          { ...e, x: 0, y: 0 },
+          { ...f, x: 1, y: 0 },
+        ]
+      }),
       g,
     ]);
   });
