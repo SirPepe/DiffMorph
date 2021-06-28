@@ -1,4 +1,5 @@
 import { groupBy } from "@sirpepe/shed";
+import { isBox } from "../lib/box";
 import {
   DiffBox,
   DiffDecoration,
@@ -7,7 +8,7 @@ import {
   DiffTokens,
   NOP,
 } from "../types";
-import { dimensionsEql, isBox } from "../util";
+import { dimensionsEql } from "../util";
 import { diffDecorations } from "./decorations";
 import { pickAlternative } from "./heuristics";
 import { diffLinesAndStructures } from "./structs";

@@ -9,7 +9,6 @@ import {
   advance,
   getFirstTextToken,
   seekBackwards,
-  spliceBoxContent,
 } from "../util";
 import {
   Box,
@@ -24,6 +23,7 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { microsyntax } from "../languages/microsyntax";
+import { wrapContent } from "../lib/box";
 
 // Microsyntax and languages can each have their own postprocessors and when
 // processing boxes its not clear if a box contains one or the other. It could
@@ -164,8 +164,8 @@ export function applyLanguageDefinition(
           type.languageDefinition,
           type.abortPredicate
         );
-        // Move embedded languages items into their own box(es)
-        spliceBoxContent(current, count, (parent) =>
+        // Wrap embedded languages items in their own box(es)
+        wrapContent(current, count, (parent) =>
           embeddedLanguageBoxFactory(parent, type.languageDefinition.name)
         );
         i++;

@@ -1,3 +1,4 @@
+import { isBox } from "./lib/box";
 import { Box, Decoration, Token } from "./types";
 
 const CHARSET =
@@ -12,81 +13,9 @@ export function toString(number: number): string {
   return res;
 }
 
-// Modifies a source boxes content in-place by re-organizing a number of tokens
-// into sub-boxes. As there may be several box borders between the first and
-// last item, the items are organized into batches (one per parent) and then
-// each parent's content gets modified accordingly.
-export function spliceBoxContent<
-  T extends Token & { parent: any; next: T | undefined },
-  D
->(
-  firstItem: T,
-  numItems: number,
-  boxFactory: (parent: Box<T, D>) => Box<T, D>
-): void {
-  if (numItems === 0) {
-    return;
-  }
-  const batches = [];
-  let lastParent = firstItem.parent;
-  let currentItem = firstItem;
-  let currentBatch = [];
-  while (numItems > 0) {
-    if (currentItem.parent != lastParent) {
-      if (currentBatch.length > 0) {
-        batches.push(currentBatch);
-      }
-      currentBatch = [];
-      lastParent = currentItem.parent;
-    }
-    currentBatch.push(currentItem);
-    if (currentItem.next) {
-      currentItem = currentItem.next;
-    }
-    numItems--;
-  }
-  batches.push(currentBatch);
-  for (const batch of batches) {
-    const { parent } = batch[0];
-    const firstIdx = parent.content.indexOf(batch[0]);
-    const newBox = boxFactory(parent);
-    newBox.content = parent.content.splice(firstIdx, batch.length, newBox);
-    newBox.x = findMinValue(newBox.content, ({ x }) => x);
-    newBox.y = findMinValue(newBox.content, ({ y }) => y);
-    newBox.parent = parent;
-    let width = 0;
-    let height = 0;
-    for (let item of newBox.content) {
-      item.parent = newBox;
-      const maxX = item.x + item.width - newBox.x;
-      const maxY = item.y + item.height - newBox.y;
-      if (maxX > width) {
-        width = maxX;
-      }
-      if (maxY > height) {
-        height = maxY;
-      }
-    }
-    newBox.width = width;
-    newBox.height = height;
-  }
-}
-
 export function getLanguage(element: Element): string | undefined {
   const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
   return match;
-}
-
-export function isBox<T extends Box<any, any>>(x: T | any): x is T {
-  if (
-    x !== null &&
-    typeof x === "object" &&
-    Array.isArray(x.content) &&
-    Array.isArray(x.decorations)
-  ) {
-    return true;
-  }
-  return false;
 }
 
 export function getFirstTextToken<T>(
