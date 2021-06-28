@@ -12,38 +12,6 @@ export function toString(number: number): string {
   return res;
 }
 
-export function is<T>(x: T | undefined | null): x is T {
-  if (typeof x === "undefined" || x === null) {
-    return false;
-  }
-  return true;
-}
-
-export function isNot<T>(x: T | undefined | null): x is null | undefined {
-  return !is(x);
-}
-
-export function assertIs<T>(
-  x: T | undefined | null,
-  name = "value"
-): asserts x is T {
-  if (!is(x)) {
-    throw new Error(`Expected ${name} to be defined, but found ${x}`);
-  }
-}
-
-export function assertIsNot<T>(
-  x: T | undefined | null,
-  name = "value"
-): asserts x is undefined | null {
-  if (is(x)) {
-    throw new Error(
-      `Expected ${name} to be null or undefined, but found ${typeof x}
-    `
-    );
-  }
-}
-
 // Modifies a source boxes content in-place by re-organizing a number of tokens
 // into sub-boxes. As there may be several box borders between the first and
 // last item, the items are organized into batches (one per parent) and then

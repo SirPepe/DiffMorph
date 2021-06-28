@@ -1,6 +1,7 @@
 // This module is a DOM frontend for the tokenizer. Its fromDom() function takes
 // elements as input and turns their text content into ready-to-use render data.
 
+import { isNot } from "@sirpepe/shed";
 import {
   Box,
   Code,
@@ -12,7 +13,7 @@ import {
   TextTokens,
 } from "../types";
 import { tokenize } from "./tokenizer";
-import { getLanguage, isNot } from "../util";
+import { getLanguage } from "../util";
 import { toRenderData } from "../render/render";
 import { optimizeDiffs } from "../diff/optimize";
 import { diff } from "../diff/diff";

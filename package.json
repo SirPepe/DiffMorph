@@ -17,7 +17,7 @@
   "author": "peter@peterkroener.de",
   "license": "ISC",
   "dependencies": {
-    "@sirpepe/shed": "^0.2.0",
+    "@sirpepe/shed": "^0.5.0",
     "bezier-easing": "^2.1.0",
     "core-js": "^3.12.1",
     "debounce": "^1.2.1",

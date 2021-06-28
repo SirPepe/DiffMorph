@@ -1,3 +1,4 @@
+import { assertIs } from "@sirpepe/shed";
 import BezierEasing from "bezier-easing";
 import {
   DecorationPosition,
@@ -9,7 +10,6 @@ import {
   TextPosition,
 } from "../types";
 import { languages } from "../languages";
-import { assertIs } from "../util";
 import {
   ColorPalette,
   DEFAULT_COLOR_PALETTE,

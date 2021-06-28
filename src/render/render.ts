@@ -1,5 +1,6 @@
 // Turn lifecycles into useable object graphs for rendering.
 
+import { assertIs } from "@sirpepe/shed";
 import {
   DecorationPosition,
   DiffBox,
@@ -13,7 +14,6 @@ import {
 } from "../types";
 import { BoxLifecycle, RootLifecycle, TokenLifecycle } from "./lifecycle";
 import { BoxTokenPool, PoolInput, PoolOutput, TokenPool } from "./TokenPool";
-import { assertIs } from "../util";
 
 // Renders a box, token or decoration for a given frame, using the pool.
 function renderObject<Input extends PoolInput, Output extends PoolOutput>(
@@ -42,7 +42,7 @@ function renderObject<Output extends PoolOutput>(
 // can access its render token from
 function renderFrames(
   lifecycle: RootLifecycle,
-  sourcePool: BoxTokenPool,
+  sourcePool: BoxTokenPool
 ): [RenderRoot<RenderText, RenderDecoration>, Map<number, RenderPositions>] {
   const frames = new Map<number, RenderPositions>();
   const textTokens = new Map<string, RenderText>();
