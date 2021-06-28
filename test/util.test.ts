@@ -85,6 +85,69 @@ describe("spliceBoxContent", () => {
     ]);
   });
 
+  test("splice inside of a box somewhere in the middle", () => {
+    const box: Box<SpliceTest, any> = {
+      x: 0,
+      y: 0,
+      width: 4,
+      height: 1,
+      data: {},
+      language: "test",
+      content: [],
+      decorations: [],
+      parent: undefined,
+    };
+    const d = {
+      value: "d",
+      x: 3,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: undefined,
+    };
+    const c = {
+      value: "c",
+      x: 2,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: d,
+    };
+    const b = {
+      value: "b",
+      x: 1,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: c,
+    };
+    const a = {
+      value: "a",
+      x: 0,
+      y: 0,
+      width: 1,
+      height: 1,
+      parent: box,
+      next: b,
+    };
+    box.content = [a, b, c, d];
+    spliceBoxContent<SpliceTest, any>(b, 2, (parent) => ({ ...parent }));
+    expect(box.content).toEqual([
+      a,
+      expect.objectContaining({
+        x: 1,
+        y: 0,
+        width: 2,
+        height: 1,
+        content: [b, c],
+      }),
+      d,
+    ]);
+  });
+
   test("nothing to splice", () => {
     const box: Box<SpliceTest, any> = {
       x: 0,
@@ -196,10 +259,7 @@ describe("spliceBoxContent", () => {
         y: 0,
         width: 2,
         height: 1,
-        content: [
-          { ...c, x: 0, y: 0 },
-          { ...d, x: 1, y: 0 },
-        ]
+        content: [c, d]
       }),
     ]);
     expect(box2.content).toEqual([
@@ -208,10 +268,7 @@ describe("spliceBoxContent", () => {
         y: 0,
         width: 2,
         height: 1,
-        content: [
-          { ...e, x: 0, y: 0 },
-          { ...f, x: 1, y: 0 },
-        ]
+        content: [e, f]
       }),
       g,
     ]);

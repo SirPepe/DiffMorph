@@ -82,17 +82,16 @@ export function spliceBoxContent<
     const { parent } = batch[0];
     const firstIdx = parent.content.indexOf(batch[0]);
     const newBox = boxFactory(parent);
-    newBox.x = batch[0].x;
-    newBox.y = batch[0].y;
     newBox.content = parent.content.splice(firstIdx, batch.length, newBox);
+    newBox.x = findMinValue(newBox.content, ({ x }) => x);
+    newBox.y = findMinValue(newBox.content, ({ y }) => y);
+    newBox.parent = parent;
     let width = 0;
     let height = 0;
     for (let item of newBox.content) {
-      item.x = item.x - newBox.x;
-      item.y = item.y - newBox.y;
       item.parent = newBox;
-      let maxX = item.x + item.width;
-      let maxY = item.y + item.height;
+      const maxX = item.x + item.width - newBox.x;
+      const maxY = item.y + item.height - newBox.y;
       if (maxX > width) {
         width = maxX;
       }
