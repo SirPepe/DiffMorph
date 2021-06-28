@@ -215,7 +215,7 @@ function generateDom(
   }
   let { tagName, attributes } = root.data;
   if (typeof tagName !== "string") {
-    tagName = "mark";
+    tagName = "span"; // gotta default to something!
   }
   if (!Array.isArray(attributes)) {
     attributes = [];
