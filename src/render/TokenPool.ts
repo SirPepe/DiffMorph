@@ -31,13 +31,13 @@ export type PoolInput = Token & { hash: number };
 export type PoolOutput = { id: string };
 
 /* eslint-disable */
-type BoxTokenPool = TokenPool<BoxLifecycle, DiffBox, RenderBox>;
-type TextTokenPool = TokenPool<
+export type BoxTokenPool = TokenPool<BoxLifecycle, DiffBox, RenderBox>;
+export type TextTokenPool = TokenPool<
   TokenLifecycle<DiffTokens>,
   DiffTokens,
   RenderText
 >;
-type DecoTokenPool = TokenPool<
+export type DecoTokenPool = TokenPool<
   TokenLifecycle<DiffDecoration>,
   DiffDecoration,
   RenderDecoration

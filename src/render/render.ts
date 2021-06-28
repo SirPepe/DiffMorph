@@ -12,7 +12,7 @@ import {
   TextPosition,
 } from "../types";
 import { BoxLifecycle, RootLifecycle, TokenLifecycle } from "./lifecycle";
-import { PoolInput, PoolOutput, TokenPool } from "./TokenPool";
+import { BoxTokenPool, PoolInput, PoolOutput, TokenPool } from "./TokenPool";
 import { assertIs } from "../util";
 
 // Renders a box, token or decoration for a given frame, using the pool.
@@ -38,27 +38,33 @@ function renderObject<Output extends PoolOutput>(
   return pool.use(lifecycle, operation);
 }
 
+// Note that each lifecycle must be accompanied by the box token pool that it
+// can access its render token from
 function renderFrames(
-  lifecycle: RootLifecycle
+  lifecycle: RootLifecycle,
+  sourcePool: BoxTokenPool,
 ): [RenderRoot<RenderText, RenderDecoration>, Map<number, RenderPositions>] {
   const frames = new Map<number, RenderPositions>();
   const textTokens = new Map<string, RenderText>();
   const decoTokens = new Map<string, RenderDecoration>();
   const boxTokens = new Map<string, RenderRoot<RenderText, RenderDecoration>>();
-  const boxPool = TokenPool.forBoxes();
+  // Pools for the current lifecycle
   const textPool = TokenPool.forText();
   const decoPool = TokenPool.forDeco();
+  // Pools that renderFrames() get passed for nested lifecycles
+  const boxPool = TokenPool.forBoxes();
   for (const frameIdx of lifecycle.self.keys()) {
     const frame = {
       text: new Map<string, TextPosition>(),
       decorations: new Map<string, DecorationPosition>(),
       boxes: new Map<string, RenderPositions>(),
     };
-    const boxResult = renderObject(lifecycle.self, frameIdx, boxPool);
-    if (!boxResult) {
-      throw new Error("renderBox() returned undefined");
+    // Important: take render tokens from the source pool
+    const boxResult = renderObject(lifecycle.self, frameIdx, sourcePool);
+    // bxoResult may be undefined on DEL
+    if (boxResult) {
+      frames.set(frameIdx, { ...boxResult[1], frame });
     }
-    frames.set(frameIdx, { ...boxResult[1], frame });
     // Render and free text tokens on a per-frame basis
     for (const textLifecycle of lifecycle.text) {
       const result = renderObject(textLifecycle, frameIdx, textPool);
@@ -77,7 +83,8 @@ function renderFrames(
     }
   }
   for (const boxLifecycle of lifecycle.roots) {
-    const [boxToken, boxFrames] = renderFrames(boxLifecycle);
+    // Important: take render tokens from the pool for nested boxes
+    const [boxToken, boxFrames] = renderFrames(boxLifecycle, boxPool);
     boxTokens.set(boxToken.id, boxToken);
     for (const [boxFrame, boxPositions] of boxFrames) {
       const root = frames.get(boxFrame);
@@ -121,7 +128,7 @@ export function toRenderData(
       maxHeight: 0,
     };
   }
-  const [objects, frames] = renderFrames(rootLifecycle);
+  const [objects, frames] = renderFrames(rootLifecycle, TokenPool.forBoxes());
   const maxWidth = Math.max(
     ...Array.from(frames.values()).map(({ width }) => width)
   );
