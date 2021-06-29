@@ -68,7 +68,7 @@ export function isAdjacent(
   return false;
 }
 
-export function isNewLine<T extends { y: number; prev: T | undefined;}>(
+export function isNewLine<T extends { y: number; prev: T | undefined }>(
   token: T
 ): boolean {
   if (!token.prev) {

@@ -247,7 +247,7 @@ function toRenderNodes(
   colorPalette: ColorPalette,
   cellSize: number,
   lineHeight: number,
-  baseTheme: LanguageTheme | undefined,
+  baseTheme: LanguageTheme | undefined
 ): RenderRoot<TextNode, DecorationNode> {
   // Merge themes to replicate the way the CSS cascade works
   const selfTheme = root.language ? languages[root.language]?.theme : {};

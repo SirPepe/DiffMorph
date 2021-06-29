@@ -25,11 +25,6 @@ function sizeof({ content }: Box<unknown, unknown>): number {
   return size;
 }
 
-type Batch<T> = {
-  parent: Box<T, any>;
-  items: (T | Box<T, any>)[];
-};
-
 // Modifies a source boxes content in-place by wrapping a number of tokens
 // into sub-boxes. As there may be several box borders between the first and
 // last item, the items are organized into batches (one per unbroken line of
@@ -76,7 +71,7 @@ export function wrapContent<
   newBox.parent = root;
   let width = 0;
   let height = 0;
-  for (let item of newBox.content) {
+  for (const item of newBox.content) {
     item.parent = newBox;
     const maxX = item.x + item.width - newBox.x;
     const maxY = item.y + item.height - newBox.y;
