@@ -54,8 +54,6 @@ export function wrapContent<
     if (isBox(item)) {
       const size = sizeof(item);
       if (size <= numTokens) {
-        // TODO: Adjust box position, because box positions are relative to
-        // their parents for some reason.
         items.push(item);
         numTokens -= size;
         i++;

@@ -100,15 +100,14 @@ function generateDecorationCss(
   return styles;
 }
 
-// In DOM, boxes are actual objects that create a relative coordinate system for
-// their contents. Said contents has absolute coordinates, which we must
-// compensate for with extra offsets.
 function generateBoxCss(
   { id, x, y, width, height, alpha, frame }: RenderPositions,
   baseSelector: string,
   offsetX: number,
   offsetY: number
 ): string[] {
+  x -= offsetX;
+  y -= offsetY;
   const styles = [];
   const selector = `${baseSelector} > .dm-box.dm-${id}`;
   const rules = [
@@ -122,17 +121,17 @@ function generateBoxCss(
   styles.push(`${selector}{${rules.join(";")}}`);
   for (const position of frame.text.values()) {
     styles.push(
-      ...generateTextCss(position, selector, x - offsetX, y - offsetY)
+      ...generateTextCss(position, selector, x + offsetX, y + offsetY)
     );
   }
   for (const position of frame.decorations.values()) {
     styles.push(
-      ...generateDecorationCss(position, selector, x - offsetX, y - offsetY)
+      ...generateDecorationCss(position, selector, x + offsetX, y + offsetY)
     );
   }
   for (const position of frame.boxes.values()) {
     styles.push(
-      ...generateBoxCss(position, selector, x - offsetX, y - offsetY)
+      ...generateBoxCss(position, selector, x + offsetX, y + offsetY)
     );
   }
   return styles;
