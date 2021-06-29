@@ -294,29 +294,25 @@ function toRenderNodes(
 function renderNodes(
   nodes: RenderRoot<TextNode, DecorationNode>,
   ctx: CanvasRenderingContext2D,
-  frame: RenderPositions,
-  xOffset: number,
-  yOffset: number
+  frame: RenderPositions
 ): void {
-  xOffset += frame.x;
-  yOffset += frame.y;
   const {
     frame: { text, decorations, boxes },
   } = frame;
   for (const [id, { x, y, width, height, alpha }] of decorations) {
     const node = nodes.content.decorations.get(id);
     assertIs(node, "decoration node");
-    node.draw(x + xOffset, y + yOffset, width, height, alpha);
+    node.draw(x, y, width, height, alpha);
   }
   for (const [id, { x, y, alpha }] of text) {
     const node = nodes.content.text.get(id);
     assertIs(node, "text node");
-    node.draw(x + xOffset, y + yOffset, alpha);
+    node.draw(x, y, alpha);
   }
   for (const [id, boxFrame] of boxes) {
     const node = nodes.content.boxes.get(id);
     assertIs(node, "box node");
-    renderNodes(node, ctx, boxFrame, xOffset, yOffset);
+    renderNodes(node, ctx, boxFrame);
   }
 }
 
@@ -427,7 +423,7 @@ export function toFrames(
         ctx.fillStyle = colorPalette.background;
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.restore();
-        renderNodes(nodes, ctx, frame, 0, 0);
+        renderNodes(nodes, ctx, frame);
         if (watermarkText) {
           renderWatermark(ctx, watermarkText, colorPalette.foreground, padding);
         }
