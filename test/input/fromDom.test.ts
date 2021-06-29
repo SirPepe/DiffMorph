@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { processCode } from "../../src/input/fromDom";
 import { Box, Decoration, TextToken } from "../../src/types";
 
@@ -216,7 +220,7 @@ describe("processing code from a DOM source", () => {
     const [txt1, box, txt2] = root.content as [
       TextToken,
       Box<TextToken, never>,
-      TextToken,
+      TextToken
     ];
     expect(txt1).toEqual({
       x: 0,
