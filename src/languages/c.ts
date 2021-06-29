@@ -1,4 +1,4 @@
-import { Stack } from "../language/lib";
+import { Stack, isAdjacent } from "../lib/languages";
 import { LanguageTheme, themeColors } from "../language/theme";
 import {
   LanguageDefinition,
@@ -7,7 +7,6 @@ import {
   LanguageTokens,
   TypedTokens,
 } from "../types";
-import { isAdjacent } from "../util";
 import { cStyleBlockComment } from "./microsyntax/cStyleBlockComment";
 import { cStyleLineComment } from "./microsyntax/cStyleLineComment";
 

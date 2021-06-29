@@ -8,7 +8,7 @@ import {
   DiffTokens,
   NOP,
 } from "../types";
-import { dimensionsEql } from "../util";
+import { dimensionsEql } from "../lib/util";
 import { diffDecorations } from "./decorations";
 import { pickAlternative } from "./heuristics";
 import { diffLinesAndStructures } from "./structs";

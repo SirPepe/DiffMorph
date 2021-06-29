@@ -4,7 +4,7 @@ import {
   LanguageTokens,
   TypedTokens,
 } from "../../types";
-import { isAdjacent } from "../../util";
+import { isAdjacent } from "../../lib/languages";
 
 const syntax: LanguageDefinition<Record<string, never>> = {
   name: "cdata",

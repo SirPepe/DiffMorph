@@ -13,7 +13,6 @@ import {
   TextTokens,
 } from "../types";
 import { tokenize } from "./tokenizer";
-import { getLanguage } from "../util";
 import { toRenderData } from "../render/render";
 import { optimizeDiffs } from "../diff/optimize";
 import { diff } from "../diff/diff";
@@ -21,29 +20,9 @@ import { applyLanguage } from "../language/language";
 import { toLifecycle } from "../render/lifecycle";
 import { InputOptions, withDefaults } from "./options";
 
-function isHTMLElement(arg: any): arg is HTMLElement {
-  if (!arg) {
-    return false;
-  }
-  return (
-    arg instanceof Node &&
-    arg.nodeType === Node.ELEMENT_NODE &&
-    arg instanceof HTMLElement
-  );
-}
-
-function isText(arg: any): arg is Text {
-  if (!arg) {
-    return false;
-  }
-  return arg instanceof Node && arg.nodeType === Node.TEXT_NODE;
-}
-
-function isDomContent(arg: any): arg is HTMLElement | Text {
-  if (!arg) {
-    return false;
-  }
-  return isHTMLElement(arg) || isText(arg);
+function getLanguage(element: Element): string | undefined {
+  const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
+  return match;
 }
 
 function getAttributes(element: Element): [string, string][] {
@@ -75,12 +54,11 @@ function decorationFromData(
 }
 
 function extractCode(source: Element): CodeContainer {
-  const children = Array.from(source.childNodes).filter(isDomContent);
   const content: Code[] = [];
-  for (const child of children) {
-    if (isText(child) && child.textContent) {
+  for (const child of source.childNodes) {
+    if (child instanceof Text && child.textContent) {
       content.push(child.textContent);
-    } else if (isHTMLElement(child)) {
+    } else if (child instanceof HTMLElement) {
       // <data> serves as a way to inject external decorations, nothing more
       if (child.tagName === "DATA") {
         continue;

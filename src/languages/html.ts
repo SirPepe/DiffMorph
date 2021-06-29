@@ -1,7 +1,7 @@
 // Implements support for both HTML and XML. XML features are controlled by a
 // a flag, which the XML language definition binds to true.
 
-import { isAdjacent, lookaheadText } from "../util";
+import { isAdjacent, lookaheadText } from "../lib/languages";
 import { languageDefinition as css } from "./css";
 import { languageDefinition as js } from "./javascript";
 import {

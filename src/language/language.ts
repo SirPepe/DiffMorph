@@ -9,7 +9,7 @@ import {
   advance,
   getFirstTextToken,
   seekBackwards,
-} from "../util";
+} from "../lib/util";
 import {
   Box,
   Decoration,

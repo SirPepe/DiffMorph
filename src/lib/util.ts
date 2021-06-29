@@ -1,5 +1,5 @@
-import { isBox } from "./lib/box";
-import { Box, Decoration, Token } from "./types";
+import { isBox } from "./box";
+import { Box, Decoration, Token } from "../types";
 
 const CHARSET =
   "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
@@ -7,15 +7,10 @@ const CHARSET =
 export function toString(number: number): string {
   let res = "";
   while (number > 0) {
-    res = CHARSET[number % 62] + res;
-    number = Math.floor(number / 62);
+    res = CHARSET[number % CHARSET.length] + res;
+    number = Math.floor(number / CHARSET.length);
   }
   return res;
-}
-
-export function getLanguage(element: Element): string | undefined {
-  const { 1: match } = /(?:.*)language-(\S+)/.exec(element.className) ?? [];
-  return match;
 }
 
 export function getFirstTextToken<T>(
@@ -145,40 +140,6 @@ export function consume<T extends { next: T | undefined }>(
   return { result: [], position: items.length };
 }
 
-type PositionedToken = {
-  x: number;
-  y: number;
-  width: number;
-};
-
-export function isAdjacent(
-  a: PositionedToken | undefined,
-  b: PositionedToken | undefined
-): boolean {
-  if (!a || !b) {
-    return false;
-  }
-  const aCoords = { x: a.x, y: a.y };
-  const bCoords = { x: b.x, y: b.y };
-  if (aCoords.y !== bCoords.y) {
-    return false;
-  }
-  if (aCoords.x + a.width === bCoords.x) {
-    return true;
-  }
-  if (bCoords.x + b.width === aCoords.x) {
-    return true;
-  }
-  return false;
-}
-
-export function isNewLine(token: {
-  y: number;
-  prev: { y: number } | undefined;
-}): boolean {
-  return Boolean(token.prev && token.y > token.prev.y);
-}
-
 export function dimensionsEql(a: Token, b: Token): boolean {
   if (
     a.x !== b.x ||
@@ -192,7 +153,7 @@ export function dimensionsEql(a: Token, b: Token): boolean {
 }
 
 export function minmax(numbers: Iterable<number>): [number, number] {
-  numbers = [...numbers]; // lest the iterable be consumed
+  numbers = [...numbers]; // lest the iterable be consumed by Math.min
   return [Math.min(...numbers), Math.max(...numbers)];
 }
 
@@ -235,50 +196,3 @@ export function findMinValue<T>(
 ): number {
   return computer(findMin(items, computer));
 }
-
-export const lookaheadText = <T extends { text: string; next: T | undefined }>(
-  token: T,
-  expected: string[]
-): boolean => {
-  while (expected.length) {
-    const nextText = expected.shift();
-    if (!token.next || token.next.text !== nextText) {
-      return false;
-    } else {
-      token = token.next;
-    }
-  }
-  return true;
-};
-
-export const lookbehindText = <T extends { text: string; prev: T | undefined }>(
-  token: T,
-  expected: string[]
-): boolean => {
-  while (expected.length) {
-    const nextText = expected.pop();
-    if (!token.prev || token.prev.text !== nextText) {
-      return false;
-    } else {
-      token = token.prev;
-    }
-  }
-  return true;
-};
-
-export const lookbehindType = <
-  T extends { type?: string; prev: T | undefined }
->(
-  token: T,
-  expected: string[]
-): boolean => {
-  while (expected.length) {
-    const value = expected.pop();
-    if (!token.prev || token.prev.type !== value) {
-      return false;
-    } else {
-      token = token.prev;
-    }
-  }
-  return true;
-};

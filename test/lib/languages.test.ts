@@ -1,16 +1,4 @@
-import { createIdGenerator, isAdjacent } from "../src/util";
-
-describe("createIdGenerator()", () => {
-  test("unique id generation", () => {
-    const generator = createIdGenerator();
-    const a = generator(null, "a");
-    const b = generator(null, "a");
-    const c = generator(null, "a");
-    expect(a).not.toBe(b);
-    expect(a).not.toBe(c);
-    expect(b).not.toBe(c);
-  });
-});
+import { isAdjacent, isNewLine } from "../../src/lib/languages";
 
 describe("isAdjacent()", () => {
   test("with two inputs", () => {
@@ -29,5 +17,13 @@ describe("isAdjacent()", () => {
   test("with one input", () => {
     expect(isAdjacent({ x: 0, y: 0, width: 1 }, undefined)).toBe(false);
     expect(isAdjacent(undefined, { x: 0, y: 0, width: 1 })).toBe(false);
+  });
+});
+
+describe("isNewLine()", () => {
+  test("works as expected", () => {
+    expect(isNewLine<any>({ y: 1, prev: null })).toBe(true);
+    expect(isNewLine<any>({ y: 1, prev: { y: 0, prev: null } })).toBe(true);
+    expect(isNewLine<any>({ y: 1, prev: { y: 1, prev: null } })).toBe(false);
   });
 });

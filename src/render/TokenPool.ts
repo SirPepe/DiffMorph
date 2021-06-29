@@ -24,7 +24,7 @@ import {
   TextPosition,
   Token,
 } from "../types";
-import { createIdGenerator, toString } from "../util";
+import { createIdGenerator, toString } from "../lib/util";
 import { BoxLifecycle, TokenLifecycle } from "./lifecycle";
 
 export type PoolInput = Token & { hash: number };

@@ -5,7 +5,7 @@
 // use absolute positions and can be nested inside boxes of arbitrary depth.
 
 import { Box, Code, CodeContainer, Decoration, TextTokens } from "../types";
-import { getFirstTextToken, getLastTextToken } from "../util";
+import { getFirstTextToken, getLastTextToken } from "../lib/util";
 
 const ONLY_WHITESPACE_RE = /^\s+$/;
 const LINE_BREAK_RE = /[\r\n]/;

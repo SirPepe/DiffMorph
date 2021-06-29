@@ -16,7 +16,7 @@ import {
   ExtendedDiffOp,
   DiffRoot,
 } from "../types";
-import { minmax } from "../util";
+import { minmax } from "../lib/util";
 
 // A lifecycle root hosts other lifecycles. It represents a box's lifecycle
 // (field "self") as well as it's content's lifecycles ("text", "decorations").

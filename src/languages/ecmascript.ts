@@ -3,7 +3,6 @@
 // definition binds to true.
 
 import { LanguageTheme, themeColors } from "../language/theme";
-import { isAdjacent, lookbehindType } from "../util";
 import {
   LanguageDefinition,
   LanguageFunction,
@@ -12,7 +11,7 @@ import {
   TextTokens,
   TypedTokens,
 } from "../types";
-import { Stack } from "../language/lib";
+import { Stack, isAdjacent, lookbehindType } from "../lib/languages";
 import { cStyleBlockComment } from "./microsyntax/cStyleBlockComment";
 import { cStyleLineComment } from "./microsyntax/cStyleLineComment";
 

@@ -3,7 +3,7 @@
 // this module assumes that every input lives in the same box.
 
 import { Optimizable } from "./optimize";
-import { findMin } from "../util";
+import { findMin } from "../lib/util";
 
 type HeuristicsTarget = Omit<Optimizable, "hash"> & { hash?: number };
 

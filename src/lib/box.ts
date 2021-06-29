@@ -1,5 +1,5 @@
 import { Box, Token } from "../types";
-import { findMinValue } from "../util";
+import { findMinValue } from "./util";
 
 export function isBox<T extends Box<any, any>>(x: T | any): x is T {
   if (
