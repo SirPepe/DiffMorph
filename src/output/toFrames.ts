@@ -1,3 +1,4 @@
+import { assertIs } from "@sirpepe/shed";
 import BezierEasing from "bezier-easing";
 import {
   DecorationPosition,
@@ -9,7 +10,6 @@ import {
   TextPosition,
 } from "../types";
 import { languages } from "../languages";
-import { assertIs } from "../util";
 import {
   ColorPalette,
   DEFAULT_COLOR_PALETTE,
@@ -246,9 +246,12 @@ function toRenderNodes(
   ctx: CanvasRenderingContext2D,
   colorPalette: ColorPalette,
   cellSize: number,
-  lineHeight: number
+  lineHeight: number,
+  baseTheme: LanguageTheme | undefined
 ): RenderRoot<TextNode, DecorationNode> {
-  const languageTheme = root.language ? languages[root.language]?.theme : {};
+  // Merge themes to replicate the way the CSS cascade works
+  const selfTheme = root.language ? languages[root.language]?.theme : {};
+  const theme = { ...baseTheme, ...selfTheme };
   return {
     ...root,
     content: {
@@ -260,7 +263,7 @@ function toRenderNodes(
               ctx,
               text,
               type,
-              languageTheme,
+              theme,
               colorPalette,
               cellSize,
               lineHeight
@@ -280,7 +283,7 @@ function toRenderNodes(
         Array.from(root.content.boxes, ([id, box]) => {
           return [
             id,
-            toRenderNodes(box, ctx, colorPalette, cellSize, lineHeight),
+            toRenderNodes(box, ctx, colorPalette, cellSize, lineHeight, theme),
           ];
         })
       ),
@@ -291,29 +294,25 @@ function toRenderNodes(
 function renderNodes(
   nodes: RenderRoot<TextNode, DecorationNode>,
   ctx: CanvasRenderingContext2D,
-  frame: RenderPositions,
-  xOffset: number,
-  yOffset: number
+  frame: RenderPositions
 ): void {
-  xOffset += frame.x;
-  yOffset += frame.y;
   const {
     frame: { text, decorations, boxes },
   } = frame;
   for (const [id, { x, y, width, height, alpha }] of decorations) {
     const node = nodes.content.decorations.get(id);
     assertIs(node, "decoration node");
-    node.draw(x + xOffset, y + yOffset, width, height, alpha);
+    node.draw(x, y, width, height, alpha);
   }
   for (const [id, { x, y, alpha }] of text) {
     const node = nodes.content.text.get(id);
     assertIs(node, "text node");
-    node.draw(x + xOffset, y + yOffset, alpha);
+    node.draw(x, y, alpha);
   }
   for (const [id, boxFrame] of boxes) {
     const node = nodes.content.boxes.get(id);
     assertIs(node, "box node");
-    renderNodes(node, ctx, boxFrame, xOffset, yOffset);
+    renderNodes(node, ctx, boxFrame);
   }
 }
 
@@ -405,7 +404,14 @@ export function toFrames(
     padding
   );
   const renderFrames = tweenFrames(frames, steps);
-  const nodes = toRenderNodes(objects, ctx, colorPalette, cellSize, lineHeight);
+  const nodes = toRenderNodes(
+    objects,
+    ctx,
+    colorPalette,
+    cellSize,
+    lineHeight,
+    undefined
+  );
   const colorIndex = new ColorIndex();
   return [
     ctx.canvas.width,
@@ -417,7 +423,7 @@ export function toFrames(
         ctx.fillStyle = colorPalette.background;
         ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
         ctx.restore();
-        renderNodes(nodes, ctx, frame, 0, 0);
+        renderNodes(nodes, ctx, frame);
         if (watermarkText) {
           renderWatermark(ctx, watermarkText, colorPalette.foreground, padding);
         }

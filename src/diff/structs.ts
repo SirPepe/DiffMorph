@@ -1,6 +1,6 @@
 // Find and work with larger structures to recycle in arrays of diff tokens.
 
-import { consume, findMaxValue } from "../util";
+import { consume, findMaxValue } from "../lib/util";
 import { DiffOp, DiffTokens, MOV, Token } from "../types";
 import { offsetHashChain } from "./hash";
 import { groupBy } from "@sirpepe/shed";

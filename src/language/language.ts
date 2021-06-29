@@ -5,7 +5,7 @@
 // the "any" in the following lines. Beware of applyLanguage() in particular as
 // it WILL modify its input with extreme prejudice.
 
-import { advance, getFirstTextToken, spliceBoxContent } from "../util";
+import { advance, getFirstTextToken, seekBackwards } from "../lib/util";
 import {
   Box,
   Decoration,
@@ -18,6 +18,36 @@ import {
   TypedTokens,
 } from "../types";
 import { languages } from "../languages";
+import { microsyntax } from "../languages/microsyntax";
+import { wrapContent } from "../lib/box";
+
+// Microsyntax and languages can each have their own postprocessors and when
+// processing boxes its not clear if a box contains one or the other. It could
+// conceivably made be distinguishable, but its easier to just have an object
+// where all languages and syntaxes can be accessed.
+const syntaxes = { ...languages, ...microsyntax };
+
+// To provide language functions with the illusion of a continuous token list
+// that only contains tokens of the same language, this proxy skips over tokens
+// from other languages when looking backwards from a language token.
+function proxyLanguageTokens(input: LanguageTokens): LanguageTokens {
+  return new Proxy<LanguageTokens>(input, {
+    get(target, property, receiver) {
+      const value = Reflect.get(target, property, receiver);
+      if (property === "prev") {
+        const prev = seekBackwards(
+          value,
+          (x) => x.parent.language === input.parent.language
+        );
+        if (prev) {
+          return proxyLanguageTokens(prev);
+        }
+        return prev;
+      }
+      return value;
+    },
+  });
+}
 
 function isEmbeddedLanguageProcessor(x: any): x is EmbeddedLanguageProcessor {
   if (x && "languageDefinition" in x && "abortPredicate" in x) {
@@ -33,6 +63,7 @@ function isTokenReplacementResult(x: any): x is TokenReplacementResult {
   return false;
 }
 
+// Box coords and sizes must be updated when items get added
 function embeddedLanguageBoxFactory(
   parent: Box<any, any>,
   language: string
@@ -61,11 +92,11 @@ function applyPostprocessors(token: TypedTokens | undefined): void {
   }
   while (true) {
     // The postprocessor function can potentially be different on a per-token
-    // basis because embedded languages are a thing.
+    // basis because embedded languages and micro-syntaxes must be considered.
     const postprocessor: LanguagePostprocessor =
-      token.parent.language && languages[token.parent.language]
-        ? languages[token.parent.language].postprocessor
-        : languages.none.postprocessor;
+      token.parent.language && syntaxes[token.parent.language]
+        ? syntaxes[token.parent.language].postprocessor
+        : syntaxes.none.postprocessor;
     if (
       token.prev &&
       token.prev.y === token.y &&
@@ -115,7 +146,7 @@ export function applyLanguageDefinition(
       return total;
     }
     const root = current.parent;
-    const results = language(current);
+    const results = language(proxyLanguageTokens(current));
     const types = Array.isArray(results) ? results : [results];
     for (let i = 0; i < types.length; i++) {
       const type = types[i];
@@ -129,8 +160,8 @@ export function applyLanguageDefinition(
           type.languageDefinition,
           type.abortPredicate
         );
-        // Move embedded languages items into their own box(es)
-        spliceBoxContent(current, count, (parent) =>
+        // Wrap embedded languages items in their own box(es)
+        wrapContent(current, count, (parent) =>
           embeddedLanguageBoxFactory(parent, type.languageDefinition.name)
         );
         i++;

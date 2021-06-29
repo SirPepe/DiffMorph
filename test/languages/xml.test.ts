@@ -54,19 +54,13 @@ describe("XML features", () => {
   test("CDATA sections", () => {
     const types = xml(`<foo>Hello <![CDATA[ World ]]></foo>`);
     expect(types).toEqual([
-      "tag",
-      "tag",
-      "token",
-      "comment cdata",
-      "comment cdata",
-      "comment cdata",
-      "comment cdata",
-      "comment cdata",
-      "comment cdata",
-      "comment cdata",
-      "comment cdata",
-      "comment cdata",
-      "tag",
+      "tag", // <foo
+      "tag", // >
+      "token", // Hello
+      "comment cdata", // <![CDATA[
+      "comment cdata", // World
+      "comment cdata", // ]]>
+      "tag", // </foo>
     ]);
   });
 

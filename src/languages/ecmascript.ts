@@ -3,7 +3,6 @@
 // definition binds to true.
 
 import { LanguageTheme, themeColors } from "../language/theme";
-import { isAdjacent, isNewLine, lookbehindType } from "../util";
 import {
   LanguageDefinition,
   LanguageFunction,
@@ -12,7 +11,9 @@ import {
   TextTokens,
   TypedTokens,
 } from "../types";
-import { Stack } from "../language/lib";
+import { Stack, isAdjacent, lookbehindType } from "../lib/languages";
+import { cStyleBlockComment } from "./microsyntax/cStyleBlockComment";
+import { cStyleLineComment } from "./microsyntax/cStyleLineComment";
 
 type CurlyType =
   | "object"
@@ -214,8 +215,6 @@ function inStringMode(state: State): boolean {
 }
 
 type State = {
-  lineCommentState: boolean;
-  blockCommentState: boolean;
   regexState: boolean;
   stringStack: Stack<StringType | undefined>;
   stringInterpolationState: boolean;
@@ -228,8 +227,6 @@ type State = {
 
 function defaultState(): State {
   return {
-    lineCommentState: false,
-    blockCommentState: false,
     regexState: false,
     stringStack: new Stack<StringType | undefined>(undefined),
     stringInterpolationState: false,
@@ -245,54 +242,19 @@ function defineECMAScript(flags: Flags = { types: false }): LanguageFunction {
   const state = defaultState();
 
   return function ecmaScript(token: LanguageTokens): LanguageFunctionResult {
-    // exit line comment state (on new line)
-    if (state.lineCommentState && isNewLine(token)) {
-      state.lineCommentState = false;
-    }
-
-    // exit regex state (on new line)
-    if (state.regexState && isNewLine(token)) {
-      state.regexState = false;
-    }
-
-    // exit block comment state
     if (
-      state.blockCommentState === true &&
       !inStringMode(state) &&
-      token.text === "/" &&
-      token.prev?.text === "*"
+      !state.regexState &&
+      cStyleLineComment.start(token)
     ) {
-      state.blockCommentState = false;
-      return "comment block";
+      return cStyleLineComment.process();
     }
-    // enter block comment state
     if (
-      state.blockCommentState === false &&
       !inStringMode(state) &&
-      token.text === "/" &&
-      token?.next?.text === "*"
+      !state.regexState &&
+      cStyleBlockComment.start(token)
     ) {
-      state.blockCommentState = true;
-      return "comment block";
-    }
-    // are we in block comment state?
-    if (state.blockCommentState) {
-      return "comment block";
-    }
-
-    // enter line comment state
-    if (
-      state.lineCommentState === false &&
-      !inStringMode(state) &&
-      token.text === "/" &&
-      token?.next?.text === "/"
-    ) {
-      state.lineCommentState = true;
-      return "comment line";
-    }
-    // are we in line comment state?
-    if (state.lineCommentState) {
-      return "comment line";
+      return cStyleBlockComment.process();
     }
 
     // exit string interpolation mode
@@ -649,10 +611,6 @@ function postprocessECMAScript(token: TypedTokens): boolean {
     token.type.startsWith("operator")
   ) {
     return isAdjacent(token, token.prev);
-  }
-  // Join comments
-  if (token.type.startsWith("comment")) {
-    return true;
   }
   // Join rest/spread
   if (

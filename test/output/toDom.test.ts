@@ -1,3 +1,7 @@
+/**
+ * @jest-environment jsdom
+ */
+
 import { toRenderData } from "../../src/render/render";
 import { toDom } from "../../src/output/toDom";
 import { process } from "../helpers";

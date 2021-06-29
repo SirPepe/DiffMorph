@@ -1,7 +1,7 @@
 // Implements support for both HTML and XML. XML features are controlled by a
 // a flag, which the XML language definition binds to true.
 
-import { isAdjacent, lookaheadText } from "../util";
+import { isAdjacent, lookaheadText } from "../lib/languages";
 import { languageDefinition as css } from "./css";
 import { languageDefinition as js } from "./javascript";
 import {
@@ -10,10 +10,11 @@ import {
   LanguageFunction,
   LanguageFunctionResult,
   LanguageTokens,
-  TextTokens,
   TypedTokens,
 } from "../types";
 import { LanguageTheme, themeColors } from "../language/theme";
+import { htmlStyleComment } from "./microsyntax/htmlStyleComment";
+import { cdata } from "./microsyntax/cdata";
 
 type Flags = {
   xml: boolean;
@@ -25,7 +26,6 @@ const ATTR_RE = /^[a-z]+[a-z0-9]*$/i;
 type State = {
   attrState: false | string; // string indicates the attribute name
   attrValueState: false | string; // string indicates the quote used
-  commentState: false | "cdata" | "comment";
   tagState: false | "tag" | "xml";
   tagName: false | string;
   doctypeState: boolean;
@@ -35,7 +35,6 @@ function defaultState(): State {
   return {
     attrState: false,
     attrValueState: false,
-    commentState: false,
     tagState: false,
     tagName: false,
     doctypeState: false,
@@ -102,67 +101,40 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
   const { xml } = flags;
 
   return (token: LanguageTokens): LanguageFunctionResult => {
-    // handle comments and doctypes
-    if (
-      state.commentState === false &&
-      token.text === "<" &&
-      token?.next?.text === "!" &&
-      isAdjacent(token, token.next)
-    ) {
-      if (token?.next?.next?.text.toLowerCase() === "doctype") {
-        state.doctypeState = true;
-        return ["doctype", "doctype"];
-      } else if (xml && token?.next?.next?.text === "[") {
-        state.commentState = "cdata";
-        return "comment cdata";
-      } else if (
-        token.next.next &&
-        lookaheadText(token.next, ["-", "-"]) &&
-        isAdjacent(token.next, token.next.next) &&
-        isAdjacent(token.next.next, token.next.next.next)
-      ) {
-        state.commentState = "comment";
-        return ["comment", "comment", "comment", "comment"];
-      }
+    if (state.attrValueState === false && htmlStyleComment.start(token)) {
+      return htmlStyleComment.process();
     }
+    if (state.attrValueState === false && cdata.start(token)) {
+      return cdata.process();
+    }
+
+    // enter doctype state
+    if (
+      state.attrValueState === false &&
+      token.text === "<" &&
+      token.next?.text === "!" &&
+      isAdjacent(token, token.next) &&
+      token.next.next?.text.toLowerCase() === "doctype" &&
+      isAdjacent(token.next, token.next.next)
+    ) {
+      state.doctypeState = true;
+      return ["doctype", "doctype", "doctype"];
+    }
+
     // exit doctype state
     if (state.doctypeState === true && token.text === ">") {
       state.doctypeState = false;
       return "doctype";
     }
-    // exit cdata state
-    if (
-      state.commentState === "cdata" &&
-      token.text === "]" &&
-      lookaheadText<TextTokens>(token, ["]", ">"])
-    ) {
-      state.commentState = false;
-      return ["comment cdata", "comment cdata", "comment cdata"];
-    }
-    // exit regular comment state
-    if (
-      state.commentState &&
-      token.text === ">" &&
-      token?.prev?.text === "-" &&
-      isAdjacent(token, token.prev) &&
-      token?.prev?.prev?.text === "-" &&
-      isAdjacent(token.prev, token.prev.prev)
-    ) {
-      state.commentState = false;
-      return "comment";
-    }
-    if (state.commentState === "cdata") {
-      return "comment cdata";
-    }
-    if (state.commentState === "comment") {
-      return "comment";
-    }
+
+    // continue doctype
     if (state.doctypeState === true) {
       return "doctype";
     }
 
     // handle tag state entry
     if (
+      state.attrValueState === false &&
       state.tagState === false &&
       token.text === "<" &&
       isAdjacent(token, token.next)
@@ -190,7 +162,11 @@ function defineHTML(flags: Flags = { xml: false }): LanguageFunction {
       return ["tag-xml", "tag-xml"];
     }
     // exit tag state
-    if (state.tagState && token.text === ">") {
+    if (
+      state.attrValueState === false &&
+      state.tagState &&
+      token.text === ">"
+    ) {
       state.tagState = false;
       // Handle embedded CSS
       if (
@@ -380,11 +356,6 @@ function glueHTML(token: TypedTokens): boolean {
   // Fuse opening tag names to opening brackets
   if (token.type === "tag" && token?.prev?.text === "<") {
     return true;
-  }
-  // Join comments that are directly adjacent, such as "<" and "!" or "foo", "-"
-  // and "bar"
-  if (token.type === "comment" && token?.prev?.type === "comment") {
-    return isAdjacent(token, token.prev);
   }
   // Fuse non-quote bits of attribute values
   if (

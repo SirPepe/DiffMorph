@@ -4,7 +4,7 @@
 import { groupBy } from "@sirpepe/shed";
 import { diffArrays } from "diff";
 import { DiffDecoration, DiffOp } from "../types";
-import { dimensionsEql } from "../util";
+import { dimensionsEql } from "../lib/util";
 
 function diffDecorationGroups(
   from: DiffDecoration[],

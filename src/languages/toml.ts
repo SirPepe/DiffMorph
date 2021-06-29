@@ -1,5 +1,5 @@
 import { LanguageTheme, themeColors } from "../language/theme";
-import { isAdjacent, lookaheadText } from "../util";
+import { isAdjacent, lookaheadText } from "../lib/languages";
 import {
   LanguageDefinition,
   LanguageFunction,

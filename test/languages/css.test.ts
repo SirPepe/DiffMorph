@@ -1,17 +1,6 @@
-import { registerLanguage } from "../../src/languages";
-import { languageDefinition } from "../../src/languages/css";
 import { type } from "../helpers";
 
-registerLanguage({
-  name: "inline-css",
-  theme: languageDefinition.theme,
-  definitionFactory: () =>
-    languageDefinition.definitionFactory({ inline: true }),
-  postprocessor: languageDefinition.postprocessor,
-});
-
 const css = type("css");
-const inlineCss = type("inline-css");
 
 describe("Basic CSS", () => {
   test("Simple rule", () => {
@@ -205,11 +194,11 @@ describe("Basic CSS", () => {
 
 describe("Comments", () => {
   test("basic comment", () => {
-    const types = css(`/* Hello foo-bar */`);
+    const types = css(`/* Hello foo */`);
     expect(types).toEqual([
       "comment", // "/*"
       "comment", // "Hello"
-      "comment", // "foo-bar"
+      "comment", // "foo"
       "comment", // "*/"
     ]);
   });
@@ -378,23 +367,6 @@ describe("At-rules", () => {
       "punctuation",
       "punctuation rule-end",
       "punctuation at-keyframes-end",
-    ]);
-  });
-});
-
-describe("Inline CSS", () => {
-  test("Inline CSS", () => {
-    const types = inlineCss(`color: red; font-family: sans-serif`);
-    expect(types).toEqual([
-      "property",
-      "punctuation",
-      "value color",
-      "punctuation",
-      "property",
-      "punctuation",
-      "token",
-      "token",
-      "token",
     ]);
   });
 });
