@@ -246,9 +246,12 @@ function toRenderNodes(
   ctx: CanvasRenderingContext2D,
   colorPalette: ColorPalette,
   cellSize: number,
-  lineHeight: number
+  lineHeight: number,
+  baseTheme: LanguageTheme | undefined,
 ): RenderRoot<TextNode, DecorationNode> {
-  const languageTheme = root.language ? languages[root.language]?.theme : {};
+  // Merge themes to replicate the way the CSS cascade works
+  const selfTheme = root.language ? languages[root.language]?.theme : {};
+  const theme = { ...baseTheme, ...selfTheme };
   return {
     ...root,
     content: {
@@ -260,7 +263,7 @@ function toRenderNodes(
               ctx,
               text,
               type,
-              languageTheme,
+              theme,
               colorPalette,
               cellSize,
               lineHeight
@@ -280,7 +283,7 @@ function toRenderNodes(
         Array.from(root.content.boxes, ([id, box]) => {
           return [
             id,
-            toRenderNodes(box, ctx, colorPalette, cellSize, lineHeight),
+            toRenderNodes(box, ctx, colorPalette, cellSize, lineHeight, theme),
           ];
         })
       ),
@@ -405,7 +408,14 @@ export function toFrames(
     padding
   );
   const renderFrames = tweenFrames(frames, steps);
-  const nodes = toRenderNodes(objects, ctx, colorPalette, cellSize, lineHeight);
+  const nodes = toRenderNodes(
+    objects,
+    ctx,
+    colorPalette,
+    cellSize,
+    lineHeight,
+    undefined
+  );
   const colorIndex = new ColorIndex();
   return [
     ctx.canvas.width,
