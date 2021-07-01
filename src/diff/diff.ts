@@ -19,7 +19,7 @@
 // 3. diff decorations by hash, position and dimensions, returning only ADD and
 //    DEL operations. The optimizer stage can again turn ADD and DEL into MOV.
 
-import { isBox } from "../lib/box";
+import { isBox } from "../lib/token";
 import { Box, Decoration, DiffBox, DiffRoot, TypedToken } from "../types";
 import { diffBox } from "./boxes";
 import { hash } from "./hash";

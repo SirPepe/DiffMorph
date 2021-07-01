@@ -5,7 +5,6 @@
 // the "any" in the following lines. Beware of applyLanguage() in particular as
 // it WILL modify its input with extreme prejudice.
 
-import { advance, getFirstTextToken, seekBackwards } from "../lib/util";
 import {
   Box,
   Decoration,
@@ -19,7 +18,12 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { microsyntax } from "../languages/microsyntax";
-import { wrapContent } from "../lib/box";
+import {
+  advance,
+  getFirstTextToken,
+  seekBackwards,
+  wrapContent,
+} from "../lib/token";
 
 // Microsyntax and languages can each have their own postprocessors and when
 // processing boxes its not clear if a box contains one or the other. It could

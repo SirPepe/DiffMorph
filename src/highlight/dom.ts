@@ -4,7 +4,7 @@ import { InputOptions, withDefaults } from "../input/options";
 import { applyLanguage } from "../language/language";
 import { DEFAULT_COLOR_PALETTE } from "../language/theme";
 import { languages } from "../languages";
-import { isBox } from "../lib/box";
+import { isBox } from "../lib/token";
 import { themeToCss, getLanguage } from "../lib/dom";
 import { Box, ContainerData, Decoration, TypedTokens } from "../types";
 

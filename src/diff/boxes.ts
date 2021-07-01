@@ -1,5 +1,5 @@
 import { groupBy } from "@sirpepe/shed";
-import { isBox } from "../lib/box";
+import { isBox } from "../lib/token";
 import {
   DiffBox,
   DiffDecoration,
@@ -8,7 +8,7 @@ import {
   DiffTokens,
   NOP,
 } from "../types";
-import { dimensionsEql } from "../lib/util";
+import { positionsEql } from "../lib/util";
 import { diffDecorations } from "./decorations";
 import { pickAlternative } from "./heuristics";
 import { diffLinesAndStructures } from "./structs";
@@ -74,7 +74,7 @@ export function diffOuterBox(
     };
   }
   if (from && to) {
-    if (dimensionsEql(from, to)) {
+    if (positionsEql(from, to)) {
       return {
         kind: "NOP",
         item: to,

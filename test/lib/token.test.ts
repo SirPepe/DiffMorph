@@ -1,4 +1,4 @@
-import { isBox, wrapContent } from "../../src/lib/box";
+import { isBox, wrapContent } from "../../src/lib/token";
 import { Box, Token } from "../../src/types";
 
 type WrapTest = Token & {
@@ -335,6 +335,7 @@ describe("wrapContent", () => {
       decorations: [],
       parent: root,
     };
+    /* eslint-disable */
     const g = { value: "g", x: 6, y: 0, width: 1, height: 1, parent: root, next: undefined };
     const f = { value: "f", x: 5, y: 0, width: 1, height: 1, parent: nested2, next: g };
     const e = { value: "e", x: 4, y: 0, width: 1, height: 1, parent: nested2, next: f };
@@ -342,12 +343,13 @@ describe("wrapContent", () => {
     const c = { value: "c", x: 2, y: 0, width: 1, height: 1, parent: nested1, next: d };
     const b = { value: "b", x: 1, y: 0, width: 1, height: 1, parent: root, next: c };
     const a = { value: "a", x: 0, y: 0, width: 1, height: 1, parent: root, next: b };
+    /* eslint-enable */
     nested1.content = [c, d];
     nested2.content = [e, f];
     root.content = [a, b, nested1, nested2, g];
     // index of b + 4 is smack dab in the middle if nested2
-    expect(
-      () => wrapContent<WrapTest, any>(b, 4, (parent) => ({ ...parent }))
-    ).toThrow();
+    expect(() => {
+      wrapContent<WrapTest, any>(b, 4, (parent) => ({ ...parent }));
+    }).toThrow();
   });
 });

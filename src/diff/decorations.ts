@@ -4,7 +4,7 @@
 import { groupBy } from "@sirpepe/shed";
 import { diffArrays } from "diff";
 import { DiffDecoration, DiffOp } from "../types";
-import { dimensionsEql } from "../lib/util";
+import { positionsEql } from "../lib/util";
 
 function diffDecorationGroups(
   from: DiffDecoration[],
@@ -13,14 +13,14 @@ function diffDecorationGroups(
   const result: DiffOp<DiffDecoration>[] = [];
   if (from.length === to.length) {
     for (let i = 0; i < from.length; i++) {
-      if (!dimensionsEql(from[i], to[i])) {
+      if (!positionsEql(from[i], to[i])) {
         result.push({ kind: "MOV", item: to[i], from: from[i] });
       }
     }
     return result;
   }
   const changes = diffArrays(from, to, {
-    comparator: (a, b) => a.hash === b.hash && dimensionsEql(a, b),
+    comparator: (a, b) => a.hash === b.hash && positionsEql(a, b),
     ignoreCase: false,
   });
   for (const change of changes) {

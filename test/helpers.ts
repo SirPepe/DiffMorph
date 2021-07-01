@@ -3,7 +3,7 @@ import { applyLanguage } from "../src/language/language";
 import { toLifecycle } from "../src/render/lifecycle";
 import { optimizeDiffs } from "../src/diff/optimize";
 import { tokenize } from "../src/input/tokenizer";
-import { flattenTokens, getFirstTextToken } from "../src/lib/util";
+import { flattenTokens, getFirstTextToken } from "../src/lib/token";
 import { Box, Code, Decoration, LinkedListOf, TypedTokens } from "../src/types";
 
 type DecorationArgs = Omit<Decoration<any>, "parent">;
