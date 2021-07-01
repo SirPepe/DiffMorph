@@ -16,8 +16,8 @@ describe("JSONC", () => {
   test("Line comment", () => {
     const types = jsonc("// a\n{}");
     expect(types).toEqual([
-      "comment comment-line",
-      "comment comment-line",
+      "comment",
+      "comment",
       "punctuation object-start-0",
       "punctuation object-end-0",
     ]);
@@ -26,9 +26,9 @@ describe("JSONC", () => {
   test("Single-line block comment", () => {
     const types = jsonc("/* a */\n{}");
     expect(types).toEqual([
-      "comment comment-block",
-      "comment comment-block",
-      "comment comment-block",
+      "comment",
+      "comment",
+      "comment",
       "punctuation object-start-0",
       "punctuation object-end-0",
     ]);
@@ -39,9 +39,9 @@ describe("JSONC", () => {
   a
 */\n{}`);
     expect(types).toEqual([
-      "comment comment-block",
-      "comment comment-block",
-      "comment comment-block",
+      "comment",
+      "comment",
+      "comment",
       "punctuation object-start-0",
       "punctuation object-end-0",
     ]);
@@ -63,8 +63,8 @@ describe("JSONC", () => {
     expect(types).toEqual([
       "punctuation object-start-0",
       "punctuation object-end-0",
-      "comment comment-line",
-      "comment comment-line",
+      "comment",
+      "comment",
     ]);
   });
 });

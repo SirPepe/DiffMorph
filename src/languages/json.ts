@@ -11,6 +11,8 @@ import {
   TextTokens,
   TypedTokens,
 } from "../types";
+import { cStyleBlockComment } from "./microsyntax/cStyleBlockComment";
+import { cStyleLineComment } from "./microsyntax/cStyleLineComment";
 
 type Flags = {
   comments: boolean;
@@ -23,8 +25,6 @@ function defaultState() {
   return {
     key: false,
     string: false,
-    lineComment: false,
-    blockComment: false,
     arrayDepth: 0,
     objectDepth: 0,
   };
@@ -44,59 +44,14 @@ function parseNumeric(token: TextTokens): string[] | null {
 
 function defineJSON(flags: Flags = { comments: false }): LanguageFunction {
   const state = defaultState();
-  const { comments } = flags;
 
   return (token: LanguageTokens): LanguageFunctionResult => {
-    if (comments) {
-      // exit line comment state (on new line)
-      if (state.lineComment && token.prev && token.y > token.prev.y) {
-        state.lineComment = false;
+    if (flags.comments) {
+      if (!state.string && !state.key && cStyleBlockComment.start(token)) {
+        return cStyleBlockComment.process();
       }
-
-      // exit block comment state
-      if (
-        state.blockComment === true &&
-        state.key === false &&
-        state.string === false &&
-        token.text === "/" &&
-        token?.prev?.text === "*"
-      ) {
-        state.blockComment = false;
-        return "comment comment-block";
-      }
-
-      // enter block comment state
-      if (
-        state.blockComment === false &&
-        state.key === false &&
-        state.string === false &&
-        token.text === "/" &&
-        token?.next?.text === "*"
-      ) {
-        state.blockComment = true;
-        return "comment comment-block";
-      }
-
-      // are we in block comment state?
-      if (state.blockComment) {
-        return "comment comment-block";
-      }
-
-      // enter line comment state
-      if (
-        state.lineComment === false &&
-        state.string === false &&
-        state.key === false &&
-        token.text === "/" &&
-        token?.next?.text === "/"
-      ) {
-        state.lineComment = true;
-        return "comment comment-line";
-      }
-
-      // in line comment state?
-      if (state.lineComment) {
-        return "comment comment-line";
+      if (!state.string && !state.key && cStyleLineComment.start(token)) {
+        return cStyleLineComment.process();
       }
     }
 
@@ -174,9 +129,6 @@ function defineJSON(flags: Flags = { comments: false }): LanguageFunction {
 }
 
 function postprocessJSON(token: TypedTokens): boolean {
-  if (token.type.startsWith("comment")) {
-    return isAdjacent(token, token.prev);
-  }
   if (
     token.type !== "token" &&
     token.y === token?.prev?.y &&
