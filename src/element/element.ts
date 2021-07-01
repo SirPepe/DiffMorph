@@ -265,10 +265,3 @@ export class DiffMorph extends HTMLElement {
     return getLanguage(this.className);
   }
 }
-
-if (!window.customElements.get("dm-frame")) {
-  window.customElements.define("dm-frame", DMFrame);
-}
-if (!window.customElements.get("diff-morph")) {
-  window.customElements.define("diff-morph", DiffMorph);
-}

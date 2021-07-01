@@ -60,38 +60,26 @@ const minConfig = {
   ],
 };
 
-function esm(input, file) {
-  return {
-    input,
+export default [
+  {
+    input: "src/index.ts",
     output: {
       sourcemap: true,
-      file,
+      file: "dist/esm/index.js",
       format: "esm",
       plugins: [license({ banner })],
     },
     ...esmConfig,
-  };
-}
-
-function min(input, file, name) {
-  return {
-    input,
+  },
+  {
+    input: "src/bundle.ts",
     output: {
       sourcemap: true,
-      file,
+      file: "dist/min/bundle.js",
       format: "umd",
-      name,
+      name: "DiffMorph",
       plugins: [terser(), license({ banner })],
     },
     ...minConfig,
-  };
-}
-
-export default [
-  esm("src/index.ts", "dist/esm/index.js"),
-  esm("src/element/element.ts", "dist/esm/element.js"),
-  esm("src/element/highlight.ts", "dist/esm/highlight.js"),
-  min("src/index.ts", "dist/min/index.js", "DiffMorph"),
-  min("src/element/element.ts", "dist/min/element.js", "DiffMorph"),
-  min("src/element/highlight.ts", "dist/min/highlight.js", "HighlightedCode"),
+  },
 ];

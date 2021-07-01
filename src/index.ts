@@ -1,3 +1,5 @@
+// Main library index file
+
 export { DMFrame, DiffMorph } from "./element/element";
 export { HighlightedCode } from "./element/highlight";
 export { fromData } from "./input/fromData";

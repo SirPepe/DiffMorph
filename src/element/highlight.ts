@@ -61,7 +61,3 @@ export class HighlightedCode extends HTMLElement {
     return 2;
   }
 }
-
-if (!window.customElements.get("highlighted-code")) {
-  window.customElements.define("highlighted-code", HighlightedCode);
-}

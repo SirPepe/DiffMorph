@@ -4,7 +4,7 @@
   "description": "Highlight and animate code with ease!",
   "main": "dist/esm/index.js",
   "module": "dist/esm/index.js",
-  "browser": "dist/esm/index.js",
+  "browser": "dist/min/bundle.js",
   "types": "dist/types/index.d.js",
   "directories": {
     "test": "test"
