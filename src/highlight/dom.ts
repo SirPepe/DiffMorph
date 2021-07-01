@@ -9,6 +9,7 @@ import { themeToCss, getLanguage } from "../lib/dom";
 import { Box, ContainerData, Decoration, TypedTokens } from "../types";
 
 const DEFAULT_STYLES = `pre {
+  margin: 0;
   --foreground: var(--dm-foreground, ${DEFAULT_COLOR_PALETTE.foreground});
   --background: var(--dm-background, ${DEFAULT_COLOR_PALETTE.background});
   --highlight: var(--dm-highlight, ${DEFAULT_COLOR_PALETTE.highlight});
