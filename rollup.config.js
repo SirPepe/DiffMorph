@@ -60,47 +60,38 @@ const minConfig = {
   ],
 };
 
+function esm(input, file) {
+  return {
+    input,
+    output: {
+      sourcemap: true,
+      file,
+      format: "esm",
+      plugins: [license({ banner })],
+    },
+    ...esmConfig,
+  };
+}
+
+function min(input, file, name) {
+  return {
+    input,
+    output: {
+      sourcemap: true,
+      file,
+      format: "umd",
+      name,
+      plugins: [terser(), license({ banner })],
+    },
+    ...minConfig,
+  };
+}
+
 export default [
-  {
-    input: "src/element/element.ts",
-    output: {
-      sourcemap: true,
-      file: "dist/esm/element.js",
-      format: "esm",
-      plugins: [license({ banner })],
-    },
-    ...esmConfig,
-  },
-  {
-    input: "src/index.ts",
-    output: {
-      sourcemap: true,
-      file: "dist/esm/index.js",
-      format: "esm",
-      plugins: [license({ banner })],
-    },
-    ...esmConfig,
-  },
-  {
-    input: "src/element/element.ts",
-    output: {
-      sourcemap: true,
-      file: "dist/min/element.js",
-      format: "umd",
-      name: "DiffMorph",
-      plugins: [terser(), license({ banner })],
-    },
-    ...minConfig,
-  },
-  {
-    input: "src/index.ts",
-    output: {
-      sourcemap: true,
-      file: "dist/min/index.js",
-      format: "umd",
-      name: "DiffMorph",
-      plugins: [terser(), license({ banner })],
-    },
-    ...minConfig,
-  },
+  esm("src/index.ts", "dist/esm/index.js"),
+  esm("src/element/element.ts", "dist/esm/element.js"),
+  esm("src/element/highlight.ts", "dist/esm/highlight.js"),
+  min("src/index.ts", "dist/min/index.js", "DiffMorph"),
+  min("src/element/element.ts", "dist/min/element.js", "DiffMorph"),
+  min("src/element/highlight.ts", "dist/min/highlight.js", "HighlightedCode"),
 ];

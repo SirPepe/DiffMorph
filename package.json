@@ -2,7 +2,10 @@
   "name": "DiffMorph",
   "version": "0.0.0",
   "description": "Highlight and animate code with ease!",
-  "main": "index.js",
+  "main": "dist/esm/index.js",
+  "module": "dist/esm/index.js",
+  "browser": "dist/esm/index.js",
+  "types": "dist/types/index.d.js",
   "directories": {
     "test": "test"
   },

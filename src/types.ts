@@ -13,7 +13,7 @@ import { LanguageTheme } from "./language/theme";
 export type Code = string | CodeContainer;
 
 // tag name and attributes for DOM sources
-type ContainerData = Record<string, string | string[] | string[][]>;
+export type ContainerData = Record<string, string | string[] | string[][]>;
 
 // Represents some kind of container object, either a regular container or a
 // decoration wrapper container. Two container with the same hash are considered

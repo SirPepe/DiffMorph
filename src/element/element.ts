@@ -1,5 +1,6 @@
 import debounce from "debounce";
 import { fromDom } from "../input/fromDom";
+import { getLanguage } from "../lib/dom";
 import { toDom } from "../output/toDom";
 import { RenderData, RenderDecoration, RenderText } from "../types";
 
@@ -261,11 +262,7 @@ export class DiffMorph extends HTMLElement {
   }
 
   get language(): string {
-    const match = /language-([a-zA-Z0-9-_]+)/.exec(this.className);
-    if (!match) {
-      return "none";
-    }
-    return match[1] || "none";
+    return getLanguage(this.className);
   }
 }
 

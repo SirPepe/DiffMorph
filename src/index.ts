@@ -1,4 +1,5 @@
 export { DMFrame, DiffMorph } from "./element/element";
+export { HighlightedCode } from "./element/highlight";
 export { fromData } from "./input/fromData";
 export { fromDom } from "./input/fromDom";
 export { toJSON } from "./output/toJSON";

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Document</title>
+  <script src="dist/min/highlight.js"></script>
+</head>
+<body>
+
+<highlighted-code>
+<pre class="language-jsonc">// JSONC
+{
+  "hello": 42,
+  "world": {
+    "wee": [42, 23]
+  }
+}</pre>
+</highlighted-code>
+
+<highlighted-code>
+<pre class="language-xml">&lt;?xml version="1.0" ?&gt;
+&lt;soap:Envelope
+  xmlns:soap="http://www.w3.org/2003/05/soap-envelope"
+  xmlns:m="http://www.example.org"&gt;
+  &lt;soap:Header&gt;&lt;/soap:Header&gt;
+  &lt;soap:Body&gt;
+    &lt;m:GetStockPrice&gt;
+      &lt;m:StockName&gt;T&lt;/m:StockName&gt;
+    &lt;/m:GetStockPrice&gt;
+  &lt;/soap:Body&gt;
+&lt;/soap:Envelope&gt;</pre>
+</highlighted-code>
+
+<highlighted-code>
+<pre class="language-css">/* Hello World, CSS! */
+
+@import "bootstrap.css";
+
+*, *::before, *::after {
+  box-sizing: inherit;
+}
+
+:root {
+  box-sizing: border-box;
+  font-size: 16px;
+  --baseColor: #C00000;
+}
+
+@media (max-width: 1000px) {
+  :root {
+    font-size: 14px;
+  }
+}
+
+div + .foo, :not([disabled]) ~ a[id="foo42"] {
+  color: var(--baseColor);
+  background: rgb(0, 0, 0);
+  border: calc(1rem / 8) solid red;
+}</pre>
+</highlighted-code>
+
+</body>
+</html>

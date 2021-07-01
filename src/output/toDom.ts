@@ -8,7 +8,8 @@ import {
 } from "../types";
 import { languages } from "../languages";
 import { createIdGenerator } from "../lib/util";
-import { DEFAULT_COLOR_PALETTE, LanguageTheme } from "../language/theme";
+import { DEFAULT_COLOR_PALETTE } from "../language/theme";
+import { themeToCss } from "../lib/dom";
 
 const nextId = createIdGenerator();
 
@@ -135,25 +136,6 @@ function generateBoxCss(
     );
   }
   return styles;
-}
-
-function themeToCss(prefix: string, theme: LanguageTheme): string {
-  return Object.entries(theme)
-    .map(([type, props]) => {
-      const selector = `${prefix} .` + type.split(/\s+/).join(".");
-      const declarations = Object.entries(props)
-        .map(([property, value]) => {
-          if (value) {
-            if (property === "color") {
-              value = `var(--${value})`;
-            }
-            return `${property}:${value}`;
-          }
-        })
-        .join(";");
-      return `${selector}{${declarations}}`;
-    })
-    .join("\n");
 }
 
 function getDefaultStyles(langs: Set<string>): string {
