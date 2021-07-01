@@ -2,46 +2,42 @@ import debounce from "debounce";
 import { fromElement, toHighlight } from "../highlight/dom";
 
 export class HighlightedCode extends HTMLElement {
-  #slot: HTMLSlotElement;
   #stage: HTMLDivElement;
+  #contentObserver = new MutationObserver(() => this.init());
 
   constructor() {
     super();
-    this.#slot = document.createElement("slot");
-    this.#slot.hidden = true;
     this.#stage = document.createElement("div");
     this.attachShadow({ mode: "open" });
     const style = document.createElement("style");
     style.innerHTML = ":host { display: block }";
-    this.shadowRoot?.append(this.#slot, this.#stage, style);
+    this.shadowRoot?.append(this.#stage, style);
   }
 
   public connectedCallback(): void {
-    this.#slot.addEventListener("slotchange", () => this.init());
+    this.#contentObserver.observe(this, {
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    });
+    this.init();
   }
 
-  static get observedAttributes(): string[] {
-    return ["tabsize"];
-  }
-
-  public attributeChangedCallback(name: string): void {
-    if (name === "tabsize") {
-      this.init();
-    }
+  public disconnectCallback(): void {
+    this.#contentObserver.disconnect();
   }
 
   public init = debounce(this._init);
   private _init(): void {
     this.#stage.innerHTML = "";
-    const source = this.#slot.assignedElements().find((element: any) => {
+    const source = Array.from(this.children).find((element: any) => {
       return element.tagName === "PRE";
     });
     if (!source) {
       return;
     }
-    const renderData = fromElement(source, {
-      tabSize: this.tabSize,
-    });
+    const renderData = fromElement(source, { tabSize: this.tabSize });
     this.#stage.append(...toHighlight(renderData));
   }
 
